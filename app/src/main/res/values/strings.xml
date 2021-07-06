@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">Sms Blocker</string>
+
+    <string name="login_title">Welcome</string>
+
+    <string name="login_label">Login</string>
+    <string name="login_login_field">Email:</string>
+    <string name="login_password_field">Password:</string>
+    <string name="login_next_button">Sign in</string>
+    <string name="login_or_text">or</string>
+    <string name="login_create_account_button">Create account</string>
+
+    <string name="register_label">Register</string>
+    <string name="register_login_field">Email:</string>
+    <string name="register_user_name_field">User name:</string>
+    <string name="register_password_field">Password:</string>
+    <string name="register_re_password_field">Re-password:</string>
+    <string name="register_next_button">Sign up</string>
+    <string name="register_or_text">or</string>
+    <string name="register_login_button">Login</string>
+    <string name="main_header_title">Amount:</string>
+    <string name="main_menu_set_sms_per_day">Settings</string>
+    <string name="main_menu_start_job">Start work</string>
+    <string name="main_menu_stop_job">Stop work</string>
+    <string name="main_menu_task_list">Task list</string>
+    <string name="main_menu_withdraw_money">Withdraw money</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_set_sms_per_day">Set sms count per day</string>
+    <string name="settings_first_sim_slot_sms_count_hint">Fisrt sms slot</string>
+    <string name="settings_secound_sim_slot_sms_count_hint">Secound sim slot</string>
+    <string name="settings_set_sms_per_day_button">Apply</string>
+    <string name="settings_on_success_updated">Success</string>
+
+</resources>

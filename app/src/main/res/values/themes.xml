@@ -1,0 +1,7 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="App" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#FAFCFF</item>
+        <item name="colorAccent">#FAFCFF</item>
+        <item name="colorPrimaryDark">#FAFCFF</item>
+    </style>
+</resources>
