@@ -14,8 +14,8 @@ val secondaryColor = Color.White
 val accentColor = Color(73, 73, 73)
 val backgroundColor = Color(247, 247, 247)
 
-val primaryDimens by lazy { 16.dp }
-val secondaryDimens by lazy { 8.dp }
+val primaryDimens by lazy { 24.dp }
+val secondaryDimens by lazy { 16.dp }
 
 val progressBarAsLabelWidth by lazy {
     430.dp

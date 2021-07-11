@@ -45,7 +45,7 @@ fun Button(
                 colors = ButtonDefaults.outlinedButtonColors(
                     backgroundColor = primaryColor.copy(alpha = if (isEnable) 1f else 0.5f)
                 ),
-                contentPadding = PaddingValues(primaryDimens * 1.2f),
+                contentPadding = PaddingValues(primaryDimens),
                 modifier = modifier
             ) {
                 TextNormal(

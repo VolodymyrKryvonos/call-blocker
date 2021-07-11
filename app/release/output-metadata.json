@@ -1,0 +1,20 @@
+{
+  "version": 3,
+  "artifactType": {
+    "type": "APK",
+    "kind": "Directory"
+  },
+  "applicationId": "com.callblocker.app",
+  "variantName": "release",
+  "elements": [
+    {
+      "type": "SINGLE",
+      "filters": [],
+      "attributes": [],
+      "versionCode": 33,
+      "versionName": "2.0.33",
+      "outputFile": "sms-sender-v2.0.33.apk"
+    }
+  ],
+  "elementType": "File"
+}

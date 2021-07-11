@@ -30,4 +30,6 @@ android {
 dependencies {
     implementation (AppDependencies.base)
     implementation project(AppDependencies.db)
+
+    implementation(AppDependencies.paged)
 }

@@ -74,4 +74,6 @@ abstract class TaskRepository {
         }
     }
 
+    fun taskList() = taskDao.taskList().asPagingSourceFactory()
+
 }

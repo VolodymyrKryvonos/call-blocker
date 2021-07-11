@@ -18,17 +18,35 @@
     <string name="register_next_button">Sign up</string>
     <string name="register_or_text">or</string>
     <string name="register_login_button">Login</string>
+
     <string name="main_header_title">Amount:</string>
     <string name="main_menu_set_sms_per_day">Settings</string>
     <string name="main_menu_start_job">Start work</string>
     <string name="main_menu_stop_job">Stop work</string>
     <string name="main_menu_task_list">Task list</string>
     <string name="main_menu_withdraw_money">Withdraw money</string>
+
     <string name="settings_title">Settings</string>
     <string name="settings_set_sms_per_day">Set sms count per day</string>
-    <string name="settings_first_sim_slot_sms_count_hint">Fisrt sms slot</string>
-    <string name="settings_secound_sim_slot_sms_count_hint">Secound sim slot</string>
+    <string name="settings_first_sim_slot_sms_count_hint">Fist sms slot</string>
+    <string name="settings_secound_sim_slot_sms_count_hint">Second sim slot</string>
     <string name="settings_set_sms_per_day_button">Apply</string>
     <string name="settings_on_success_updated">Success</string>
+
+    <string name="intro_welcome_title">Great</string>
+    <string name="intro_welcome_label">You had just opened the account</string>
+    <string name="intro_welcome_to_desc">To properly work app you have make setup.\nPlease click \"next\" button to start setup</string>
+    <string name="intro_welcome_next_btn_title">Next</string>
+
+    <string name="intro_permissions_title">Allow Permission</string>
+    <string name="intro_permissions_label">We need sms and phone state permissions for background sending sms</string>
+    <string name="intro_permissions_to_desc">If you allow please click \"allow\" button</string>
+    <string name="intro_permissions_next_btn_title">Allow</string>
+
+    <string name="intro_app_as_default_title">Set app as default sms app</string>
+    <string name="intro_app_as_default_label">App has to be as default sms app for controlling black list</string>
+    <string name="intro_app_as_default_to_desc">If you allow please click \"setup\" button and than select this app</string>
+    <string name="intro_app_as_default_next_btn_title">setup</string>
+    <string name="task_list_loading_text">Loading</string>
 
 </resources>

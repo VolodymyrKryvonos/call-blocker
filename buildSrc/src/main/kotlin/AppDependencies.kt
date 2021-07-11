@@ -37,6 +37,11 @@ object AppDependencies {
         add("com.squareup.okhttp3:logging-interceptor:4.9.1")
     }
 
+    val paged = arrayListOf<String>().apply {
+        add("androidx.paging:paging-runtime:${Version.paging_version}")
+        add("androidx.paging:paging-compose:1.0.0-alpha11")
+    }
+
     const val okhttp = "com.squareup.okhttp3:okhttp:4.9.1"
 
     val db = ":db"

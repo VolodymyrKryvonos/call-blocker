@@ -92,7 +92,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     3 -> stringResource(id = R.string.main_menu_withdraw_money)
                     else -> stringResource(id = R.string.main_menu_set_sms_per_day)
                 },
-                isEnable = arrayListOf(1, 4).contains(i)
+                isEnable = arrayListOf(1, 4, 2).contains(i)
             ) {
                 if (i == 1) {
                     if (isExecutorRunning)
@@ -102,6 +102,8 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 }
                 else if (i == 4)
                     navController.navigate("settings")
+                else if (i == 2)
+                    navController.navigate("task_list")
             }
         }
     }

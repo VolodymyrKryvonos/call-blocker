@@ -1,6 +1,7 @@
 package com.call_blocke.app.screen.auth
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -53,14 +54,10 @@ fun AuthScreen(mViewModel: AuthViewModel = viewModel()) {
 
         NavHost(navController = navController, startDestination = "login") {
             composable("login") {
-                EnterAnimation {
-                    LoginScreen(navController = navController, mViewModel = mViewModel)
-                }
+                LoginScreen(navController = navController, mViewModel = mViewModel)
             }
             composable("register") {
-                EnterAnimation {
-                    RegisterScreen(navController = navController, mViewModel = mViewModel)
-                }
+                RegisterScreen(navController = navController, mViewModel = mViewModel)
             }
         }
     }
@@ -86,20 +83,4 @@ fun Header(currentRoute: String) {
         "login" -> R.string.login_label
         else -> R.string.register_label
     }), color = accentColor.copy(alpha = 0.5f))
-}
-
-@ExperimentalAnimationApi
-@Composable
-fun EnterAnimation(content: @Composable () -> Unit) {
-    AnimatedVisibility(
-        visible = true,
-        enter = slideInVertically(
-            initialOffsetY = { -40 }
-        ) + expandVertically(
-            expandFrom = Alignment.Top
-        ) + fadeIn(initialAlpha = 0.3f),
-        exit = slideOutVertically() + shrinkVertically() + fadeOut(),
-        content = content,
-        initiallyVisible = false
-    )
 }

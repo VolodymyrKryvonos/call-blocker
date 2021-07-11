@@ -1,5 +1,6 @@
 package com.call_blocke.db.entity
 
+import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy.IGNORE
@@ -20,5 +21,8 @@ interface TaskDao {
 
     @Query("select * from task where processAt = 0 and deliveredAt = 0")
     suspend fun toProcessList(): List<TaskEntity>
+
+    @Query("select * from task order by bufferedAt desc")
+    fun taskList(): DataSource.Factory<Int, TaskEntity>
 
 }

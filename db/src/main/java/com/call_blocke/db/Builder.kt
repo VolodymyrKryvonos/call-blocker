@@ -35,6 +35,12 @@ object SmsBlockerDatabase {
     val taskDao: TaskDao
         get() = (database ?: throw Exception("please init db module")).taskDao()
 
+    var lastSimSlotUsed: Int
+        get() = (preference ?: throw Exception("please init db module")).lastSimSlotUsed
+        set(value) {
+            preference?.lastSimSlotUsed = value
+        }
+
     @SuppressLint("HardwareIds")
     fun init(context: Context) {
         preference = Preference(context)

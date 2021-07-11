@@ -50,4 +50,13 @@ class Preference(context: Context) {
             }
         }
 
+    var lastSimSlotUsed: Int
+        get() = sharedPreferences.getInt("last_sim_slot_used", 0)
+        set(value) {
+            with (sharedPreferences.edit()) {
+                putInt("last_sim_slot_used", value)
+                commit()
+            }
+        }
+
 }

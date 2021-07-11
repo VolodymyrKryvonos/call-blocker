@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
+import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.RepositoryBuilder
@@ -30,7 +31,6 @@ class TaskExecutorService : Service() {
 
     companion object {
         val isRunning = MutableLiveData(false)
-        private var lastSimSlot = -1
         fun start(context: Context) {
             context.startService(Intent(context, TaskExecutorService::class.java))
         }
@@ -38,6 +38,12 @@ class TaskExecutorService : Service() {
             context.stopService(Intent(context, TaskExecutorService::class.java))
         }
     }
+
+    private var lastSimSlot
+        get() = SmsBlockerDatabase.lastSimSlotUsed
+        set(value) {
+            SmsBlockerDatabase.lastSimSlotUsed = value
+        }
 
     private val sentRegisterName = "SMS_SENT"
 

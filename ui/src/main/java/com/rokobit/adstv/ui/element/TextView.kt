@@ -24,11 +24,12 @@ import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.secondaryColor
 
 @Composable
-fun Title(text: String) = Text(
+fun Title(text: String, contentAlignment: TextAlign = TextAlign.Start) = Text(
     text = text,
     fontSize = 32.sp,
     fontFamily = mainFont,
     color = primaryColor,
+    textAlign = contentAlignment
     //modifier = Modifier.animateContentSize()
 )
 

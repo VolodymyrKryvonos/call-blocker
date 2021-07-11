@@ -34,4 +34,6 @@ dependencies {
 
     implementation(AppDependencies.gson)
     implementation(AppDependencies.security)
+
+    implementation(AppDependencies.paged)
 }
