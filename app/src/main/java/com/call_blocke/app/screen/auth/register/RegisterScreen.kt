@@ -73,13 +73,13 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
 
     Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
 
-    Field(
+    /*Field(
         hint = stringResource(id = R.string.register_user_name_field),
         value = userNameValue,
         isEnable = false,
     )
 
-    Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
+    Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)*/
 
     Field(
         hint = stringResource(id = R.string.register_password_field),
@@ -97,7 +97,7 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
         isEnable = !isProgress.value
     )
 
-    Divider(modifier = Modifier.height(primaryDimens * 2), color = Color.Transparent)
+    Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)
 
     Button(
         title = stringResource(id = R.string.register_next_button),

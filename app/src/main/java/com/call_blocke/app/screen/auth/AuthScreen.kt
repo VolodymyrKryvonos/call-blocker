@@ -48,7 +48,7 @@ fun AuthScreen(mViewModel: AuthViewModel = viewModel()) {
             currentBackStackEntry?.destination?.route ?: ""
         )
 
-        Divider(modifier = Modifier.height(primaryDimens * 2), color = Color.Transparent)
+        Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)
 
         //val isSuccessLogin: Boolean? by mViewModel.isSuccessLogin.observeAsState(null)
 
@@ -69,7 +69,7 @@ fun Header(currentRoute: String) {
         painter = painterResource(R.drawable.logo),
         contentDescription = null,
         modifier = Modifier.requiredSize(
-            size = primaryDimens * 6
+            size = primaryDimens * 3
         )
     )
 

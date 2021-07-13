@@ -1,5 +1,6 @@
 package com.call_blocke.a_repository.model
 
+import com.call_blocke.db.SmsBlockerDatabase
 import com.google.gson.annotations.SerializedName
 
 data class SmsPerDayRequest(
@@ -16,5 +17,8 @@ data class SmsPerDayRequest(
     val secondSimName: String,
 
     @SerializedName("country_code")
-    val countryCode: String
+    val countryCode: String,
+
+    @SerializedName("unique_id")
+    val uniqueId: String = SmsBlockerDatabase.deviceID
 )

@@ -24,7 +24,7 @@
     <string name="main_menu_start_job">Start work</string>
     <string name="main_menu_stop_job">Stop work</string>
     <string name="main_menu_task_list">Task list</string>
-    <string name="main_menu_withdraw_money">Withdraw money</string>
+    <string name="main_menu_withdraw_money">Account</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_set_sms_per_day">Set sms count per day</string>

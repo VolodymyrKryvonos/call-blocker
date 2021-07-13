@@ -16,10 +16,10 @@ interface TaskDao {
     @Update
     suspend fun update(data: TaskEntity)
 
-    @Query("select * from task where confirmAt = 0 and deliveredAt > 0")
+    @Query("select * from task where confirmAt = 0")
     suspend fun toConfirmList(): List<TaskEntity>
 
-    @Query("select * from task where processAt = 0 and deliveredAt = 0")
+    @Query("select * from task where processAt = 0")
     suspend fun toProcessList(): List<TaskEntity>
 
     @Query("select * from task order by bufferedAt desc")

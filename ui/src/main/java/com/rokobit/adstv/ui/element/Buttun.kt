@@ -15,10 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.rokobit.adstv.ui.accentColor
-import com.rokobit.adstv.ui.primaryColor
+import com.rokobit.adstv.ui.*
 import com.rokobit.adstv.ui.primaryDimens
-import com.rokobit.adstv.ui.secondaryColor
 
 @Composable
 fun Button(
@@ -45,7 +43,7 @@ fun Button(
                 colors = ButtonDefaults.outlinedButtonColors(
                     backgroundColor = primaryColor.copy(alpha = if (isEnable) 1f else 0.5f)
                 ),
-                contentPadding = PaddingValues(primaryDimens),
+                contentPadding = PaddingValues(secondaryDimens),
                 modifier = modifier
             ) {
                 TextNormal(

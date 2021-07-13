@@ -65,11 +65,9 @@ abstract class TaskRepository {
             }
 
             if (isOk) {
-                task.apply {
+                updateTask(task.apply {
                     confirmAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
-                }.also {
-                    updateTask(it)
-                }
+                })
             }
         }
     }

@@ -48,10 +48,10 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val emailValue = remember {
-        mutableStateOf("neka1dev@gmail.com")
+        mutableStateOf("")
     }
     val passwordValue = remember {
-        mutableStateOf("12345678")
+        mutableStateOf("")
     }
 
     val isProgress = mViewModel.isLoading.observeAsState(false)
@@ -72,7 +72,7 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
         isError = isSuccessLogin == false
     )
 
-    Divider(modifier = Modifier.height(primaryDimens * 2), color = Color.Transparent)
+    Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)
 
     Button(
         title = stringResource(id = R.string.login_next_button),

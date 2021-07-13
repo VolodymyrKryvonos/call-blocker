@@ -13,6 +13,6 @@ interface TaskRest {
     suspend fun tasks(@Body data: TasksRequest): ApiResponse<List<TaskResponse>>
 
     @POST("sms/deliver")
-    suspend fun confirmStatus(@Body data: TaskStatusRequest): ApiResponse<String>
+    suspend fun confirmStatus(@Body data: TaskStatusRequest)
 
 }

@@ -73,7 +73,8 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
     val context = LocalContext.current
 
     LazyVerticalGrid(
-        cells = GridCells.Fixed(2)
+        cells = GridCells.Adaptive(150.dp),
+        contentPadding = PaddingValues(primaryDimens / 2)
     ) {
         items(4) {
             val i = it + 1
@@ -81,7 +82,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 icon = when (i) {
                     1 -> if (isExecutorRunning) Icons.Filled.Close else Icons.Filled.PlayArrow
                     2 -> Icons.Filled.List
-                    3 -> Icons.Filled.ShoppingCart
+                    3 -> Icons.Filled.AccountCircle
                     else -> Icons.Filled.Settings
                 },
                 title = when (i) {
@@ -117,8 +118,9 @@ fun MenuItem(icon: ImageVector,
              onClick: () -> Unit) {
     Card(
         modifier = Modifier
-            .requiredSize(200.dp)
-            .padding(primaryDimens),
+           // .size(100.dp)
+            .wrapContentSize()
+            .padding(primaryDimens / 2),
         shape = RoundedCornerShape(15),
         backgroundColor = secondaryColor,
         elevation = 6.dp,
