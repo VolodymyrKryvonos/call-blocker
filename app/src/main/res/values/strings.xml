@@ -19,12 +19,16 @@
     <string name="register_or_text">or</string>
     <string name="register_login_button">Login</string>
 
-    <string name="main_header_title">Amount:</string>
+    <string name="main_header_amount">Amount:</string>
+    <string name="main_header_left_count">Left:</string>
+    <string name="main_header_delivered_count">Delivered:</string>
+    <string name="main_header_undelivered_count">Undelivered:</string>
     <string name="main_menu_set_sms_per_day">Settings</string>
     <string name="main_menu_start_job">Start work</string>
     <string name="main_menu_stop_job">Stop work</string>
     <string name="main_menu_task_list">Task list</string>
     <string name="main_menu_withdraw_money">Account</string>
+    <string name="main_menu_black_list">Black list</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_set_sms_per_day">Set sms count per day</string>
@@ -48,5 +52,6 @@
     <string name="intro_app_as_default_to_desc">If you allow please click \"setup\" button and than select this app</string>
     <string name="intro_app_as_default_next_btn_title">setup</string>
     <string name="task_list_loading_text">Loading</string>
+    <string name="black_list_remove_item_btn_title">Remove</string>
 
 </resources>

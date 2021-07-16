@@ -2,8 +2,11 @@ package com.call_blocke.rest_work_imp
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
+import android.net.Uri
 import android.provider.BlockedNumberContract
 import com.call_blocke.db.SmsBlockerDatabase
+import android.provider.BlockedNumberContract.BlockedNumbers
 
 abstract class SettingsRepository {
 
@@ -49,5 +52,28 @@ abstract class SettingsRepository {
     protected abstract suspend fun updateSmsPerDay(context: Context)
 
     protected abstract suspend fun blackPhoneNumberList(): List<String>
+
+    fun blackList(context: Context): List<String> {
+        val c: Cursor = context.contentResolver.query(
+            BlockedNumbers.CONTENT_URI, arrayOf(
+                BlockedNumbers.COLUMN_ORIGINAL_NUMBER
+            ), null, null, null
+        ) ?: return emptyList()
+
+        val data = arrayListOf<String>()
+
+        while (c.moveToNext()) {
+            data.add(c.getString(0))
+        }
+
+        return data
+    }
+
+    fun removeFromBlackList(context: Context, phoneNumber: String) {
+        val values = ContentValues()
+        values.put(BlockedNumbers.COLUMN_ORIGINAL_NUMBER, phoneNumber)
+        val uri: Uri = context.contentResolver.insert(BlockedNumbers.CONTENT_URI, values)!!
+        context.contentResolver.delete(uri, null, null)
+    }
 
 }

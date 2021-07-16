@@ -24,7 +24,8 @@ val PERMISSIONS_REQUIRED = arrayOf(
     Manifest.permission.RECEIVE_SMS,
     Manifest.permission.RECEIVE_WAP_PUSH,
     Manifest.permission.SEND_SMS,
-    Manifest.permission.READ_PHONE_STATE
+    Manifest.permission.READ_PHONE_STATE,
+    Manifest.permission.ACCESS_NETWORK_STATE
 )
 
 class SplashViewModel : ViewModel() {

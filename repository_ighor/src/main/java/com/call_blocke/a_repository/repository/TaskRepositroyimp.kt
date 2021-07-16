@@ -1,4 +1,4 @@
-package com.call_blocke.a_repository
+package com.call_blocke.a_repository.repository
 
 import com.call_blocke.a_repository.model.TaskStatusRequest
 import com.call_blocke.a_repository.model.TasksRequest
@@ -12,11 +12,7 @@ class TaskRepositoryImp: TaskRepository() {
     private val taskRest = ApiRepositoryHelper.createRest(TaskRest::class.java)
 
     override suspend fun loadTasks(): List<TaskEntity> {
-        return taskRest.tasks(TasksRequest(
-            campaign = "App SMS",
-            connectionType = "WIFI",
-            carrier = ""
-        )).data.flatMap {
+        return taskRest.tasks(TasksRequest()).data.flatMap {
             it.smsList
         }.map {
             TaskEntity(

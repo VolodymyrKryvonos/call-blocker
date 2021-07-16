@@ -4,7 +4,9 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import androidx.room.Room
+import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocke.db.entity.TaskDao
+import com.google.gson.Gson
 
 object SmsBlockerDatabase {
     private var preference: Preference? = null
@@ -39,6 +41,12 @@ object SmsBlockerDatabase {
         get() = (preference ?: throw Exception("please init db module")).lastSimSlotUsed
         set(value) {
             preference?.lastSimSlotUsed = value
+        }
+
+    var systemDetail: SystemDetailEntity
+        get() = (preference ?: throw Exception("please init db module")).systemDetail
+        set(value) {
+           preference?.systemDetail = value
         }
 
     @SuppressLint("HardwareIds")

@@ -2,6 +2,7 @@ package com.call_blocke.rest_work_imp
 
 import android.content.Context
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.entity.SystemDetailEntity
 
 abstract class UserRepository {
 
@@ -20,6 +21,8 @@ abstract class UserRepository {
      * @return auth token
      */
     protected abstract suspend fun doRegister(email: String, password: String, context: Context): String
+
+    protected abstract suspend fun  loadSystemDetail(): SystemDetailEntity
 
     /**
      * @param email is accounts`s login field
@@ -61,6 +64,9 @@ abstract class UserRepository {
         return userToken != null
     }
 
-
+    suspend fun systemDetail(): SystemDetailEntity {
+        SmsBlockerDatabase.systemDetail = loadSystemDetail()
+        return SmsBlockerDatabase.systemDetail
+    }
 
 }

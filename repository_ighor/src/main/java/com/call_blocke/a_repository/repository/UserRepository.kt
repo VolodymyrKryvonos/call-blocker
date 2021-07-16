@@ -1,13 +1,12 @@
-package com.call_blocke.a_repository
+package com.call_blocke.a_repository.repository
 
 import android.content.Context
-import com.call_blocke.a_repository.model.LoginRequest
-import com.call_blocke.a_repository.model.RegisterRequest
 import com.call_blocke.a_repository.rest.UserRest
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.UserRepository
 import android.os.Build
-
+import com.call_blocke.a_repository.model.*
+import com.call_blocke.db.entity.SystemDetailEntity
 
 class UserRepositoryImp : UserRepository() {
 
@@ -45,6 +44,21 @@ class UserRepositoryImp : UserRepository() {
                 deviceBrand = Build.BRAND
             )
         ).data.success.token
+    }
+
+    override suspend fun loadSystemDetail(): SystemDetailEntity {
+        val data = try {
+            userRest.userInfo(TasksRequest())
+        } catch (e: Exception) {
+            null
+        }?.data?.user ?: return SmsBlockerDatabase.systemDetail
+
+        return SystemDetailEntity(
+            leftCount = data.details.leftCount,
+            deliveredCount = data.details.deliveredCount,
+            undeliveredCount = data.details.undeliveredCount,
+            amount = data.calculation
+        )
     }
 
 }

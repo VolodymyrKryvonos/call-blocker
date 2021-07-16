@@ -22,6 +22,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.call_blocke.app.R
+import com.call_blocke.app.screen.black_list.BlackListScreen
 import com.call_blocke.app.screen.intro.IntroScreen
 import com.call_blocke.app.screen.main.MainScreen
 import com.call_blocke.app.screen.settings.SettingsScreen
@@ -90,6 +91,9 @@ fun Main() {
         }
         composable("task_list") {
             TaskListScreen()
+        }
+        composable("black_list") {
+            BlackListScreen()
         }
     }
 }

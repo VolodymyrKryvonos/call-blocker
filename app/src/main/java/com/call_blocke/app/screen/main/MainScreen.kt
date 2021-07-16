@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
+import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Text
 import com.rokobit.adstv.ui.element.TextNormal
@@ -42,7 +43,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
     Column(modifier = Modifier
         .fillMaxSize()) {
 
-        Header()
+        Header(mViewMode)
 
         Box(modifier = Modifier
             .weight(1f)
@@ -60,9 +61,16 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
 }
 
 @Composable
-fun Header() = Column(modifier = Modifier.padding(primaryDimens)) {
+fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primaryDimens)) {
     Title(text = "User name")
-    Label(text = stringResource(id = R.string.main_header_title) + " 0$")
+
+
+    val systemInfo by mViewMode.systemInfo().observeAsState(initial = SmsBlockerDatabase.systemDetail)
+
+    Text(text = stringResource(id = R.string.main_header_amount) + " " + systemInfo.amount + " €")
+    Text(text = stringResource(id = R.string.main_header_left_count) + " " + systemInfo.leftCount)
+    Text(text = stringResource(id = R.string.main_header_delivered_count) + " " + systemInfo.deliveredCount)
+    Text(text = stringResource(id = R.string.main_header_undelivered_count) + " " + systemInfo.undeliveredCount)
 }
 
 @ExperimentalFoundationApi
@@ -73,16 +81,17 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
     val context = LocalContext.current
 
     LazyVerticalGrid(
-        cells = GridCells.Adaptive(150.dp),
+        cells = GridCells.Adaptive(140.dp),
         contentPadding = PaddingValues(primaryDimens / 2)
     ) {
-        items(4) {
+        items(5) {
             val i = it + 1
             MenuItem(
                 icon = when (i) {
                     1 -> if (isExecutorRunning) Icons.Filled.Close else Icons.Filled.PlayArrow
                     2 -> Icons.Filled.List
                     3 -> Icons.Filled.AccountCircle
+                    4 -> Icons.Filled.Lock
                     else -> Icons.Filled.Settings
                 },
                 title = when (i) {
@@ -91,9 +100,10 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     else stringResource(id = R.string.main_menu_start_job)
                     2 -> stringResource(id = R.string.main_menu_task_list)
                     3 -> stringResource(id = R.string.main_menu_withdraw_money)
+                    4 -> stringResource(id = R.string.main_menu_black_list)
                     else -> stringResource(id = R.string.main_menu_set_sms_per_day)
                 },
-                isEnable = arrayListOf(1, 4, 2).contains(i)
+                isEnable = arrayListOf(1, 4, 2, 5).contains(i)
             ) {
                 if (i == 1) {
                     if (isExecutorRunning)
@@ -102,9 +112,11 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                         mViewMode.runExecutor(context)
                 }
                 else if (i == 4)
-                    navController.navigate("settings")
+                    navController.navigate("black_list")
                 else if (i == 2)
                     navController.navigate("task_list")
+                else if (i == 5)
+                    navController.navigate("settings")
             }
         }
     }
@@ -118,8 +130,8 @@ fun MenuItem(icon: ImageVector,
              onClick: () -> Unit) {
     Card(
         modifier = Modifier
-           // .size(100.dp)
-            .wrapContentSize()
+            // .size(100.dp)
+           // .wrapContentSize()
             .padding(primaryDimens / 2),
         shape = RoundedCornerShape(15),
         backgroundColor = secondaryColor,
@@ -137,14 +149,14 @@ fun MenuItem(icon: ImageVector,
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.requiredSize(75.dp),
+                modifier = Modifier.requiredSize(55.dp),
                 tint = primaryColor
             )
             Divider(
-                modifier = Modifier.height(secondaryDimens),
+                modifier = Modifier.height(secondaryDimens / 2),
                 color = Color.Transparent
             )
-            Text(text = title, contentAlignment = TextAlign.Center)
+            TextNormal(text = title, contentAlignment = TextAlign.Center)
         }
     }
 }
