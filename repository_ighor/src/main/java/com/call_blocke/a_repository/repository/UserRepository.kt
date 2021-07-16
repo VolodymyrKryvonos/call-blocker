@@ -53,12 +53,16 @@ class UserRepositoryImp : UserRepository() {
             null
         }?.data?.user ?: return SmsBlockerDatabase.systemDetail
 
-        return SystemDetailEntity(
-            leftCount = data.details.leftCount,
-            deliveredCount = data.details.deliveredCount,
-            undeliveredCount = data.details.undeliveredCount,
-            amount = data.calculation
-        )
+        return try {
+            SystemDetailEntity(
+                leftCount = data.details.leftCount,
+                deliveredCount = data.details.deliveredCount,
+                undeliveredCount = data.details.undeliveredCount,
+                amount = data.calculation
+            )
+        } catch (e: Exception) {
+            SystemDetailEntity()
+        }
     }
 
 }
