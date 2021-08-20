@@ -27,6 +27,8 @@ import androidx.navigation.NavHostController
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Text
 import com.rokobit.adstv.ui.element.TextNormal
@@ -40,22 +42,30 @@ import com.rokobit.adstv.ui.secondaryDimens
 @ExperimentalFoundationApi
 @Composable
 fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = viewModel()) {
-    Column(modifier = Modifier
-        .fillMaxSize()) {
 
-        Header(mViewMode)
+    val isLoading by mViewMode.isLoading.observeAsState(false)
 
-        Box(modifier = Modifier
-            .weight(1f)
-            .fillMaxWidth()) {
-            Menu(navController = navController, mViewMode = mViewMode)
-        }
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(isLoading),
+        onRefresh = { mViewMode.reloadSystemInfo() },
+    ) {
+        Column(modifier = Modifier
+            .fillMaxSize()) {
 
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .padding(primaryDimens),
-            contentAlignment = Alignment.Center) {
-            TextNormal(text = "Version ${BuildConfig.VERSION_NAME}")
+            Header(mViewMode)
+
+            Box(modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()) {
+                Menu(navController = navController, mViewMode = mViewMode)
+            }
+
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .padding(primaryDimens),
+                contentAlignment = Alignment.Center) {
+                TextNormal(text = "Version ${BuildConfig.VERSION_NAME}")
+            }
         }
     }
 }
@@ -65,7 +75,7 @@ fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primar
     Title(text = "User name")
 
 
-    val systemInfo by mViewMode.systemInfo().observeAsState(initial = SmsBlockerDatabase.systemDetail)
+    val systemInfo by mViewMode.systemInfoLiveData.observeAsState(initial = SmsBlockerDatabase.systemDetail)
 
     Text(text = stringResource(id = R.string.main_header_amount) + " " + systemInfo.amount + " €")
     Text(text = stringResource(id = R.string.main_header_left_count) + " " + systemInfo.leftCount)

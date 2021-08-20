@@ -14,16 +14,17 @@ import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.core.app.NotificationCompat
 import androidx.lifecycle.MutableLiveData
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
-import com.call_blocke.rest_work_imp.RepositoryBuilder
 import com.call_blocke.rest_work_imp.SimUtil
 import kotlinx.coroutines.*
 import java.lang.Runnable
+import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -45,11 +46,11 @@ class TaskExecutorService : Service() {
             SmsBlockerDatabase.lastSimSlotUsed = value
         }
 
-    private val sentRegisterName = "SMS_SENT"
-
     private val taskRepository = RepositoryImp.taskRepository
 
     private val settingsRepository = RepositoryImp.settingsRepository
+
+    private val userRepository = RepositoryImp.userRepository
 
     private val mHandler = Handler(Looper.myLooper()!!)
 
@@ -77,15 +78,16 @@ class TaskExecutorService : Service() {
     @DelicateCoroutinesApi
     private fun doWork() {
         GlobalScope.launch(Dispatchers.IO) {
+            //taskRepository.deleteUnProcessed()
+
             taskRepository.reloadTasks()
 
             val tasks = taskRepository.toProcessList()
 
             Log.d("TaskExecutorService", "tasks is $tasks")
 
-            var delay = 1000L
             tasks.forEach { task ->
-                delay(delay)
+                delay(2 * 1000L)
 
                 updateSimSlot()
 
@@ -96,22 +98,39 @@ class TaskExecutorService : Service() {
                     simSlot = lastSimSlot
                 )
 
-                val isOK = sendSms(simInfo, task)
+                var isOK = sendSms(applicationContext, simInfo, task)
+
+                if (!isOK && SimUtil.getSIMInfo(applicationContext).size > 1) {
+                    updateSimSlot()
+                    taskRepository.taskOnProcess(
+                        taskEntity = task,
+                        simSlot = lastSimSlot
+                    )
+                    isOK = sendSms(applicationContext, SimUtil.getSIMInfo(applicationContext)[lastSimSlot], task)
+                }
 
                 if (isOK)
                     taskRepository.taskOnDelivered(task)
                 else
                     taskRepository.taskOnError(task)
 
-                delay += 1000L
+                taskRepository.confirmTasksStatus()
             }
 
-            taskRepository.confirmTasksStatus()
+            if (tasks.isNotEmpty()) {
+                settingsRepository.reloadBlackList(applicationContext)
 
-            settingsRepository.reloadBlackList(applicationContext)
+                val systemDetail = userRepository.systemDetail()
+
+                if (systemDetail.deliveredCount >= (
+                            settingsRepository.currentSmsContFirstSimSlot +
+                                    settingsRepository.currentSmsContSecondSimSlot)) {
+                    notifySmsLimitDone()
+                }
+            }
 
             if (isRunning.value == true)
-                mHandler.postDelayed(worker, 10 * 1000L)
+                mHandler.postDelayed(worker, (if (tasks.isEmpty()) 10 else 1) * 1000L)
         }
     }
 
@@ -130,37 +149,6 @@ class TaskExecutorService : Service() {
         lastSimSlot = 0
     }
 
-    private suspend fun sendSms(simInfo: SubscriptionInfo, task: TaskEntity): Boolean = suspendCoroutine { cont ->
-        val smsManager: SmsManager = try {
-            SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            cont.resume(false)
-            return@suspendCoroutine
-        }
-
-        val sentStatusIntent = Intent(sentRegisterName)
-
-        object : BroadcastReceiver() {
-            override fun onReceive(arg0: Context, arg1: Intent) {
-                cont.resume(resultCode == Activity.RESULT_OK)
-                unregisterReceiver(this)
-            }
-        }.also {
-            registerReceiver(it, IntentFilter(sentRegisterName))
-        }
-
-        val sentPI = PendingIntent.getBroadcast(this, task.id, sentStatusIntent, 0)
-
-        smsManager.sendTextMessage(
-            task.sendTo,
-            null,
-            task.message,
-            sentPI,
-            null
-        )
-    }
-
     private fun startForeground() {
         val pendingIntent: PendingIntent =
             Intent(this, MainActivity::class.java).let { notificationIntent ->
@@ -168,11 +156,7 @@ class TaskExecutorService : Service() {
             }
 
         val channelId =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                createNotificationChannel("my_service", "My Background Service")
-            } else {
-                ""
-            }
+            createNotificationChannel("my_service", "My Background Service")
 
         val notification: Notification = Notification.Builder(this, channelId)
             .setContentTitle("Task executor")
@@ -197,4 +181,57 @@ class TaskExecutorService : Service() {
         service.createNotificationChannel(chan)
         return channelId
     }
+
+    private fun notifySmsLimitDone() {
+        val channelId =
+            createNotificationChannel("my_service", "My Background Service")
+
+        val notification: Notification = Notification.Builder(this, channelId)
+            .setContentTitle(applicationContext.getString(R.string.service_sms_limit_done_title))
+            .setContentText(applicationContext.getString(R.string.service_sms_limit_done_desc))
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .build()
+
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        notificationManager.notify(1, notification)
+    }
+}
+
+suspend fun sendSms(context: Context, simInfo: SubscriptionInfo, task: TaskEntity): Boolean {
+    return sendSms(context, simInfo, task.sendTo, task.message)
+}
+
+suspend fun sendSms(context: Context, simInfo: SubscriptionInfo, address: String, text: String): Boolean = suspendCoroutine { cont ->
+    val sentRegisterName = "SMS_SENT"
+
+    val smsManager: SmsManager = try {
+        SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        cont.resume(false)
+        return@suspendCoroutine
+    }
+
+    val sentStatusIntent = Intent(sentRegisterName)
+
+    object : BroadcastReceiver() {
+        override fun onReceive(arg0: Context, arg1: Intent) {
+            cont.resume(resultCode == Activity.RESULT_OK)
+            context.unregisterReceiver(this)
+        }
+    }.also {
+        context.registerReceiver(it, IntentFilter(sentRegisterName))
+    }
+
+    val sentPI = PendingIntent.getBroadcast(context, address.hashCode(), sentStatusIntent, 0)
+
+    smsManager.sendTextMessage(
+        address,
+        null,
+        text,
+        sentPI,
+        null
+    )
 }

@@ -11,10 +11,10 @@ abstract class TaskRepository {
 
     protected abstract suspend fun loadTasks(): List<TaskEntity>
 
-    protected abstract suspend fun confirmTask(data: TaskEntity)
+    protected abstract suspend fun confirmTask(data: List<TaskEntity>)
 
     suspend fun reloadTasks() {
-        confirmTasksStatus()
+        //confirmTasksStatus()
 
         val tasks = try {
            loadTasks()
@@ -54,24 +54,32 @@ abstract class TaskRepository {
 
     suspend fun toProcessList() = taskDao.toProcessList()
 
-    suspend fun confirmTasksStatus() {
-        taskDao.toConfirmList().forEach { task ->
-            val isOk = try {
-                confirmTask(task)
-                true
-            } catch (e: Exception) {
-                e.printStackTrace()
-                false
-            }
+    suspend fun deleteUnProcessed() = taskDao.deleteUnProcessed()
 
-            if (isOk) {
-                updateTask(task.apply {
-                    confirmAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
-                })
-            }
+    suspend fun confirmTasksStatus() {
+        val toConfirmList = taskDao.toConfirmList()
+
+        if (toConfirmList.isEmpty())
+            return
+
+        try {
+            confirmTask(toConfirmList)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return
+        }
+
+        toConfirmList.forEach { task ->
+            updateTask(task.apply {
+                confirmAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
+            })
         }
     }
 
     fun taskList() = taskDao.taskList().asPagingSourceFactory()
+
+    //suspend fun findReplay(rInMsisdn: String, tText: String) = taskDao.findReplay(rInMsisdn, tText)
+
+    /*suspend fun clearReplay() = taskDao.deleteReplay()*/
 
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Sms Blocker</string>
+    <string name="app_name">BottegaSms</string>
 
     <string name="login_title">Welcome</string>
 
@@ -53,5 +53,7 @@
     <string name="intro_app_as_default_next_btn_title">setup</string>
     <string name="task_list_loading_text">Loading</string>
     <string name="black_list_remove_item_btn_title">Remove</string>
+    <string name="service_sms_limit_done_title">Task manager</string>
+    <string name="service_sms_limit_done_desc">Limit of sms per day havve been done</string>
 
 </resources>

@@ -44,10 +44,14 @@ class MainActivity : ComponentActivity() {
                             brush = backgroundBrush
                         )
                 ) {
-                    if (SmsBlockerDatabase.userToken == null)
-                        AuthView()
-                    else
+                    val isUserAuth by SmsBlockerDatabase
+                        .userIsAuthLiveData
+                        .observeAsState(initial = SmsBlockerDatabase.userToken != null)
+
+                    if (isUserAuth)
                         MainView()
+                    else
+                        AuthView()
                 }
             }
         }

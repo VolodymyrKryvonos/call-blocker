@@ -40,6 +40,7 @@ private fun TaskItemView(item: TaskEntity) = Card(
 ) {
 
     Column(modifier = Modifier.padding(primaryDimens)) {
+        Text(text = "Sms id: ${item.id}")
         Text(text = "Send to: ${item.sendTo}")
         Text(text = "Status: ${item.status.name}")
         Text(text = "Sim id: ${item.simSlot}")

@@ -23,9 +23,9 @@ class SettingsRepositoryImp : SettingsRepository() {
         settingsRest.setSmsPerDay(SmsPerDayRequest(
             forSimFirst  = currentSmsContFirstSimSlot,
             forSimSecond = currentSmsContSecondSimSlot,
-            firstSimName = simInfo[0].displayName.toString(),
+            firstSimName = if (simInfo.isNotEmpty()) simInfo[0].displayName.toString() else "default",
             secondSimName = if (simInfo.size > 1) simInfo[1].displayName.toString() else "none",
-            countryCode = simInfo[0].countryIso
+            countryCode = if (simInfo.isNotEmpty()) simInfo[0].countryIso else "default"
         ))
     }
 

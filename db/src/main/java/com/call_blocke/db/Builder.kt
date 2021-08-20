@@ -3,6 +3,7 @@ package com.call_blocke.db
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
+import androidx.lifecycle.MutableLiveData
 import androidx.room.Room
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocke.db.entity.TaskDao
@@ -13,10 +14,17 @@ object SmsBlockerDatabase {
 
     private var database: AppDatabase? = null
 
+    val userIsAuthLiveData = MutableLiveData(false)
+
     var userToken: String?
-        get() = (preference ?: throw Exception("please init db module")).userToken
+        get() {
+            val tok = (preference ?: throw Exception("please init db module")).userToken
+            userIsAuthLiveData.postValue(tok != null)
+            return tok
+        }
         set(value) {
             preference?.userToken = value
+            userIsAuthLiveData.postValue(value != null)
         }
 
     val deviceID: String

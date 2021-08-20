@@ -28,6 +28,9 @@ object AppDependencies {
         add( "androidx.compose.foundation:foundation:${Version.compose}")
         // Material Design
         add( "androidx.compose.material:material:${Version.compose}")
+
+        add("com.google.accompanist:accompanist-swiperefresh:0.14.0")
+
     }
 
     val rest = arrayListOf<String>().apply {

@@ -1,5 +1,6 @@
 package com.call_blocke.a_repository.repository
 
+import com.call_blocke.a_repository.model.ConfirmStatusRequest
 import com.call_blocke.a_repository.model.TaskStatusRequest
 import com.call_blocke.a_repository.model.TasksRequest
 import com.call_blocke.a_repository.rest.TaskRest
@@ -23,16 +24,20 @@ class TaskRepositoryImp: TaskRepository() {
         }
     }
 
-    override suspend fun confirmTask(data: TaskEntity) {
-        taskRest.confirmStatus(TaskStatusRequest(
-            id = data.id,
-            error = if (data.status == TaskStatus.DELIVERED)
-                "SUCCESS"
-            else "Generic failure error",
-            statusCode = if (data.status == TaskStatus.DELIVERED) 1 else 0,
-            simId = if (data.simSlot == 0)
-                "msisdn_1"
-            else "msisdn_2"
+    override suspend fun confirmTask(data: List<TaskEntity>) {
+        taskRest.confirmStatus(ConfirmStatusRequest(
+            data = data.map {
+                TaskStatusRequest(
+                    id = it.id,
+                    error = if (it.status == TaskStatus.DELIVERED)
+                        "SUCCESS"
+                    else "Generic failure error",
+                    statusCode = if (it.status == TaskStatus.DELIVERED) 1 else 0,
+                    simId = if (it.simSlot == 0)
+                        "msisdn_1"
+                    else "msisdn_2"
+                )
+            }
         ))
     }
 }

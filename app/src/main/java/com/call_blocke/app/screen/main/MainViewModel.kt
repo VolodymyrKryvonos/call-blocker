@@ -16,11 +16,13 @@ class MainViewModel : ViewModel() {
 
     val taskExecutorIsRunning = TaskExecutorService.isRunning
 
+    val systemInfoLiveData = MutableLiveData(SmsBlockerDatabase.systemDetail)
+
+    val isLoading = MutableLiveData(false)
+
     private val userRepository by lazy {
         RepositoryImp.userRepository
     }
-
-    private val mHandler = Handler(Looper.getMainLooper())
 
     fun runExecutor(context: Context) {
         TaskExecutorService.start(context = context)
@@ -30,21 +32,16 @@ class MainViewModel : ViewModel() {
         TaskExecutorService.stop(context = context)
     }
 
-    fun systemInfo(): LiveData<SystemDetailEntity> {
-        val data = MutableLiveData(SmsBlockerDatabase.systemDetail)
+    fun reloadSystemInfo() {
+        viewModelScope.launch(Dispatchers.IO) {
+            isLoading.postValue(true)
 
-        var run: Runnable? = null
+            val systemDetail = userRepository.systemDetail()
 
-        run = Runnable {
-            viewModelScope.launch(Dispatchers.IO) {
-                data.postValue(userRepository.systemDetail())
-            }
-            mHandler.postDelayed(run!!, TimeUnit.SECONDS.toMillis(10L))
+            isLoading.postValue(false)
+
+            systemInfoLiveData.postValue(systemDetail)
         }
-
-        run.run()
-
-        return data
     }
 
 }
