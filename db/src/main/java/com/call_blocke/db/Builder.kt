@@ -19,7 +19,6 @@ object SmsBlockerDatabase {
     var userToken: String?
         get() {
             val tok = (preference ?: throw Exception("please init db module")).userToken
-            userIsAuthLiveData.postValue(tok != null)
             return tok
         }
         set(value) {
@@ -72,5 +71,7 @@ object SmsBlockerDatabase {
             context,
             AppDatabase::class.java, "call_blocker_db"
         ).build()
+
+        userIsAuthLiveData.postValue(userToken != null)
     }
 }

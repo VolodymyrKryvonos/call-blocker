@@ -11,9 +11,9 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 50,
-      "versionName": "2.0.50",
-      "outputFile": "sms-sender-v2.0.50.apk"
+      "versionCode": 52,
+      "versionName": "2.0.52",
+      "outputFile": "sms-sender-v2.0.52.apk"
     }
   ],
   "elementType": "File"

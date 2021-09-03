@@ -63,14 +63,7 @@ class MainActivity : ComponentActivity() {
     @ExperimentalAnimationApi
     @Composable
     fun AuthView(mViewModel: AuthViewModel = viewModel()) {
-        val isSuccessLogin: Boolean? by mViewModel.isSuccessLogin.observeAsState(initial = null)
-
-        Crossfade(targetState = isSuccessLogin) {
-            if (it == true)
-                MainView()
-            else
-                AuthScreen(mViewModel)
-        }
+        AuthScreen(mViewModel)
     }
 
     @ExperimentalComposeUiApi

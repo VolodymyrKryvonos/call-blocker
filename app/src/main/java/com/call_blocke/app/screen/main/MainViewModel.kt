@@ -44,4 +44,9 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun logOut(context: Context) {
+        stopExecutor(context = context)
+        userRepository.logOut()
+    }
+
 }

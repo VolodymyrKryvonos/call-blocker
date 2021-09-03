@@ -14,7 +14,6 @@ import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
 import androidx.lifecycle.MutableLiveData
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
@@ -40,10 +39,26 @@ class TaskExecutorService : Service() {
         }
     }
 
-    private var lastSimSlot
-        get() = SmsBlockerDatabase.lastSimSlotUsed
-        set(value) {
-            SmsBlockerDatabase.lastSimSlotUsed = value
+    private val simInfo: Pair<Int, SubscriptionInfo>?
+        get() {
+            val simList = SimUtil.getSIMInfo(applicationContext)
+            if (simList.isEmpty())
+                return null
+            if (simList.size == 1)
+                return Pair(0, simList[0])
+
+            val pair = Pair(
+                SmsBlockerDatabase.lastSimSlotUsed,
+                simList[SmsBlockerDatabase.lastSimSlotUsed]
+            )
+
+            SmsBlockerDatabase.lastSimSlotUsed.let {
+                if (it == 0)
+                    SmsBlockerDatabase.lastSimSlotUsed = 1
+                SmsBlockerDatabase.lastSimSlotUsed = 0
+            }
+
+            return pair
         }
 
     private val taskRepository = RepositoryImp.taskRepository
@@ -89,24 +104,25 @@ class TaskExecutorService : Service() {
             tasks.forEach { task ->
                 delay(2 * 1000L)
 
-                updateSimSlot()
-
-                val simInfo: SubscriptionInfo = SimUtil.getSIMInfo(applicationContext)[lastSimSlot]
+                var simInfoN = simInfo ?: return@launch
 
                 taskRepository.taskOnProcess(
                     taskEntity = task,
-                    simSlot = lastSimSlot
+                    simSlot = simInfoN.first
                 )
 
-                var isOK = sendSms(applicationContext, simInfo, task)
+                var isOK = sendSms(applicationContext, simInfoN.second, task)
 
                 if (!isOK && SimUtil.getSIMInfo(applicationContext).size > 1) {
-                    updateSimSlot()
+
+                    simInfoN = simInfo ?: return@launch
+
                     taskRepository.taskOnProcess(
                         taskEntity = task,
-                        simSlot = lastSimSlot
+                        simSlot = simInfoN.first
                     )
-                    isOK = sendSms(applicationContext, SimUtil.getSIMInfo(applicationContext)[lastSimSlot], task)
+
+                    isOK = sendSms(applicationContext, simInfoN.second, task)
                 }
 
                 if (isOK)
@@ -137,16 +153,6 @@ class TaskExecutorService : Service() {
     @DelicateCoroutinesApi
     private val worker = Runnable {
         doWork()
-    }
-
-    private fun updateSimSlot() {
-        val sims = SimUtil.getSIMInfo(applicationContext)
-
-        if (sims.size > 1) {
-            lastSimSlot = if (lastSimSlot == 0) 1 else 0
-        }
-
-        lastSimSlot = 0
     }
 
     private fun startForeground() {

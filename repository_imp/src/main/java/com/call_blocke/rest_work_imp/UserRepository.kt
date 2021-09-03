@@ -69,4 +69,8 @@ abstract class UserRepository {
         return SmsBlockerDatabase.systemDetail
     }
 
+    fun logOut() {
+        SmsBlockerDatabase.userToken = null
+    }
+
 }

@@ -24,6 +24,7 @@
     <string name="main_header_delivered_count">Delivered:</string>
     <string name="main_header_undelivered_count">Undelivered:</string>
     <string name="main_menu_set_sms_per_day">Settings</string>
+    <string name="main_menu_log_out">log out</string>
     <string name="main_menu_start_job">Start work</string>
     <string name="main_menu_stop_job">Stop work</string>
     <string name="main_menu_task_list">Task list</string>
