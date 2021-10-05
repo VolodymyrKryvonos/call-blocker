@@ -94,15 +94,15 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
         cells = GridCells.Adaptive(140.dp),
         contentPadding = PaddingValues(primaryDimens / 2)
     ) {
-        items(6) {
+        items(5) {
             val i = it + 1
             MenuItem(
                 icon = when (i) {
                     1 -> if (isExecutorRunning) Icons.Filled.Close else Icons.Filled.PlayArrow
                     2 -> Icons.Filled.List
-                    3 -> Icons.Filled.AccountCircle
-                    4 -> Icons.Filled.Lock
-                    5 -> Icons.Filled.Settings
+                    3 -> Icons.Filled.Lock
+                    4 -> Icons.Filled.Settings
+                    5 -> Icons.Filled.Refresh
                     else -> Icons.Filled.ExitToApp
                 },
                 title = when (i) {
@@ -110,9 +110,9 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                         stringResource(id = R.string.main_menu_stop_job)
                     else stringResource(id = R.string.main_menu_start_job)
                     2 -> stringResource(id = R.string.main_menu_task_list)
-                    3 -> stringResource(id = R.string.main_menu_withdraw_money)
-                    4 -> stringResource(id = R.string.main_menu_black_list)
-                    5 -> stringResource(id = R.string.main_menu_set_sms_per_day)
+                    3 -> stringResource(id = R.string.main_menu_black_list)
+                    4 -> stringResource(id = R.string.main_menu_set_sms_per_day)
+                    5 -> stringResource(id = R.string.main_menu_refresh_full)
                     else -> stringResource(id = R.string.main_menu_log_out)
                 },
                 isEnable = arrayListOf(1, 4, 2, 5, 6).contains(i)
@@ -123,12 +123,14 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     else
                         mViewMode.runExecutor(context)
                 }
-                else if (i == 4)
+                else if (i == 3)
                     navController.navigate("black_list")
                 else if (i == 2)
                     navController.navigate("task_list")
-                else if (i == 5)
+                else if (i == 4)
                     navController.navigate("settings")
+                else if (i == 5)
+                    navController.navigate("refresh")
                 else if (i == 6)
                     mViewMode.logOut(context = context)
             }

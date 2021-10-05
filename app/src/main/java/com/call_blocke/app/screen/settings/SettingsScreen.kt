@@ -50,20 +50,25 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
             color = Color.Transparent
         )
 
-        val smsOneCountValue = remember {
-            mutableStateOf(mViewModel.fistSimSlotSmsCount.toString())
-        }
-
-        val smsTwoCountValue = remember {
-            mutableStateOf(mViewModel.secondSimSlotSmsCount.toString())
-        }
-
         val isFirstSimAllow = remember {
             mViewModel.isFirstSimAllow(context)
         }
 
         val isSecondSimAllow = remember {
             mViewModel.isSecondSimAllow(context)
+        }
+
+        val smsOneCountValue = remember {
+            mutableStateOf(mViewModel.fistSimSlotSmsCount.toString())
+        }
+
+        val smsTwoCountValue = remember {
+            mutableStateOf(
+                if (isSecondSimAllow)
+                    mViewModel.secondSimSlotSmsCount.toString()
+                else
+                    "0"
+            )
         }
 
         Field(

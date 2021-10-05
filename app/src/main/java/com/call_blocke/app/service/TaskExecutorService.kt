@@ -42,8 +42,10 @@ class TaskExecutorService : Service() {
     private val simInfo: Pair<Int, SubscriptionInfo>?
         get() {
             val simList = SimUtil.getSIMInfo(applicationContext)
+
             if (simList.isEmpty())
                 return null
+
             if (simList.size == 1)
                 return Pair(0, simList[0])
 
@@ -55,7 +57,8 @@ class TaskExecutorService : Service() {
             SmsBlockerDatabase.lastSimSlotUsed.let {
                 if (it == 0)
                     SmsBlockerDatabase.lastSimSlotUsed = 1
-                SmsBlockerDatabase.lastSimSlotUsed = 0
+                else
+                    SmsBlockerDatabase.lastSimSlotUsed = 0
             }
 
             return pair
@@ -135,6 +138,18 @@ class TaskExecutorService : Service() {
 
             if (tasks.isNotEmpty()) {
                 settingsRepository.reloadBlackList(applicationContext)
+
+                //val blackList = settingsRepository.blackList(applicationContext)
+
+                val replayInPhoneList = taskRepository.replayInPhoneList()
+
+                replayInPhoneList.forEach {
+                    try {
+                        settingsRepository.removeFromBlackList(applicationContext, it)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
 
                 val systemDetail = userRepository.systemDetail()
 

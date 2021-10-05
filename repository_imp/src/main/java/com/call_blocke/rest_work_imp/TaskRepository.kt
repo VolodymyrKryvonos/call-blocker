@@ -9,6 +9,8 @@ abstract class TaskRepository {
 
     private val taskDao = SmsBlockerDatabase.taskDao
 
+    private val replayTaskDao = SmsBlockerDatabase.replayDao
+
     protected abstract suspend fun loadTasks(): List<TaskEntity>
 
     protected abstract suspend fun confirmTask(data: List<TaskEntity>)
@@ -78,8 +80,10 @@ abstract class TaskRepository {
 
     fun taskList() = taskDao.taskList().asPagingSourceFactory()
 
-    //suspend fun findReplay(rInMsisdn: String, tText: String) = taskDao.findReplay(rInMsisdn, tText)
+    suspend fun findReplay(rInMsisdn: String, tText: String) = replayTaskDao.find(rInMsisdn, tText)
 
-    /*suspend fun clearReplay() = taskDao.deleteReplay()*/
+    suspend fun clearReplay() = replayTaskDao.deleteAll()
+
+    suspend fun replayInPhoneList() = replayTaskDao.rInPhoneList()
 
 }

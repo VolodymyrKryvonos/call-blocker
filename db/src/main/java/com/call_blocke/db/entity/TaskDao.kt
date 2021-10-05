@@ -11,7 +11,7 @@ import androidx.room.Update
 @Dao
 interface TaskDao {
 
-    @Insert(onConflict = REPLACE)
+    @Insert(onConflict = IGNORE)
     suspend fun save(data: List<TaskEntity>)
 
     @Update

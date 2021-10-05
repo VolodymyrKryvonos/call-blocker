@@ -19,17 +19,38 @@ class SmsReceiver : BroadcastReceiver() {
 
     private val taskRepository = RepositoryImp.taskRepository
 
-    private var lastSimSlot
-        get() = SmsBlockerDatabase.lastSimSlotUsed
-        set(value) {
-            SmsBlockerDatabase.lastSimSlotUsed = value
+    private fun simInfo(context: Context): Pair<Int, SubscriptionInfo>? {
+        val simList = SimUtil.getSIMInfo(context)
+
+        if (simList.isEmpty())
+            return null
+
+        if (simList.size == 1)
+            return Pair(0, simList[0])
+
+        val pair = Pair(
+            SmsBlockerDatabase.lastSimSlotUsed,
+            simList[SmsBlockerDatabase.lastSimSlotUsed]
+        )
+
+        SmsBlockerDatabase.lastSimSlotUsed.let {
+            if (it == 0)
+                SmsBlockerDatabase.lastSimSlotUsed = 1
+            else
+                SmsBlockerDatabase.lastSimSlotUsed = 0
         }
+
+        return pair
+    }
 
     @DelicateCoroutinesApi
     override fun onReceive(context: Context?, intent: Intent?) {
-        val extras = intent!!.extras
+        if (context == null || intent == null)
+            return
 
-        /*GlobalScope.launch(Dispatchers.IO) {
+        val extras = intent.extras
+
+        GlobalScope.launch(Dispatchers.IO) {
             val smsExtras = extras!!["pdus"] as Array<*>
 
             for (smsExtra in smsExtras) {
@@ -38,33 +59,18 @@ class SmsReceiver : BroadcastReceiver() {
                 val replay = taskRepository.findReplay(
                     smsMessage.originatingAddress.toString(),
                     smsMessage.messageBody
+                ) ?: continue
+
+                val simInfo: SubscriptionInfo = simInfo(context = context)!!.second
+
+                sendSms(
+                    context = context,
+                    simInfo = simInfo,
+                    address = replay.rOutMsisdn,
+                    text = replay.rTextReply
                 )
-
-                val simInfo: SubscriptionInfo = SimUtil.getSIMInfo(context)[lastSimSlot]
-
-                if (context != null) {
-                    updateSimSlot(context)
-
-                    sendSms(
-                        context = context,
-                        simInfo = simInfo,
-                        address = replay.rOutMsisdn,
-                        text = replay.rTextReply
-                    )
-
-                }
             }
-        }*/
-
-    }
-
-    private fun updateSimSlot(context: Context) {
-        val sims = SimUtil.getSIMInfo(context)
-
-        if (sims.size > 1) {
-            lastSimSlot = if (lastSimSlot == 0) 1 else 0
         }
-
-        lastSimSlot = 0
     }
+
 }

@@ -50,7 +50,8 @@ class UserRepositoryImp : UserRepository() {
         val data = try {
             userRest.userInfo(TasksRequest())
         } catch (e: Exception) {
-            SmsBlockerDatabase.userToken = null
+
+           // SmsBlockerDatabase.userToken = null
             null
         }?.data?.user ?: return SmsBlockerDatabase.systemDetail
 

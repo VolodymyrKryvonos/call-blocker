@@ -38,9 +38,9 @@ abstract class SettingsRepository {
         list.forEach {
             try {
                 val values = ContentValues()
-                values.put(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER, it)
+                values.put(BlockedNumbers.COLUMN_ORIGINAL_NUMBER, it)
                 val uri = context.contentResolver.insert(
-                    BlockedNumberContract.BlockedNumbers.CONTENT_URI,
+                    BlockedNumbers.CONTENT_URI,
                     values
                 )
             } catch (e: java.lang.Exception) {
@@ -52,6 +52,8 @@ abstract class SettingsRepository {
     protected abstract suspend fun updateSmsPerDay(context: Context)
 
     protected abstract suspend fun blackPhoneNumberList(): List<String>
+
+    abstract suspend fun refreshDataForSim(simSlot: Int)
 
     fun blackList(context: Context): List<String> {
         val c: Cursor = context.contentResolver.query(

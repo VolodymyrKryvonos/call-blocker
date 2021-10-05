@@ -30,6 +30,7 @@
     <string name="main_menu_task_list">Task list</string>
     <string name="main_menu_withdraw_money">Account</string>
     <string name="main_menu_black_list">Black list</string>
+    <string name="main_menu_refresh_full">Reset full</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_set_sms_per_day">Set sms count per day</string>
@@ -37,6 +38,9 @@
     <string name="settings_secound_sim_slot_sms_count_hint">Second sim slot</string>
     <string name="settings_set_sms_per_day_button">Apply</string>
     <string name="settings_on_success_updated">Success</string>
+
+    <string name="refresh_full_title">Reset full</string>
+    <string name="refresh_full_label">Choose sim slot to reset</string>
 
     <string name="intro_welcome_title">Great</string>
     <string name="intro_welcome_label">You had just opened the account</string>
