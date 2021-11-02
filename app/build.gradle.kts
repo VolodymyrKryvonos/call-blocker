@@ -43,7 +43,18 @@ android {
                 outputs.forEach { output ->
                     if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
                         output.outputFileName =
-                            "sms-sender-v${versionName}.${output.outputFile.extension}"
+                            "sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                    }
+                }
+            }
+        }
+
+        debug {
+            applicationVariants.all {
+                outputs.forEach { output ->
+                    if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                        output.outputFileName =
+                            "sms-sender-local-v${versionName}.${output.outputFile.extension}"
                     }
                 }
             }

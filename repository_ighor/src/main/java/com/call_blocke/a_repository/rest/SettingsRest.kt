@@ -15,4 +15,7 @@ interface SettingsRest {
 
     @POST("apps/reset-count-sim")
     suspend fun resetSim(@Body model: RefreshDataForSimRequest)
+
+    @POST("apps/get-sim-info")
+    suspend fun simInfo(@Body model: SimInfoRequest = SimInfoRequest()): ApiResponse<SimInfoResponse>
 }

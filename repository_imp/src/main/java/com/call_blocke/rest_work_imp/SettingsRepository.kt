@@ -55,6 +55,8 @@ abstract class SettingsRepository {
 
     abstract suspend fun refreshDataForSim(simSlot: Int)
 
+    abstract suspend fun simInfo(): List<FullSimInfoModel>
+
     fun blackList(context: Context): List<String> {
         val c: Cursor = context.contentResolver.query(
             BlockedNumbers.CONTENT_URI, arrayOf(

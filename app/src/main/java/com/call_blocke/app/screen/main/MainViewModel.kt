@@ -24,6 +24,8 @@ class MainViewModel : ViewModel() {
         RepositoryImp.userRepository
     }
 
+    val deviceID = userRepository.deviceID
+
     fun runExecutor(context: Context) {
         TaskExecutorService.start(context = context)
     }

@@ -81,6 +81,10 @@ fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primar
     Text(text = stringResource(id = R.string.main_header_left_count) + " " + systemInfo.leftCount)
     Text(text = stringResource(id = R.string.main_header_delivered_count) + " " + systemInfo.deliveredCount)
     Text(text = stringResource(id = R.string.main_header_undelivered_count) + " " + systemInfo.undeliveredCount)
+
+    Spacer(modifier = Modifier.height(primaryDimens))
+
+    Text(text = mViewMode.deviceID)
 }
 
 @ExperimentalFoundationApi
@@ -94,7 +98,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
         cells = GridCells.Adaptive(140.dp),
         contentPadding = PaddingValues(primaryDimens / 2)
     ) {
-        items(5) {
+        items(7) {
             val i = it + 1
             MenuItem(
                 icon = when (i) {
@@ -103,6 +107,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     3 -> Icons.Filled.Lock
                     4 -> Icons.Filled.Settings
                     5 -> Icons.Filled.Refresh
+                    6 -> Icons.Filled.Info
                     else -> Icons.Filled.ExitToApp
                 },
                 title = when (i) {
@@ -113,9 +118,10 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     3 -> stringResource(id = R.string.main_menu_black_list)
                     4 -> stringResource(id = R.string.main_menu_set_sms_per_day)
                     5 -> stringResource(id = R.string.main_menu_refresh_full)
+                    6 -> stringResource(id = R.string.main_menu_sim_info)
                     else -> stringResource(id = R.string.main_menu_log_out)
                 },
-                isEnable = arrayListOf(1, 4, 2, 5, 6).contains(i)
+                isEnable = true
             ) {
                 if (i == 1) {
                     if (isExecutorRunning)
@@ -132,6 +138,8 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 else if (i == 5)
                     navController.navigate("refresh")
                 else if (i == 6)
+                    navController.navigate("sim_info")
+                else if (i == 7)
                     mViewMode.logOut(context = context)
             }
         }

@@ -46,8 +46,9 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
     if (isLoading) {
         CircularProgressIndicator()
     } else {
-        
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally) {
             mViewModel.firstSim(context)?.let {
                 SimSlotBtn(simName = it.carrierName.toString()) {
                     mViewModel.reset(0)
@@ -62,15 +63,16 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
                 }
             }
         }
-        
     }
     
 }
 
 @ExperimentalMaterialApi
 @Composable
-private fun SimSlotBtn(simName: String, onClick: () -> Unit) = Card(modifier = Modifier
-    /*.padding(primaryDimens)*/,
+private fun SimSlotBtn(simName: String, onClick: () -> Unit) = Card(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(primaryDimens),
     shape = RoundedCornerShape(15),
     backgroundColor = secondaryColor,
     elevation = 6.dp,
@@ -85,7 +87,7 @@ private fun SimSlotBtn(simName: String, onClick: () -> Unit) = Card(modifier = M
             imageVector = Icons.Filled.Call,
             contentDescription = null,
             modifier = Modifier.size(
-                primaryDimens * 2
+                primaryDimens * 3
             )
         )
 

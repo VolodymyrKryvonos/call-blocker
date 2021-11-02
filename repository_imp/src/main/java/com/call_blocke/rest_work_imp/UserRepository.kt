@@ -73,4 +73,6 @@ abstract class UserRepository {
         SmsBlockerDatabase.userToken = null
     }
 
+    val deviceID = SmsBlockerDatabase.deviceID
+
 }

@@ -3,6 +3,7 @@ package com.call_blocke.app.screen.refresh_full
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
@@ -14,6 +15,12 @@ class RefreshViewModel : ViewModel() {
     private val settingsRepository = RepositoryImp.settingsRepository
 
     val onLoading = MutableLiveData(false)
+
+    fun simsInfo() = liveData(Dispatchers.IO) {
+        emit(
+            settingsRepository.simInfo()
+        )
+    }
 
     fun firstSim(context: Context) = if (
         SimUtil.getSIMInfo(context).isNotEmpty()

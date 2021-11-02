@@ -5,6 +5,7 @@ import com.call_blocke.a_repository.model.RefreshDataForSimRequest
 import com.call_blocke.a_repository.model.SmsPerDayRequest
 import com.call_blocke.a_repository.model.TasksRequest
 import com.call_blocke.a_repository.rest.SettingsRest
+import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocke.rest_work_imp.SimUtil
 
@@ -45,5 +46,36 @@ class SettingsRepositoryImp : SettingsRepository() {
             else
                 "msisdn_2"
         ))
+    }
+
+    override suspend fun simInfo(): List<FullSimInfoModel> {
+        try {
+            val sims = arrayListOf<FullSimInfoModel>()
+            val data = settingsRest.simInfo()
+
+            data.data.simFirst?.let {
+                sims.add(
+                    FullSimInfoModel(
+                        simDate = it.updatedAt,
+                        simDelivered = it.delivered,
+                        simPerDay = it.smsPerDay,
+                    )
+                )
+            }
+
+            data.data.simSecond?.let {
+                sims.add(
+                    FullSimInfoModel(
+                        simDate = it.updatedAt,
+                        simDelivered = it.delivered,
+                        simPerDay = it.smsPerDay,
+                    )
+                )
+            }
+
+            return sims
+        } catch (e: Exception) {
+        }
+        return emptyList()
     }
 }

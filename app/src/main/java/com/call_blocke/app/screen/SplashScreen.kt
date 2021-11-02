@@ -27,6 +27,7 @@ import com.call_blocke.app.screen.intro.IntroScreen
 import com.call_blocke.app.screen.main.MainScreen
 import com.call_blocke.app.screen.refresh_full.RefreshScreen
 import com.call_blocke.app.screen.settings.SettingsScreen
+import com.call_blocke.app.screen.sim_info.SimInfoScreen
 import com.call_blocke.app.screen.task_list.TaskListScreen
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
@@ -98,6 +99,9 @@ fun Main() {
         }
         composable("refresh") {
             RefreshScreen()
+        }
+        composable("sim_info") {
+            SimInfoScreen()
         }
     }
 }

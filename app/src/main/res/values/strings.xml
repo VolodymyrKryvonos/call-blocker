@@ -31,6 +31,7 @@
     <string name="main_menu_withdraw_money">Account</string>
     <string name="main_menu_black_list">Black list</string>
     <string name="main_menu_refresh_full">Reset full</string>
+    <string name="main_menu_sim_info">Sims info</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_set_sms_per_day">Set sms count per day</string>
@@ -40,7 +41,7 @@
     <string name="settings_on_success_updated">Success</string>
 
     <string name="refresh_full_title">Reset full</string>
-    <string name="refresh_full_label">Choose sim slot to reset</string>
+    <string name="refresh_full_label">Choose sim card to reset</string>
 
     <string name="intro_welcome_title">Great</string>
     <string name="intro_welcome_label">You had just opened the account</string>
@@ -60,5 +61,7 @@
     <string name="black_list_remove_item_btn_title">Remove</string>
     <string name="service_sms_limit_done_title">Task manager</string>
     <string name="service_sms_limit_done_desc">Limit of sms per day havve been done</string>
+
+    <string name="sim_info_title">SIM Card information</string>
 
 </resources>

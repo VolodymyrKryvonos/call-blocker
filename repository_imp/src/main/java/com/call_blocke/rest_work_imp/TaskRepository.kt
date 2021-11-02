@@ -3,6 +3,7 @@ package com.call_blocke.rest_work_imp
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 abstract class TaskRepository {
@@ -27,6 +28,8 @@ abstract class TaskRepository {
 
         taskDao.save(tasks)
     }
+
+    protected suspend fun save(data: List<TaskEntity>) = taskDao.save(data)
 
     private suspend fun updateTask(taskEntity: TaskEntity) {
         taskDao.update(taskEntity)
@@ -86,4 +89,5 @@ abstract class TaskRepository {
 
     suspend fun replayInPhoneList() = replayTaskDao.rInPhoneList()
 
+    abstract fun taskListMessage(): Flow<List<TaskEntity>>
 }

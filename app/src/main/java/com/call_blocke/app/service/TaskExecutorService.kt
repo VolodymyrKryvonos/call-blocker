@@ -22,11 +22,15 @@ import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEach
 import java.lang.Runnable
 import java.util.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
+@DelicateCoroutinesApi
 class TaskExecutorService : Service() {
 
     companion object {
@@ -70,44 +74,40 @@ class TaskExecutorService : Service() {
 
     private val userRepository = RepositoryImp.userRepository
 
-    private val mHandler = Handler(Looper.myLooper()!!)
+    private val taskList = taskRepository.taskListMessage()
+
+    private var job: Job? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground()
 
         isRunning.postValue(true)
 
-        doWork()
+        job = GlobalScope.launch(Dispatchers.IO) {
+            doWork()
+        }
 
         return super.onStartCommand(intent, flags, startId)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        mHandler.removeCallbacks(worker)
         isRunning.postValue(false)
+        job?.cancel()
+        taskList.cancellable()
     }
 
-    @DelicateCoroutinesApi
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
     @DelicateCoroutinesApi
-    private fun doWork() {
-        GlobalScope.launch(Dispatchers.IO) {
-            //taskRepository.deleteUnProcessed()
-
-            taskRepository.reloadTasks()
-
-            val tasks = taskRepository.toProcessList()
-
+    private suspend fun doWork() {
+        taskList.collect { tasks ->
             Log.d("TaskExecutorService", "tasks is $tasks")
 
-            tasks.forEach { task ->
-                delay(2 * 1000L)
-
-                var simInfoN = simInfo ?: return@launch
+            for (task in tasks) {
+                var simInfoN = simInfo ?: return@collect
 
                 taskRepository.taskOnProcess(
                     taskEntity = task,
@@ -118,7 +118,7 @@ class TaskExecutorService : Service() {
 
                 if (!isOK && SimUtil.getSIMInfo(applicationContext).size > 1) {
 
-                    simInfoN = simInfo ?: return@launch
+                    simInfoN = simInfo ?: return@collect
 
                     taskRepository.taskOnProcess(
                         taskEntity = task,
@@ -159,15 +159,7 @@ class TaskExecutorService : Service() {
                     notifySmsLimitDone()
                 }
             }
-
-            if (isRunning.value == true)
-                mHandler.postDelayed(worker, (if (tasks.isEmpty()) 10 else 1) * 1000L)
         }
-    }
-
-    @DelicateCoroutinesApi
-    private val worker = Runnable {
-        doWork()
     }
 
     private fun startForeground() {
