@@ -9,9 +9,17 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillNode
+import androidx.compose.ui.autofill.AutofillType
+import androidx.compose.ui.composed
 import androidx.compose.ui.focus.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalAutofill
+import androidx.compose.ui.platform.LocalAutofillTree
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
@@ -67,6 +75,7 @@ fun TextNormal(text: String,
     textAlign = contentAlignment
 )
 
+@ExperimentalComposeUiApi
 @Composable
 fun Field(
     hint: String,
@@ -75,7 +84,8 @@ fun Field(
     visualTransformation: VisualTransformation = VisualTransformation.None,
     value: MutableState<String> = remember {
         mutableStateOf("")
-    }
+    },
+    autofillTypes: List<AutofillType> = emptyList()
 ) {
     val shape = RoundedCornerShape(20)
 
@@ -100,7 +110,11 @@ fun Field(
         shape = shape,
         singleLine = true,
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .autofill(
+                autofillTypes = autofillTypes,
+                onFill = { value.value = it },
+            ),
         colors = TextFieldDefaults.outlinedTextFieldColors(),
         leadingIcon = {
             Icon(
@@ -111,4 +125,26 @@ fun Field(
         visualTransformation = visualTransformation,
         isError = isError
     )
+}
+
+@ExperimentalComposeUiApi
+fun Modifier.autofill(
+    autofillTypes: List<AutofillType>,
+    onFill: ((String) -> Unit),
+) = composed {
+    val autofill = LocalAutofill.current
+    val autofillNode = AutofillNode(onFill = onFill, autofillTypes = autofillTypes)
+    LocalAutofillTree.current += autofillNode
+
+    this.onGloballyPositioned {
+        autofillNode.boundingBox = it.boundsInWindow()
+    }.onFocusChanged { focusState ->
+        autofill?.run {
+            if (focusState.isFocused) {
+                requestAutofillForNode(autofillNode)
+            } else {
+                cancelAutofillForNode(autofillNode)
+            }
+        }
+    }
 }

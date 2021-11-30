@@ -13,11 +13,38 @@ class Preference(context: Context) {
         Context.MODE_PRIVATE
     )
 
+    var userPassword: String?
+        get() = sharedPreferences.getString("userPassword", null)
+        set(value) {
+            with (sharedPreferences.edit()) {
+                putString("userPassword", value)
+                commit()
+            }
+        }
+
+    var userName: String?
+        get() = sharedPreferences.getString("userName", null)
+        set(value) {
+            with (sharedPreferences.edit()) {
+                putString("userName", value)
+                commit()
+            }
+        }
+
     var userToken: String?
         get() = sharedPreferences.getString("user_token", null)
         set(value) {
             with (sharedPreferences.edit()) {
                 putString("user_token", value)
+                commit()
+            }
+        }
+
+    var isSimChanged: Boolean
+        get() = sharedPreferences.getBoolean("isSimChanged", false)
+        set(value) {
+            with (sharedPreferences.edit()) {
+                putBoolean("isSimChanged", value)
                 commit()
             }
         }

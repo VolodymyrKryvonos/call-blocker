@@ -31,4 +31,6 @@ dependencies {
     implementation(project(":repository_imp"))
 
     implementation(project(":repository_ighor"))
+
+    implementation (project(":loger"))
 }

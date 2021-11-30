@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.call_blocke.app">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -13,8 +14,27 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"
+        tools:ignore="ProtectedPermissions" />
+
+    <!-- @SystemApi @hide Allows an application to call APIs that allow it to do interactions
+     across the users on the device, using singleton services and
+     user-targeted broadcasts.  This permission is not available to
+     third party applications. -->
+    <permission android:name="android.permission.INTERACT_ACROSS_USERS"
+        android:protectionLevel="signature|system|privileged" />
+
+    <!-- @hide Fuller form of {@link android.Manifest.permission#INTERACT_ACROSS_USERS}
+         that removes restrictions on where broadcasts can be sent and allows other
+         types of interactions. -->
+    <permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL"
+        android:protectionLevel="signature" />
 
     <uses-feature android:name="android.hardware.telephony" />
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".SmsApp"
@@ -25,7 +45,8 @@
         android:supportsRtl="true"
         android:theme="@style/App"
         android:usesCleartextTraffic="true"
-        android:fullBackupContent="false">
+        android:fullBackupContent="false"
+        android:requestLegacyExternalStorage="true">
 
         <activity
             android:name=".SplashActivity"
@@ -85,6 +106,13 @@
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
 
                 <data android:mimeType="application/vnd.wap.mms-message" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".broad_cast.SimSlotReceiver"
+            android:exported="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SIM_STATE_CHANGED" />
             </intent-filter>
         </receiver>
 

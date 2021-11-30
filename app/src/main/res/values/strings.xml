@@ -64,4 +64,8 @@
 
     <string name="sim_info_title">SIM Card information</string>
 
+
+    <string name="sim_slot_change_title">Warning</string>
+    <string name="sim_slot_change_desc">SIM card has been changed. Please reset the SIM</string>
+
 </resources>

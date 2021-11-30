@@ -24,6 +24,16 @@ class MainViewModel : ViewModel() {
         RepositoryImp.userRepository
     }
 
+    private val taskRepository by lazy {
+        RepositoryImp.taskRepository
+    }
+
+    val isServerOnline = taskRepository.serverConnectStatus()
+
+    fun userName() = userRepository.userName()
+
+    fun userPassword() = userRepository.userPassword()
+
     val deviceID = userRepository.deviceID
 
     fun runExecutor(context: Context) {

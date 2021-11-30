@@ -3,10 +3,8 @@ package com.call_blocke.app.broad_cast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import android.telephony.SmsMessage
 import android.telephony.SubscriptionInfo
-import com.call_blocke.app.service.sendSms
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
@@ -63,12 +61,12 @@ class SmsReceiver : BroadcastReceiver() {
 
                 val simInfo: SubscriptionInfo = simInfo(context = context)!!.second
 
-                sendSms(
+                /*sendSms(
                     context = context,
                     simInfo = simInfo,
                     address = replay.rOutMsisdn,
                     text = replay.rTextReply
-                )
+                )*/
             }
         }
     }

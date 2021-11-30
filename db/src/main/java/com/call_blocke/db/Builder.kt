@@ -17,6 +17,17 @@ object SmsBlockerDatabase {
 
     val userIsAuthLiveData = MutableLiveData(false)
 
+    val onSimChanged = MutableLiveData(false)
+
+    var isSimChanged: Boolean
+        get() {
+            return (preference ?: throw Exception("please init db module")).isSimChanged
+        }
+        set(value) {
+            preference?.isSimChanged = value
+            onSimChanged.postValue(value)
+        }
+
     var userToken: String?
         get() {
             val tok = (preference ?: throw Exception("please init db module")).userToken
@@ -25,6 +36,24 @@ object SmsBlockerDatabase {
         set(value) {
             preference?.userToken = value
             userIsAuthLiveData.postValue(value != null)
+        }
+
+    var userPassword: String
+        get() {
+            val tok = (preference ?: throw Exception("please init db module")).userPassword
+            return tok ?: "unknow"
+        }
+        set(value) {
+            preference?.userPassword = value
+        }
+
+    var userName: String
+        get() {
+            val tok = (preference ?: throw Exception("please init db module")).userName
+            return tok ?: "unknow"
+        }
+        set(value) {
+            preference?.userName = value
         }
 
     val deviceID: String

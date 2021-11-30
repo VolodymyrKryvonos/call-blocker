@@ -1,5 +1,7 @@
 package com.call_blocke.app.screen.sim_info
 
+import android.content.ContentResolver
+import android.provider.Settings
 import android.telephony.SubscriptionInfo
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,6 +10,7 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -17,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.refresh_full.RefreshViewModel
 import com.call_blocke.rest_work_imp.FullSimInfoModel
+import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor
@@ -32,14 +36,16 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
 
     Title(text = stringResource(id = R.string.sim_info_title))
 
+    val resolver: ContentResolver = context.contentResolver
+
     Spacer(modifier = Modifier.height(24.dp))
 
-    val sims = mViewModel.simsInfo().observeAsState(initial = null)
+    val sims by mViewModel.simsInfo().observeAsState(initial = null)
 
-    if (sims.value == null)
+    if (sims == null)
         CircularProgressIndicator()
     else {
-        for ((index, fullSimInfoModel) in sims.value!!.withIndex()) {
+        for ((index, fullSimInfoModel) in sims!!.withIndex()) {
 
             if (index == 0) {
                 mViewModel.firstSim(context = context)?.let {
@@ -69,6 +75,7 @@ private fun SimInfoCard(info: SubscriptionInfo, data: FullSimInfoModel) = Card(
     elevation = 6.dp,
     onClick = {},
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -82,7 +89,7 @@ private fun SimInfoCard(info: SubscriptionInfo, data: FullSimInfoModel) = Card(
 
         Row {
             Text(text = "IMSI:", modifier = Modifier.weight(1f))
-            Text(text = info.number.toString())
+            Text(text = info.number ?: "unknown")
         }
 
         Spacer(modifier = Modifier.height(8.dp))

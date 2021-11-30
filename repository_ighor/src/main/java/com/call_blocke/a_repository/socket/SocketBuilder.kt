@@ -1,17 +1,11 @@
 package com.call_blocke.a_repository.socket
 
-import android.util.Log
 import com.call_blocke.a_repository.Const.socketUrl
-import com.call_blocke.a_repository.model.ApiResponse
-import com.call_blocke.a_repository.model.TaskResponse
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
-import java.lang.reflect.Type
 
 @DelicateCoroutinesApi
 class SocketBuilder private constructor(private val userToken: String,
@@ -23,18 +17,33 @@ class SocketBuilder private constructor(private val userToken: String,
 
     val onMessage = MutableSharedFlow<String>()
 
+    val statusConnect = MutableStateFlow(false)
+
     private var connector: WebSocket? = null
 
+    private var isOn = false
+
     fun connect() {
-        connector = OkHttpClient().newWebSocket(url, this@SocketBuilder)
+        SmartLog.d("onConnect")
+        isOn = true
+        if (!statusConnect.value)
+            connector = OkHttpClient().newWebSocket(url, this@SocketBuilder)
     }
+
     fun disconnect() {
+        SmartLog.d("onDisconnect")
+        isOn = false
         connector?.close(1000, null)
+    }
+
+    override fun onOpen(webSocket: WebSocket, response: Response) {
+        super.onOpen(webSocket, response)
+        statusConnect.value = true
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
-        Log.d("SocketBuilder", "onMessage $text")
+        SmartLog.d("onMessage $text")
 
         GlobalScope.launch(Dispatchers.IO) {
             onMessage.emit(text)
@@ -43,14 +52,24 @@ class SocketBuilder private constructor(private val userToken: String,
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosed(webSocket, code, reason)
-        Log.d("SocketBuilder", "onClosed")
-        connect()
+        SmartLog.d("onClosed")
+        statusConnect.value = false
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
-        Log.d("SocketBuilder", "onFailure")
-        connect()
+        SmartLog.d(t)
+        statusConnect.value = false
+        if (isOn)
+            connect()
+    }
+
+    fun sendMessage(data: String) {
+        try {
+            connector?.send(data)
+        } catch (e: Exception) {
+            SmartLog.e(e)
+        }
     }
 
     class Builder private constructor() {
@@ -76,6 +95,7 @@ class SocketBuilder private constructor(private val userToken: String,
             userToken = userToken!!,
             uuid      = uuid!!
         )
+
     }
 
 }

@@ -33,4 +33,6 @@ dependencies {
     implementation (AppDependencies.rest)
 
     implementation(project(":repository_imp"))
+
+    implementation (project(":loger"))
 }

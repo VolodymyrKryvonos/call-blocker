@@ -9,13 +9,17 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.screen.SplashScreen
 import com.call_blocke.app.screen.SplashViewModel
@@ -52,6 +56,30 @@ class MainActivity : ComponentActivity() {
                         MainView()
                     else
                         AuthView()
+
+                    val isSimChanged by SmsBlockerDatabase
+                        .onSimChanged
+                        .observeAsState(initial = SmsBlockerDatabase.isSimChanged)
+
+                    if (isSimChanged) {
+                        Column {
+                            Box(modifier = Modifier.weight(1f))
+
+                            Card(modifier = Modifier.fillMaxWidth()) {
+                                Column {
+                                    Text(
+                                        text = stringResource(id = R.string.sim_slot_change_desc),
+                                        color = Color.White
+                                    )
+                                    Button(onClick = {
+                                        SmsBlockerDatabase.isSimChanged = false
+                                    }) {
+                                        Text("OK")
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

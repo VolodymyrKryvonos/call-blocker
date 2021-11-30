@@ -1,3 +1,4 @@
+import AppDependencies.impTester
 import AppDependencies.implementation
 
 plugins {
@@ -5,9 +6,19 @@ plugins {
     kotlin("android")
     id("kotlin-android")
     kotlin("kapt")
+    id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
+    signingConfigs {
+        create("release") {
+            storeFile = file("/Users/mykyta/Documents/callblockerunit/key")
+            storePassword = "12345678"
+            keyAlias = "nk"
+            keyPassword = "12345678"
+        }
+    }
     buildFeatures {
         compose = true
     }
@@ -21,6 +32,7 @@ android {
         targetSdk = Config.targetVersion.toInt()
         versionCode = Config.versionCode
         versionName = Config.versionName
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
 
@@ -44,17 +56,6 @@ android {
                     if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
                         output.outputFileName =
                             "sms-sender-remote-v${versionName}.${output.outputFile.extension}"
-                    }
-                }
-            }
-        }
-
-        debug {
-            applicationVariants.all {
-                outputs.forEach { output ->
-                    if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                        output.outputFileName =
-                            "sms-sender-local-v${versionName}.${output.outputFile.extension}"
                     }
                 }
             }
@@ -89,4 +90,13 @@ dependencies {
 
     implementation (AppDependencies.paged)
 
+    implementation(platform("com.google.firebase:firebase-bom:29.0.0"))
+
+    implementation("com.google.firebase:firebase-analytics-ktx")
+
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
+
+    impTester()
+
+    implementation (project(":loger"))
 }

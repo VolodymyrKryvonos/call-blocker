@@ -21,12 +21,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.auth.login.LoginScreen
 import com.call_blocke.app.screen.auth.register.RegisterScreen
 import com.rokobit.adstv.ui.accentColor
 import com.rokobit.adstv.ui.backgroundBrush
 import com.rokobit.adstv.ui.element.Label
+import com.rokobit.adstv.ui.element.TextNormal
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
 
@@ -60,6 +62,10 @@ fun AuthScreen(mViewModel: AuthViewModel = viewModel()) {
                 RegisterScreen(navController = navController, mViewModel = mViewModel)
             }
         }
+
+        Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)
+
+        TextNormal(text = "Version ${BuildConfig.VERSION_NAME}")
     }
 }
 

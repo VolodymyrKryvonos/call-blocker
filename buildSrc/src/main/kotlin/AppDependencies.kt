@@ -60,4 +60,10 @@ object AppDependencies {
             add("implementation", dependency)
         }
     }
+
+    fun DependencyHandler.impTester() {
+        this.add("testImplementation", "junit:junit:4.12")
+        this.add("androidTestImplementation", "androidx.test.ext:junit-ktx:1.1.3")
+        this.add("androidTestImplementation", "androidx.test.espresso:espresso-core:3.4.0")
+    }
 }

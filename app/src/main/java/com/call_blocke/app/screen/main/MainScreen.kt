@@ -12,6 +12,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -44,6 +45,8 @@ import com.rokobit.adstv.ui.secondaryDimens
 fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = viewModel()) {
 
     val isLoading by mViewMode.isLoading.observeAsState(false)
+    
+    val isServerOnline by mViewMode.isServerOnline.collectAsState()
 
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
@@ -52,6 +55,8 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
         Column(modifier = Modifier
             .fillMaxSize()) {
 
+            Label(text = "Server is connect = $isServerOnline")
+            
             Header(mViewMode)
 
             Box(modifier = Modifier
@@ -72,10 +77,10 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
 
 @Composable
 fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primaryDimens)) {
-    Title(text = "User name")
-
-
     val systemInfo by mViewMode.systemInfoLiveData.observeAsState(initial = SmsBlockerDatabase.systemDetail)
+
+    Title(text = mViewMode.userName())
+    //Label(text = mViewMode.userPassword())
 
     Text(text = stringResource(id = R.string.main_header_amount) + " " + systemInfo.amount + " €")
     Text(text = stringResource(id = R.string.main_header_left_count) + " " + systemInfo.leftCount)

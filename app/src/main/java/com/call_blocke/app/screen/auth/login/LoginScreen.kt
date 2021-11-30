@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -61,7 +62,8 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
     Field(
         hint = stringResource(id = R.string.login_login_field),
         value = emailValue,
-        isEnable = !isProgress.value
+        isEnable = !isProgress.value,
+        autofillTypes = listOf(AutofillType.EmailAddress)
     )
     Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
     Field(
@@ -69,7 +71,8 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
         visualTransformation = PasswordVisualTransformation(),
         value = passwordValue,
         isEnable = !isProgress.value,
-        isError = isSuccessLogin == false
+        isError = isSuccessLogin == false,
+        autofillTypes = listOf(AutofillType.Password)
     )
 
     Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)

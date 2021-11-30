@@ -14,6 +14,8 @@ class RefreshViewModel : ViewModel() {
 
     private val settingsRepository = RepositoryImp.settingsRepository
 
+    private val taskRepository = RepositoryImp.taskRepository
+
     val onLoading = MutableLiveData(false)
 
     fun simsInfo() = liveData(Dispatchers.IO) {
@@ -42,6 +44,8 @@ class RefreshViewModel : ViewModel() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        taskRepository.clearFor(simIndex = simSlotID)
 
         onLoading.postValue(false)
     }

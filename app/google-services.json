@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "78922921864",
+    "project_id": "smssender-975cf",
+    "storage_bucket": "smssender-975cf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:78922921864:android:b63c3f2963aab20266ec3d",
+        "android_client_info": {
+          "package_name": "com.callblocker.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "78922921864-m7j5ostbpgu3vt63gpvrsajcq0ktspu1.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRT5QnD6PzdL1tTeANrQ95ac0iqv1n20g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "78922921864-m7j5ostbpgu3vt63gpvrsajcq0ktspu1.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

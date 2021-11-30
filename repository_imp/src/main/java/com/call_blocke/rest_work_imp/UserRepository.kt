@@ -39,6 +39,7 @@ abstract class UserRepository {
 
         if (userToken != null) {
             SmsBlockerDatabase.userToken = userToken
+            SmsBlockerDatabase.userPassword = password
         }
 
         return userToken != null
@@ -59,6 +60,7 @@ abstract class UserRepository {
 
         if (userToken != null) {
             SmsBlockerDatabase.userToken = userToken
+            SmsBlockerDatabase.userPassword = password
         }
 
         return userToken != null
@@ -74,5 +76,10 @@ abstract class UserRepository {
     }
 
     val deviceID = SmsBlockerDatabase.deviceID
+
+    fun userName() = SmsBlockerDatabase.userName
+
+    fun userPassword() = SmsBlockerDatabase.userPassword
+
 
 }

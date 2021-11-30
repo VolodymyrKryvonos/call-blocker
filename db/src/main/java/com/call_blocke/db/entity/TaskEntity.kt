@@ -23,7 +23,7 @@ data class TaskEntity(
 
     var confirmAt: Long = 0,
 
-    var simSlot: Int? = null
+    var simSlot: Int? = 0
 )
 
 enum class TaskStatus {
