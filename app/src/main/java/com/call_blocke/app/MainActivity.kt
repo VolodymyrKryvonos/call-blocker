@@ -28,6 +28,7 @@ import com.call_blocke.app.screen.auth.AuthViewModel
 import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.Them
 import com.rokobit.adstv.ui.backgroundBrush
+import com.rokobit.adstvv_unit.loger.SmartLog
 
 class MainActivity : ComponentActivity() {
 
@@ -102,5 +103,4 @@ class MainActivity : ComponentActivity() {
     fun MainView() {
         SplashScreen(splashViewModel)
     }
-
 }

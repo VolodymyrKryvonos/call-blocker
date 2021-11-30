@@ -1,5 +1,6 @@
 package com.call_blocke.a_repository.socket
 
+import android.util.Log
 import com.call_blocke.a_repository.Const.socketUrl
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
@@ -44,7 +45,7 @@ class SocketBuilder private constructor(private val userToken: String,
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
-
+        Log.e("onMessageLocal", text)
         GlobalScope.launch(Dispatchers.IO) {
             onMessage.emit(text)
         }

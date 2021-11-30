@@ -12,7 +12,6 @@ object RepositoryBuilder {
 
     fun init(context: Context) {
         SmsBlockerDatabase.init(context)
-        LogBuild.build(context)
         this.mContext = context
     }
 

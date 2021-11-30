@@ -17,6 +17,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.call_blocke.app.MainActivity
+import com.rokobit.adstvv_unit.loger.SmartLog
 
 val PERMISSIONS_REQUIRED = arrayOf(
     Manifest.permission.READ_SMS,
@@ -41,6 +42,12 @@ class SplashViewModel : ViewModel() {
             it
         ) == PackageManager.PERMISSION_GRANTED })
         isAppDefault.postValue(Telephony.Sms.getDefaultSmsPackage(context) == context.packageName)
+    }
+
+    override fun onCleared() {
+
+        SmartLog.d("onCleared")
+        super.onCleared()
     }
 
 }

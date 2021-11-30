@@ -20,6 +20,7 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
+import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.catch
@@ -65,6 +66,11 @@ class TaskExecutorService : Service() {
         }
 
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        SmartLog.d("onTaskRemoved")
     }
 
     override fun onDestroy() {

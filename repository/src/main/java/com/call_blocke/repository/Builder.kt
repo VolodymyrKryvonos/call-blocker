@@ -26,7 +26,6 @@ object RepositoryImp {
 
     fun init(context: Context) {
         RepositoryBuilder.init(context)
-        LogBuild.build(context)
     }
 
 }

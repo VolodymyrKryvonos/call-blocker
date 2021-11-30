@@ -74,6 +74,7 @@
         </activity>
 
         <service
+            android:stopWithTask="false"
             android:name=".service.TaskExecutorService"
             android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
             android:exported="true">
