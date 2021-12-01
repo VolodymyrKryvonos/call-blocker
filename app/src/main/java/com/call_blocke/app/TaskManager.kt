@@ -10,6 +10,7 @@ import android.telephony.SubscriptionInfo
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
+import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.delay
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -103,6 +104,7 @@ class TaskManager(private val context: Context) {
         val smsManager: SmsManager = try {
             SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
         } catch (e: Exception) {
+            SmartLog.e("On send error ${e.stackTrace}")
             e.printStackTrace()
             cont.resume(false)
             return@suspendCoroutine

@@ -59,7 +59,7 @@ class SocketBuilder private constructor(private val userToken: String,
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
-        SmartLog.d(t)
+        SmartLog.d("onFailure connection $t")
         statusConnect.value = false
         if (isOn)
             connect()
@@ -69,7 +69,7 @@ class SocketBuilder private constructor(private val userToken: String,
         try {
             connector?.send(data)
         } catch (e: Exception) {
-            SmartLog.e(e)
+            SmartLog.e("onSend error $e")
         }
     }
 

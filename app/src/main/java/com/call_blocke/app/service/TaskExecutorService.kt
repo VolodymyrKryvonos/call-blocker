@@ -46,8 +46,10 @@ class TaskExecutorService : Service() {
 
     private val taskList = taskRepository
         .taskMessage()
-        .catch {
+        .catch {e->
             stop(applicationContext)
+            start(applicationContext)
+            SmartLog.e("Restart service on error ${e.stackTrace}")
         }
 
     private val taskManager by lazy {
@@ -70,7 +72,6 @@ class TaskExecutorService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        SmartLog.d("onTaskRemoved")
     }
 
     override fun onDestroy() {

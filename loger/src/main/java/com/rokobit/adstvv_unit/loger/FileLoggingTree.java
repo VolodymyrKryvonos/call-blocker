@@ -1,5 +1,6 @@
 package com.rokobit.adstvv_unit.loger;
 
+import android.content.Context;
 import android.os.Environment;
 import android.util.Log;
 
@@ -17,6 +18,12 @@ import timber.log.Timber;
 public class FileLoggingTree extends Timber.DebugTree {
 
     private static final String LOG_TAG = FileLoggingTree.class.getSimpleName();
+
+    private Context context;
+
+    public FileLoggingTree(Context context) {
+        this.context = context;
+    }
 
     @Override
     protected void log(int priority, String tag, String message, Throwable t) {
@@ -59,11 +66,10 @@ public class FileLoggingTree extends Timber.DebugTree {
 
     /*  Helper method to create file*/
     @Nullable
-    private static File generateFile(@NonNull String path, @NonNull String fileName) {
+    private File generateFile(@NonNull String path, @NonNull String fileName) {
         File file = null;
         if (isExternalStorageAvailable()) {
-            File root = new File(Environment.getExternalStorageDirectory().getAbsolutePath(),
-                    "com.callblocker.app" + File.separator + path);
+            File root = new File(context.getFilesDir(),File.separator + path);
 
             boolean dirExists = true;
 

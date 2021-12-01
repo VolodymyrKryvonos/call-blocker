@@ -11,11 +11,12 @@ import com.call_blocke.rest_work_imp.TaskMessage
 import com.call_blocke.rest_work_imp.TaskRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.*
 
 @DelicateCoroutinesApi
-class TaskRepositoryImp: TaskRepository() {
+class TaskRepositoryImp : TaskRepository() {
 
     private val taskRest = ApiRepositoryHelper.createRest(TaskRest::class.java)
 
@@ -59,6 +60,7 @@ class TaskRepositoryImp: TaskRepository() {
     override fun taskMessage(): Flow<TaskMessage> = socketBuilder
         .onMessage
         .map {
+            SmartLog.d("Receive unparsed Message $it")
             Log.d("taskListMessage", "onMap")
             Gson().fromJson<ApiResponse<TaskResponse>>(
                 it,
@@ -66,24 +68,28 @@ class TaskRepositoryImp: TaskRepository() {
             )
         }
         .map { res ->
-           TaskMessage(
-               list = res.data.smsList.map {
-                   TaskEntity(
-                       id = it.id,
-                       sendTo = it.msisdn,
-                       message = it.txt,
-                       simSlot = if (res.data.sim == "msisdn_1")
-                           0
+
+            SmartLog.d("Receive parsed Message ${res.data}")
+            TaskMessage(
+                list = res.data.smsList.map {
+                    TaskEntity(
+                        id = it.id,
+                        sendTo = it.msisdn,
+                        message = it.txt,
+                        simSlot = if (res.data.sim == "msisdn_1")
+                            0
                         else
                             1
-                   )
-               }
-           )
+                    )
+                }
+            )
         }
         .onEach {
+            SmartLog.d("Receive taskMessage ${it.list.joinToString { it.message + " " }}")
             save(it.list)
         }
-        .catch {
+        .catch { e ->
+            SmartLog.e("onParseError ${e.stackTrace}")
             Log.d("taskListMessage", "catch")
         }
         .onStart {
@@ -113,9 +119,11 @@ class TaskRepositoryImp: TaskRepository() {
             )
         )
 
-        socketBuilder.sendMessage(Gson().toJson(
-            req
-        ))
+        socketBuilder.sendMessage(
+            Gson().toJson(
+                req
+            )
+        )
     }
 
     override fun serverConnectStatus(): StateFlow<Boolean> = socketBuilder.statusConnect

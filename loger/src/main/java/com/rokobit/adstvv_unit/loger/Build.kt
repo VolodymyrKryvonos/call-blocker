@@ -6,7 +6,7 @@ import timber.log.Timber
 object LogBuild {
 
     fun build(context: Context) {
-        Timber.plant(FileLoggingTree())
+        Timber.plant(FileLoggingTree(context))
     }
 
 }
