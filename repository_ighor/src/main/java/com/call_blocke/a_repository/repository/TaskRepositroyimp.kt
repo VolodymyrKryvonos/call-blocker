@@ -2,6 +2,7 @@ package com.call_blocke.a_repository.repository
 
 import android.util.Log
 import com.call_blocke.a_repository.model.*
+import com.call_blocke.a_repository.model.TaskStatusRequest
 import com.call_blocke.a_repository.rest.TaskRest
 import com.call_blocke.a_repository.socket.SocketBuilder
 import com.call_blocke.db.SmsBlockerDatabase
@@ -89,7 +90,7 @@ class TaskRepositoryImp : TaskRepository() {
             save(it.list)
         }
         .catch { e ->
-            SmartLog.e("onParseError ${e.stackTrace}")
+            SmartLog.e("onParseError ${e.stackTrace} ${e.message}")
             Log.d("taskListMessage", "catch")
         }
         .onStart {

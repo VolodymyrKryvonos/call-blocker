@@ -1,14 +1,9 @@
 buildscript {
-    allprojects {
-        repositories {
-            google()
-            mavenCentral()
-        }
-    }
 
     repositories {
         google()
         mavenCentral()
+        gradlePluginPortal()
     }
 
     dependencies {
@@ -16,6 +11,14 @@ buildscript {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.10")
         classpath("com.google.gms:google-services:4.3.10")
         classpath("com.google.firebase:firebase-crashlytics-gradle:2.8.0")
+        classpath("gradle.plugin.com.onesignal:onesignal-gradle-plugin:0.14.0")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
     }
 }
 

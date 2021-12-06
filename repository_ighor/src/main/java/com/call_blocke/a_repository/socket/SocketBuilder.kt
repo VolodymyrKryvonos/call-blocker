@@ -61,8 +61,10 @@ class SocketBuilder private constructor(private val userToken: String,
         super.onFailure(webSocket, t, response)
         SmartLog.d("onFailure connection $t")
         statusConnect.value = false
-        if (isOn)
+        if (isOn) {
+            disconnect()
             connect()
+        }
     }
 
     fun sendMessage(data: String) {

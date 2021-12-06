@@ -1,33 +1,23 @@
 package com.call_blocke.app.service
 
 import android.app.*
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.graphics.Color
 import android.os.Build
 import android.os.IBinder
-import android.telephony.SmsManager
-import android.telephony.SubscriptionInfo
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
-import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
-import com.call_blocke.rest_work_imp.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
-import java.util.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 @DelicateCoroutinesApi
 class TaskExecutorService : Service() {
@@ -37,6 +27,7 @@ class TaskExecutorService : Service() {
         fun start(context: Context) {
             context.startService(Intent(context, TaskExecutorService::class.java))
         }
+
         fun stop(context: Context) {
             context.stopService(Intent(context, TaskExecutorService::class.java))
         }
@@ -46,10 +37,10 @@ class TaskExecutorService : Service() {
 
     private val taskList = taskRepository
         .taskMessage()
-        .catch {e->
+        .catch { e ->
             stop(applicationContext)
             start(applicationContext)
-            SmartLog.e("Restart service on error ${e.stackTrace}")
+            SmartLog.e("Restart service on error ${e.stackTrace} ${e.message}")
         }
 
     private val taskManager by lazy {
@@ -91,7 +82,11 @@ class TaskExecutorService : Service() {
             Log.d("TaskSms", "on new task")
 
             msg.list.map {
-                taskManager.doTask(it)
+                if (it.sendTo.isNotEmpty() && it.message.isNotEmpty()) {
+                    taskManager.doTask(it)
+                } else {
+                    SmartLog.e("Empty address or message")
+                }
             }
 
             //tasks.awaitAll()

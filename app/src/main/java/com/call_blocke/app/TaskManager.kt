@@ -74,8 +74,7 @@ class TaskManager(private val context: Context) {
                 taskRepository.taskOnDelivered(task)
             } catch (e: Exception) {
             }
-        }
-        else {
+        } else {
             try {
                 taskRepository.taskOnError(task)
             } catch (e: Exception) {
@@ -98,38 +97,45 @@ class TaskManager(private val context: Context) {
         return sendSms(simInfo, task.sendTo, task.message)
     }
 
-    private suspend fun sendSms(simInfo: SubscriptionInfo, address: String, text: String): Boolean = suspendCoroutine { cont ->
-        val sentRegisterName = "SMS_SENT"
+    private suspend fun sendSms(simInfo: SubscriptionInfo, address: String, text: String): Boolean =
+        suspendCoroutine { cont ->
+            val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
 
-        val smsManager: SmsManager = try {
-            SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
-        } catch (e: Exception) {
-            SmartLog.e("On send error ${e.stackTrace}")
-            e.printStackTrace()
-            cont.resume(false)
-            return@suspendCoroutine
-        }
-
-        val sentStatusIntent = Intent(sentRegisterName)
-
-        object : BroadcastReceiver() {
-            override fun onReceive(arg0: Context, arg1: Intent) {
-                cont.resume(resultCode == Activity.RESULT_OK)
-                context.unregisterReceiver(this)
+            val smsManager: SmsManager = try {
+                SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
+            } catch (e: Exception) {
+                SmartLog.e("OnSimSelect ${e.stackTrace} ${e.message}")
+                e.printStackTrace()
+                cont.resume(false)
+                return@suspendCoroutine
             }
-        }.also {
-            context.registerReceiver(it, IntentFilter(sentRegisterName))
+
+            val sentStatusIntent = Intent(sentRegisterName)
+
+            object : BroadcastReceiver() {
+                override fun onReceive(arg0: Context, arg1: Intent) {
+                    SmartLog.e("resultCode = $resultCode")
+                    cont.resume(resultCode == Activity.RESULT_OK)
+                    context.unregisterReceiver(this)
+                }
+            }.also {
+                context.registerReceiver(it, IntentFilter(sentRegisterName))
+            }
+
+            val sentPI =
+                PendingIntent.getBroadcast(context, address.hashCode(), sentStatusIntent, 0)
+            try {
+                SmartLog.e("Try to sent message")
+                smsManager.sendTextMessage(
+                    address,
+                    null,
+                    text,
+                    sentPI,
+                    null
+                )
+            } catch (e: Exception) {
+                SmartLog.e("OnSendTextMessage ${e.stackTrace} ${e.message}")
+            }
         }
-
-        val sentPI = PendingIntent.getBroadcast(context, address.hashCode(), sentStatusIntent, 0)
-
-        smsManager.sendTextMessage(
-            address,
-            null,
-            text,
-            sentPI,
-            null
-        )
-    }
 
 }

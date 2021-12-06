@@ -8,6 +8,7 @@ plugins {
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("com.onesignal.androidsdk.onesignal-gradle-plugin")
 }
 
 android {
@@ -86,9 +87,9 @@ dependencies {
     implementation (project(":repository"))
     implementation (project(":repository_imp"))
 
-    implementation (project(":db"))
+    implementation(project(":db"))
 
-    implementation (AppDependencies.paged)
+    implementation(AppDependencies.paged)
 
     implementation(platform("com.google.firebase:firebase-bom:29.0.0"))
 
@@ -96,7 +97,9 @@ dependencies {
 
     implementation("com.google.firebase:firebase-crashlytics-ktx")
 
+    implementation("com.onesignal:OneSignal:4.6.3")
+
     impTester()
 
-    implementation (project(":loger"))
+    implementation(project(":loger"))
 }
