@@ -29,6 +29,7 @@ class SocketBuilder private constructor(private val userToken: String,
         isOn = true
         if (!statusConnect.value)
             connector = OkHttpClient().newWebSocket(url, this@SocketBuilder)
+
     }
 
     fun disconnect() {

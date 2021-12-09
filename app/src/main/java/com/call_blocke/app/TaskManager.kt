@@ -115,8 +115,8 @@ class TaskManager(private val context: Context) {
             object : BroadcastReceiver() {
                 override fun onReceive(arg0: Context, arg1: Intent) {
                     SmartLog.e("resultCode = $resultCode")
-                    cont.resume(resultCode == Activity.RESULT_OK)
                     context.unregisterReceiver(this)
+                    cont.resume(resultCode == Activity.RESULT_OK)
                 }
             }.also {
                 context.registerReceiver(it, IntentFilter(sentRegisterName))

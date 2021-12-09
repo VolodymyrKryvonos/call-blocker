@@ -4,6 +4,8 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -50,6 +52,7 @@ class TaskExecutorService : Service() {
     private var job: Job? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        registerNetworkCallback()
         startForeground()
 
         isRunning.postValue(true)
@@ -58,7 +61,7 @@ class TaskExecutorService : Service() {
             doWork()
         }
 
-        return super.onStartCommand(intent, flags, startId)
+        return START_STICKY
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
@@ -74,6 +77,23 @@ class TaskExecutorService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? {
         return null
+    }
+
+    private fun registerNetworkCallback() {
+        val connectivityManager =
+            getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        connectivityManager.registerDefaultNetworkCallback(object :
+            ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                SmartLog.e("Connected to the internet")
+                super.onAvailable(network)
+            }
+
+            override fun onLost(network: Network) {
+                SmartLog.e("Lost internet connection")
+                super.onLost(network)
+            }
+        })
     }
 
     @DelicateCoroutinesApi
