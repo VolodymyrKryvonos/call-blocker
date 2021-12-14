@@ -65,8 +65,8 @@ class TaskExecutorService : Service() {
         job = taskList
             .onEach { msg ->
                 msg.list.map {
-                taskManager.doTask(it)
-            }
+                    taskManager.doTask(it)
+                }
             }
             .launchIn(GlobalScope)
 
