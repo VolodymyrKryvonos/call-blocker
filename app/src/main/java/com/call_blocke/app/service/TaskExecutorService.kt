@@ -7,7 +7,9 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
@@ -17,20 +19,21 @@ import com.call_blocke.app.TaskManager
 import com.call_blocke.repository.RepositoryImp
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.*
 
 @DelicateCoroutinesApi
 class TaskExecutorService : Service() {
 
     companion object {
         val isRunning = MutableLiveData(false)
+
         fun start(context: Context) {
+            SmartLog.d("user start service")
             context.startService(Intent(context, TaskExecutorService::class.java))
         }
 
         fun stop(context: Context) {
+            SmartLog.d("user stop service")
             context.stopService(Intent(context, TaskExecutorService::class.java))
         }
     }
@@ -52,14 +55,20 @@ class TaskExecutorService : Service() {
     private var job: Job? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        SmartLog.d("onStartCommand")
+
         registerNetworkCallback()
         startForeground()
 
         isRunning.postValue(true)
 
-        job = GlobalScope.launch(Dispatchers.IO) {
-            doWork()
-        }
+        job = taskList
+            .onEach { msg ->
+                msg.list.map {
+                taskManager.doTask(it)
+            }
+            }
+            .launchIn(GlobalScope)
 
         return START_STICKY
     }
@@ -70,6 +79,8 @@ class TaskExecutorService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        SmartLog.d("onDestroy")
+
         isRunning.postValue(false)
         job?.cancel()
         taskList.cancellable()
@@ -86,6 +97,10 @@ class TaskExecutorService : Service() {
             ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 SmartLog.e("Connected to the internet")
+                if (isRunning.value == true) {
+                    stop(applicationContext)
+                    start(applicationContext)
+                }
                 super.onAvailable(network)
             }
 
@@ -94,23 +109,6 @@ class TaskExecutorService : Service() {
                 super.onLost(network)
             }
         })
-    }
-
-    @DelicateCoroutinesApi
-    private suspend fun doWork() {
-        taskList.collect { msg ->
-            Log.d("TaskSms", "on new task")
-
-            msg.list.map {
-                if (it.sendTo.isNotEmpty() && it.message.isNotEmpty()) {
-                    taskManager.doTask(it)
-                } else {
-                    SmartLog.e("Empty address or message")
-                }
-            }
-
-            //tasks.awaitAll()
-        }
     }
 
     private fun startForeground() {

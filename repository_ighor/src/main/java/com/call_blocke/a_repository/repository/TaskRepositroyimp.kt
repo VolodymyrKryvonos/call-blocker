@@ -61,18 +61,24 @@ class TaskRepositoryImp : TaskRepository() {
     override fun taskMessage(): Flow<TaskMessage> = socketBuilder
         .onMessage
         .map {
-            SmartLog.d("Receive unparsed Message $it")
-            Log.d("taskListMessage", "onMap")
-            Gson().fromJson<ApiResponse<TaskResponse>>(
-                it,
-                (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
-            )
+            SmartLog.d("Receive Message $it")
+            try {
+                Gson().fromJson<ApiResponse<TaskResponse>>(
+                    it,
+                    (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
+                )
+            } catch (e: Exception) {
+                SmartLog.e(e)
+                null
+            }
+
+        }
+        .filter {
+            it != null
         }
         .map { res ->
-
-            SmartLog.d("Receive parsed Message ${res.data}")
             TaskMessage(
-                list = res.data.smsList.map {
+                list = res!!.data.smsList.map {
                     TaskEntity(
                         id = it.id,
                         sendTo = it.msisdn,

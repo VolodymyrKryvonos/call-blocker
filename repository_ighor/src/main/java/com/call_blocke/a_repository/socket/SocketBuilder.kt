@@ -41,6 +41,7 @@ class SocketBuilder private constructor(private val userToken: String,
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
         statusConnect.value = true
+        SmartLog.d("onOpen")
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -63,8 +64,16 @@ class SocketBuilder private constructor(private val userToken: String,
         SmartLog.d("onFailure connection $t")
         statusConnect.value = false
         if (isOn) {
-            disconnect()
-            connect()
+            try {
+                disconnect()
+            } catch (e: Exception) {
+                SmartLog.e(e)
+            }
+            try {
+                connect()
+            } catch (e: Exception) {
+                SmartLog.e(e)
+            }
         }
     }
 
