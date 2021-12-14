@@ -121,9 +121,9 @@ class MainActivity : ComponentActivity() {
     private fun checkBatteryOptimizations() {
         if (!isIgnoringBatteryOptimizations(this)) {
             androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Settings")
-                .setMessage("Turn off battery optimization")
-                .setPositiveButton("Ok") { _, _ ->
+                .setTitle(R.string.settings_title)
+                .setMessage(R.string.turn_of_optimization)
+                .setPositiveButton(R.string.ok) { _, _ ->
                     val name = resources.getString(R.string.app_name)
                     Toast.makeText(
                         applicationContext,

@@ -7,10 +7,7 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Build
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import com.call_blocke.app.MainActivity
@@ -18,8 +15,13 @@ import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
 import com.call_blocke.repository.RepositoryImp
 import com.rokobit.adstvv_unit.loger.SmartLog
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 
 @DelicateCoroutinesApi
 class TaskExecutorService : Service() {
@@ -36,20 +38,42 @@ class TaskExecutorService : Service() {
             SmartLog.d("user stop service")
             context.stopService(Intent(context, TaskExecutorService::class.java))
         }
+
+        fun restart(context: Context) {
+            SmartLog.d("user restart service")
+            context.stopService(Intent(context, TaskExecutorService::class.java))
+            context.startService(Intent(context, TaskExecutorService::class.java))
+        }
     }
+
 
     private val taskRepository = RepositoryImp.taskRepository
 
     private val taskList = taskRepository
         .taskMessage()
         .catch { e ->
-            stop(applicationContext)
-            start(applicationContext)
+            restart(applicationContext)
             SmartLog.e("Restart service on error ${e.stackTrace} ${e.message}")
         }
 
     private val taskManager by lazy {
         TaskManager(applicationContext)
+    }
+
+    private val networkCallback = object :
+        ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            SmartLog.e("Connected to the internet")
+            if (isRunning.value == true) {
+                restart(applicationContext)
+            }
+            super.onAvailable(network)
+        }
+
+        override fun onLost(network: Network) {
+            SmartLog.e("Lost internet connection")
+            super.onLost(network)
+        }
     }
 
     private var job: Job? = null
@@ -93,22 +117,8 @@ class TaskExecutorService : Service() {
     private fun registerNetworkCallback() {
         val connectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        connectivityManager.registerDefaultNetworkCallback(object :
-            ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                SmartLog.e("Connected to the internet")
-                if (isRunning.value == true) {
-                    stop(applicationContext)
-                    start(applicationContext)
-                }
-                super.onAvailable(network)
-            }
-
-            override fun onLost(network: Network) {
-                SmartLog.e("Lost internet connection")
-                super.onLost(network)
-            }
-        })
+        connectivityManager.unregisterNetworkCallback(networkCallback)
+        connectivityManager.registerDefaultNetworkCallback(networkCallback)
     }
 
     private fun startForeground() {

@@ -101,9 +101,11 @@ class TaskRepositoryImp : TaskRepository() {
         }
         .onStart {
             Log.d("taskListMessage", "onStart")
+            SmartLog.e("taskListMessage onStart")
             socketBuilder.connect()
         }
         .onCompletion {
+            SmartLog.e("taskListMessage onCompletion")
             Log.d("taskListMessage", "onCompletion")
             socketBuilder.disconnect()
         }

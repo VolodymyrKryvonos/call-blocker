@@ -67,5 +67,7 @@
 
     <string name="sim_slot_change_title">Warning</string>
     <string name="sim_slot_change_desc">SIM card has been changed. Please reset the SIM</string>
+    <string name="ok">Ok</string>
+    <string name="turn_of_optimization">Turn off battery optimization</string>
 
 </resources>
