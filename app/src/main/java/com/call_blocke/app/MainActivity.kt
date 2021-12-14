@@ -1,10 +1,14 @@
 package com.call_blocke.app
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -12,7 +16,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Card
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -28,7 +35,6 @@ import com.call_blocke.app.screen.auth.AuthViewModel
 import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.Them
 import com.rokobit.adstv.ui.backgroundBrush
-import com.rokobit.adstvv_unit.loger.SmartLog
 
 class MainActivity : ComponentActivity() {
 
@@ -84,6 +90,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        checkBatteryOptimizations()
     }
 
     @ExperimentalMaterialApi
@@ -102,5 +109,32 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun MainView() {
         SplashScreen(splashViewModel)
+    }
+
+    private fun isIgnoringBatteryOptimizations(context: Context): Boolean {
+        val pwrm =
+            context.applicationContext.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val name = context.applicationContext.packageName
+        return pwrm.isIgnoringBatteryOptimizations(name)
+    }
+
+    private fun checkBatteryOptimizations() {
+        if (!isIgnoringBatteryOptimizations(this)) {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Settings")
+                .setMessage("Turn off battery optimization")
+                .setPositiveButton("Ok") { _, _ ->
+                    val name = resources.getString(R.string.app_name)
+                    Toast.makeText(
+                        applicationContext,
+                        "Battery optimization -> All apps -> $name -> Don't optimize",
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                    startActivity(intent)
+                }.show()
+
+        }
     }
 }
