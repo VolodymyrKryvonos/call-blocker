@@ -4,6 +4,7 @@ import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.media.MediaPlayer
 import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Build
@@ -23,8 +24,11 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
+
 @DelicateCoroutinesApi
 class TaskExecutorService : Service() {
+
+    var player: MediaPlayer? = null
 
     companion object {
         val isRunning = MutableLiveData(false)
@@ -46,6 +50,18 @@ class TaskExecutorService : Service() {
         }
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        player = MediaPlayer()
+        val descriptor = assets.openFd("qwe.mp3")
+        player?.setDataSource(descriptor.fileDescriptor, descriptor.startOffset, descriptor.length)
+        descriptor.close()
+
+        player?.prepare()
+        player?.setVolume(0f, 0f)
+        player?.setLooping(true)
+        player?.start()
+    }
 
     private val taskRepository = RepositoryImp.taskRepository
 
@@ -62,15 +78,18 @@ class TaskExecutorService : Service() {
 
     private val networkCallback = object :
         ConnectivityManager.NetworkCallback() {
+        var lost = false
         override fun onAvailable(network: Network) {
             SmartLog.e("Connected to the internet")
-            if (isRunning.value == true) {
+            if (isRunning.value == true && lost) {
                 restart(applicationContext)
             }
+            lost = false
             super.onAvailable(network)
         }
 
         override fun onLost(network: Network) {
+            lost = true
             SmartLog.e("Lost internet connection")
             super.onLost(network)
         }
@@ -117,8 +136,17 @@ class TaskExecutorService : Service() {
     private fun registerNetworkCallback() {
         val connectivityManager =
             getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        connectivityManager.unregisterNetworkCallback(networkCallback)
-        connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        try {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+
+        }
+
+        try {
+            connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+
+        }
     }
 
     private fun startForeground() {
