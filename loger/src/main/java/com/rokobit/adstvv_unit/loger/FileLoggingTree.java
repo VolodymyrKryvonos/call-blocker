@@ -26,7 +26,7 @@ public class FileLoggingTree extends Timber.DebugTree {
     }
 
     @Override
-    protected void log(int priority, String tag, String message, Throwable t) {
+    protected void log(int priority, String tag, @NonNull String message, Throwable t) {
         try {
             Log.e("onMessageLocal2", message);
             String path = "Log";
@@ -59,7 +59,7 @@ public class FileLoggingTree extends Timber.DebugTree {
     }
 
     @Override
-    protected String createStackElementTag(StackTraceElement element) {
+    protected String createStackElementTag(@NonNull StackTraceElement element) {
         // Add log statements line number to the log
         return super.createStackElementTag(element) + " - " + element.getLineNumber();
     }

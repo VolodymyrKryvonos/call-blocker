@@ -102,4 +102,6 @@ dependencies {
     impTester()
 
     implementation(project(":loger"))
+
+    implementation("androidx.work:work-runtime-ktx:2.6.0")
 }

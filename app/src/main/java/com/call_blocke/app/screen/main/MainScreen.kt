@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.work.WorkManager
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
@@ -38,6 +39,7 @@ import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor
 import com.rokobit.adstv.ui.secondaryDimens
+import com.rokobit.adstvv_unit.loger.SmartLog
 
 @ExperimentalMaterialApi
 @ExperimentalFoundationApi
@@ -45,30 +47,36 @@ import com.rokobit.adstv.ui.secondaryDimens
 fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = viewModel()) {
 
     val isLoading by mViewMode.isLoading.observeAsState(false)
-    
+
     val isServerOnline by mViewMode.isServerOnline.collectAsState()
 
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
         onRefresh = { mViewMode.reloadSystemInfo() },
     ) {
-        Column(modifier = Modifier
-            .fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
 
             Label(text = "Server is connect = $isServerOnline")
-            
+
             Header(mViewMode)
 
-            Box(modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
                 Menu(navController = navController, mViewMode = mViewMode)
             }
 
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .padding(primaryDimens),
-                contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(primaryDimens),
+                contentAlignment = Alignment.Center
+            ) {
                 TextNormal(text = "Version ${BuildConfig.VERSION_NAME}")
             }
         }
@@ -116,7 +124,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     else -> Icons.Filled.ExitToApp
                 },
                 title = when (i) {
-                    1 ->  if (isExecutorRunning)
+                    1 -> if (isExecutorRunning)
                         stringResource(id = R.string.main_menu_stop_job)
                     else stringResource(id = R.string.main_menu_start_job)
                     2 -> stringResource(id = R.string.main_menu_task_list)
@@ -129,12 +137,15 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 isEnable = true
             ) {
                 if (i == 1) {
-                    if (isExecutorRunning)
+                    if (isExecutorRunning) {
+                        SmartLog.e("User stop service")
+                        WorkManager.getInstance(context).cancelAllWork()
                         mViewMode.stopExecutor(context)
-                    else
+                    } else {
+                        SmartLog.e("User start service")
                         mViewMode.runExecutor(context)
-                }
-                else if (i == 3)
+                    }
+                } else if (i == 3)
                     navController.navigate("black_list")
                 else if (i == 2)
                     navController.navigate("task_list")
@@ -153,14 +164,16 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
 
 @ExperimentalMaterialApi
 @Composable
-fun MenuItem(icon: ImageVector,
-             title: String,
-             isEnable: Boolean,
-             onClick: () -> Unit) {
+fun MenuItem(
+    icon: ImageVector,
+    title: String,
+    isEnable: Boolean,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             // .size(100.dp)
-           // .wrapContentSize()
+            // .wrapContentSize()
             .padding(primaryDimens / 2),
         shape = RoundedCornerShape(15),
         backgroundColor = secondaryColor,

@@ -23,11 +23,11 @@ class SmsApp : Application() {
         LogBuild.build(this)
 
         // Enable verbose OneSignal logging to debug issues if needed.
-        OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE);
+        OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE)
 
         // OneSignal Initialization
-        OneSignal.initWithContext(this);
-        OneSignal.setAppId("52a0a88c-bf79-4fdc-90d3-00728ef22fb0");
+        OneSignal.initWithContext(this)
+        OneSignal.setAppId("52a0a88c-bf79-4fdc-90d3-00728ef22fb0")
     }
 
     override fun onLowMemory() {

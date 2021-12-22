@@ -1,9 +1,7 @@
 package com.call_blocke.app.screen.auth
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Divider
 import androidx.compose.runtime.Composable
@@ -26,7 +24,6 @@ import com.call_blocke.app.R
 import com.call_blocke.app.screen.auth.login.LoginScreen
 import com.call_blocke.app.screen.auth.register.RegisterScreen
 import com.rokobit.adstv.ui.accentColor
-import com.rokobit.adstv.ui.backgroundBrush
 import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.TextNormal
 import com.rokobit.adstv.ui.element.Title

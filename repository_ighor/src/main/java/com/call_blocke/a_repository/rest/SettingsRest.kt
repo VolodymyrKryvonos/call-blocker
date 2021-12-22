@@ -2,7 +2,6 @@ package com.call_blocke.a_repository.rest
 
 import com.call_blocke.a_repository.model.*
 import retrofit2.http.Body
-import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface SettingsRest {

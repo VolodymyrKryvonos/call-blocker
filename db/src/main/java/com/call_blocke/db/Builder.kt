@@ -8,7 +8,6 @@ import androidx.room.Room
 import com.call_blocke.db.entity.ReplayTaskDao
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocke.db.entity.TaskDao
-import com.google.gson.Gson
 
 object SmsBlockerDatabase {
     private var preference: Preference? = null
@@ -30,8 +29,7 @@ object SmsBlockerDatabase {
 
     var userToken: String?
         get() {
-            val tok = (preference ?: throw Exception("please init db module")).userToken
-            return tok
+            return (preference ?: throw Exception("please init db module")).userToken
         }
         set(value) {
             preference?.userToken = value

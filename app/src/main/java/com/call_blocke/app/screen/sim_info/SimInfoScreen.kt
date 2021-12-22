@@ -1,7 +1,6 @@
 package com.call_blocke.app.screen.sim_info
 
 import android.content.ContentResolver
-import android.provider.Settings
 import android.telephony.SubscriptionInfo
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,7 +19,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.refresh_full.RefreshViewModel
 import com.call_blocke.rest_work_imp.FullSimInfoModel
-import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor

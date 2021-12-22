@@ -4,9 +4,8 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
-import android.provider.BlockedNumberContract
-import com.call_blocke.db.SmsBlockerDatabase
 import android.provider.BlockedNumberContract.BlockedNumbers
+import com.call_blocke.db.SmsBlockerDatabase
 
 abstract class SettingsRepository {
 

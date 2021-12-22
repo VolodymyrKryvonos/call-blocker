@@ -8,12 +8,18 @@ import android.media.MediaPlayer
 import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
+import com.call_blocke.app.worker_manager.RestartServiceWorker
 import com.call_blocke.repository.RepositoryImp
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -23,44 +29,41 @@ import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.util.concurrent.TimeUnit
 
 
 @DelicateCoroutinesApi
 class TaskExecutorService : Service() {
 
-    var player: MediaPlayer? = null
+    private var player: MediaPlayer? = null
 
     companion object {
         val isRunning = MutableLiveData(false)
 
         fun start(context: Context) {
-            SmartLog.d("user start service")
+            SmartLog.d("start service")
             context.startService(Intent(context, TaskExecutorService::class.java))
+            val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(15, TimeUnit.MINUTES)
+                .setInitialDelay(15, TimeUnit.MINUTES)
+                .build()
+            WorkManager.getInstance(context)
+                .enqueueUniquePeriodicWork(
+                    "RestartServiceWorker",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    work
+                )
         }
 
         fun stop(context: Context) {
-            SmartLog.d("user stop service")
+            SmartLog.d("stop service")
             context.stopService(Intent(context, TaskExecutorService::class.java))
         }
 
         fun restart(context: Context) {
-            SmartLog.d("user restart service")
-            context.stopService(Intent(context, TaskExecutorService::class.java))
-            context.startService(Intent(context, TaskExecutorService::class.java))
+            SmartLog.d("restart service")
+            stop(context)
+            Handler(Looper.getMainLooper()).postDelayed({ start(context) }, 5000)
         }
-    }
-
-    override fun onCreate() {
-        super.onCreate()
-        player = MediaPlayer()
-        val descriptor = assets.openFd("qwe.mp3")
-        player?.setDataSource(descriptor.fileDescriptor, descriptor.startOffset, descriptor.length)
-        descriptor.close()
-
-        player?.prepare()
-        player?.setVolume(0f, 0f)
-        player?.setLooping(true)
-        player?.start()
     }
 
     private val taskRepository = RepositoryImp.taskRepository
@@ -173,10 +176,10 @@ class TaskExecutorService : Service() {
     private fun createNotificationChannel(channelId: String, channelName: String): String {
         val chan = NotificationChannel(
             channelId,
-            channelName, NotificationManager.IMPORTANCE_NONE
+            channelName, NotificationManager.IMPORTANCE_HIGH
         )
         chan.lightColor = Color.BLUE
-        chan.lockscreenVisibility = Notification.VISIBILITY_PRIVATE
+        chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         val service = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         service.createNotificationChannel(chan)
         return channelId

@@ -1,5 +1,3 @@
-import AppDependencies.implementation
-
 plugins {
     id("com.android.library")
     kotlin("android")

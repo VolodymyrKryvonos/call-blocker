@@ -126,13 +126,14 @@ class TaskManager(private val context: Context) {
                 PendingIntent.getBroadcast(context, address.hashCode(), sentStatusIntent, 0)
             try {
                 SmartLog.e("Try to sent message")
-                smsManager.sendTextMessage(
-                    address,
-                    null,
-                    text,
-                    sentPI,
-                    null
-                )
+//                smsManager.sendTextMessage(
+//                    address,
+//                    null,
+//                    text,
+//                    sentPI,
+//                    null
+//                )
+                cont.resume(false)
             } catch (e: Exception) {
                 SmartLog.e("OnSendTextMessage ${e.stackTrace} ${e.message}")
             }

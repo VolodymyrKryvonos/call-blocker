@@ -3,7 +3,6 @@ package com.call_blocke.db.entity
 import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy.IGNORE
 import androidx.room.OnConflictStrategy.REPLACE
 import androidx.room.Query
 import androidx.room.Update

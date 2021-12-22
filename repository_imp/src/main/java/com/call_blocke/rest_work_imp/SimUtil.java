@@ -1,21 +1,10 @@
 package com.call_blocke.rest_work_imp;
 
-import static android.content.Context.TELEPHONY_SERVICE;
-
 import android.annotation.SuppressLint;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Build;
-import android.os.IBinder;
 import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
-import android.telephony.TelephonyManager;
-import android.util.Log;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,11 +28,6 @@ public class SimUtil {
             simInfoList.add(infoSim2);
 
         return simInfoList;
-    }
-
-    private static boolean isSimSupport(Context context, int slot) {
-        TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
-        return tm.getSimState(slot) == TelephonyManager.SIM_STATE_READY;
     }
 
 }

@@ -10,7 +10,6 @@ import android.graphics.Color
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.core.app.NotificationCompat
 import com.call_blocke.app.R
 import com.call_blocke.app.service.TaskExecutorService
 import com.call_blocke.db.SmsBlockerDatabase
@@ -38,7 +37,7 @@ class SimSlotReceiver : BroadcastReceiver() {
             .setContentTitle(context.getString(R.string.sim_slot_change_title))
             .setContentText(context.getString(R.string.sim_slot_change_desc))
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(Notification.PRIORITY_HIGH)
             .build()
 
         val notificationManager: NotificationManager =

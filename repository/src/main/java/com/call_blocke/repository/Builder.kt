@@ -8,7 +8,6 @@ import com.call_blocke.rest_work_imp.RepositoryBuilder
 import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocke.rest_work_imp.TaskRepository
 import com.call_blocke.rest_work_imp.UserRepository
-import com.rokobit.adstvv_unit.loger.LogBuild
 
 object RepositoryImp {
 

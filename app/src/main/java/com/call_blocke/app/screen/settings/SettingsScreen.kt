@@ -27,6 +27,7 @@ import com.rokobit.adstv.ui.secondaryDimens
 import kotlinx.coroutines.delay
 import java.io.File
 
+
 @ExperimentalAnimationApi
 @ExperimentalComposeUiApi
 @Composable
@@ -171,7 +172,6 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
             }
         }
     }
-
 
 fun getLogsShareIntent(context: Context): Intent {
     val files = arrayListOf<Uri>()

@@ -11,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -22,8 +21,6 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.itemsIndexed
 import com.call_blocke.app.R
 import com.call_blocke.db.entity.TaskEntity
-import com.call_blocke.rest_work_imp.SimUtil
-import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Text
 import com.rokobit.adstv.ui.element.TextNormal
 import com.rokobit.adstv.ui.primaryDimens

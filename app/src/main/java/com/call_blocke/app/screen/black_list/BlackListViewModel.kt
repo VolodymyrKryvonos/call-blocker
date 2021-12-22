@@ -3,7 +3,6 @@ package com.call_blocke.app.screen.black_list
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.repository.RepositoryImp
 import kotlinx.coroutines.Dispatchers

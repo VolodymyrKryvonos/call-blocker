@@ -2,7 +2,6 @@ package com.call_blocke.db
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.security.crypto.EncryptedSharedPreferences
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.google.gson.Gson
 
