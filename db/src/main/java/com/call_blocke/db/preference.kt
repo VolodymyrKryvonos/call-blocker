@@ -42,8 +42,26 @@ class Preference(context: Context) {
     var isSimChanged: Boolean
         get() = sharedPreferences.getBoolean("isSimChanged", false)
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putBoolean("isSimChanged", value)
+                commit()
+            }
+        }
+
+    var ipType: String
+        get() = sharedPreferences.getString("ipType", "") ?: "Production"
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("ipType", value)
+                commit()
+            }
+        }
+
+    var customIp: String
+        get() = sharedPreferences.getString("customIp", "") ?: ""
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("customIp", value)
                 commit()
             }
         }
@@ -51,7 +69,7 @@ class Preference(context: Context) {
     var deviceID: String
         get() = sharedPreferences.getString("device_id", "no") ?: "no"
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putString("device_id", value)
                 commit()
             }

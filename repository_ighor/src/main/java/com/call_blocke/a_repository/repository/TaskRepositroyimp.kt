@@ -1,6 +1,8 @@
 package com.call_blocke.a_repository.repository
 
 import android.util.Log
+import com.call_blocke.a_repository.Const.socketIp
+import com.call_blocke.a_repository.Const.testIp
 import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.model.TaskStatusRequest
 import com.call_blocke.a_repository.rest.TaskRest
@@ -26,6 +28,13 @@ class TaskRepositoryImp : TaskRepository() {
             .Builder
             .setUserToken(SmsBlockerDatabase.userToken ?: "jhfhjlbdhjlf")
             .setUUid(SmsBlockerDatabase.deviceID)
+            .setIP(
+                when (preference?.ipType) {
+                    "Test" -> testIp
+                    "Production" -> socketIp
+                    else -> preference?.customIp ?: ""
+                }
+            )
             .build()
     }
 
@@ -74,6 +83,9 @@ class TaskRepositoryImp : TaskRepository() {
 
         }
         .filter {
+            if (it?.data?.smsList?.isEmpty() == true) {
+                ping.emit(true)
+            }
             it != null
         }
         .map { res ->
@@ -102,6 +114,12 @@ class TaskRepositoryImp : TaskRepository() {
         .onStart {
             Log.d("taskListMessage", "onStart")
             SmartLog.e("taskListMessage onStart")
+            socketBuilder.ip =
+                when (preference?.ipType) {
+                    "Test" -> testIp
+                    "Production" -> socketIp
+                    else -> preference?.customIp ?: ""
+                }
             socketBuilder.connect()
         }
         .onCompletion {
