@@ -1,20 +1,23 @@
 package com.call_blocke.a_repository.socket
 
 import android.util.Log
+import com.call_blocke.a_repository.Const.socketIp
 import com.call_blocke.a_repository.Const.socketUrl
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
+import java.io.PrintWriter
+import java.io.StringWriter
 
 @DelicateCoroutinesApi
-class SocketBuilder private constructor(private val userToken: String,
-                                        private val uuid: String) : WebSocketListener() {
+class SocketBuilder private constructor(
+    private val userToken: String,
+    private val uuid: String,
+    var ip: String
+) : WebSocketListener() {
 
-    private val url = Request.Builder()
-        .url("$socketUrl?token=$userToken&unique_id=$uuid")
-        .build()
 
     val onMessage = MutableSharedFlow<String>()
 
@@ -25,8 +28,11 @@ class SocketBuilder private constructor(private val userToken: String,
     private var isOn = false
 
     fun connect() {
-        SmartLog.d("onConnect")
+        SmartLog.d("onConnect $ip")
         isOn = true
+        val url = Request.Builder()
+            .url("${String.format(socketUrl, ip)}?token=$userToken&unique_id=$uuid")
+            .build()
         if (!statusConnect.value)
             connector = OkHttpClient().newWebSocket(url, this@SocketBuilder)
 
@@ -61,7 +67,11 @@ class SocketBuilder private constructor(private val userToken: String,
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
-        SmartLog.d("onFailure connection $t")
+
+        val sw = StringWriter()
+        val pw = PrintWriter(sw)
+        t.printStackTrace(pw)
+        SmartLog.d("onFailure connection $sw")
         statusConnect.value = false
         if (isOn) {
             try {
@@ -89,6 +99,7 @@ class SocketBuilder private constructor(private val userToken: String,
 
         private var userToken: String? = null
         private var uuid: String? = null
+        private var ip: String? = null
 
         companion object {
             private val data = Builder()
@@ -99,6 +110,11 @@ class SocketBuilder private constructor(private val userToken: String,
             }
         }
 
+        fun setIP(ip: String): Builder {
+            data.ip = ip
+            return data
+        }
+
         fun setUUid(d: String): Builder {
             data.uuid = d
             return data
@@ -106,7 +122,8 @@ class SocketBuilder private constructor(private val userToken: String,
 
         fun build() = SocketBuilder(
             userToken = userToken!!,
-            uuid      = uuid!!
+            uuid = uuid!!,
+            ip = ip ?: socketIp
         )
 
     }

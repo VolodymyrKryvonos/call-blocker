@@ -2,16 +2,15 @@ package com.call_blocke.app.screen.main
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -23,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.work.WorkManager
@@ -31,15 +31,14 @@ import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.rokobit.adstv.ui.element.Label
+import com.rokobit.adstv.ui.*
+import com.rokobit.adstv.ui.element.Circle
 import com.rokobit.adstv.ui.element.Text
 import com.rokobit.adstv.ui.element.TextNormal
 import com.rokobit.adstv.ui.element.Title
-import com.rokobit.adstv.ui.primaryColor
-import com.rokobit.adstv.ui.primaryDimens
-import com.rokobit.adstv.ui.secondaryColor
-import com.rokobit.adstv.ui.secondaryDimens
 import com.rokobit.adstvv_unit.loger.SmartLog
+import kotlinx.coroutines.delay
+
 
 @ExperimentalMaterialApi
 @ExperimentalFoundationApi
@@ -50,6 +49,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
 
     val isServerOnline by mViewMode.isServerOnline.collectAsState()
 
+    val ping by mViewMode.isPingOn.collectAsState(initial = false)
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
         onRefresh = { mViewMode.reloadSystemInfo() },
@@ -59,7 +59,21 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                 .fillMaxSize()
         ) {
 
-            Label(text = "Server is connect = $isServerOnline")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = SpaceBetween
+            ) {
+                Text(
+                    modifier = Modifier.padding(start = primaryDimens),
+                    text = if (isServerOnline) "Server connected" else "Server disconnected",
+                    color = if (isServerOnline) Color.Green else Color.Red,
+                    fontSize = 24.sp,
+                    fontFamily = mainFont
+                )
+                if (ping) {
+                    Circle(color = Color.Green, modifier = Modifier.padding(end = 8.dp, top = 8.dp))
+                }
+            }
 
             Header(mViewMode)
 
@@ -81,6 +95,11 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
             }
         }
     }
+    if (ping)
+        LaunchedEffect(key1 = Unit, block = {
+            delay(1000)
+            mViewMode.isPingOn.emit(false)
+        })
 }
 
 @Composable
@@ -97,7 +116,7 @@ fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primar
 
     Spacer(modifier = Modifier.height(primaryDimens))
 
-    Text(text = mViewMode.deviceID)
+    Text(text = stringResource(id = R.string.device_id) + mViewMode.deviceID)
 }
 
 @ExperimentalFoundationApi

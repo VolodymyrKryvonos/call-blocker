@@ -26,6 +26,8 @@ class MainViewModel : ViewModel() {
         RepositoryImp.taskRepository
     }
 
+    val isPingOn = taskRepository.ping
+
     val isServerOnline = taskRepository.serverConnectStatus()
 
     fun userName() = userRepository.userName()

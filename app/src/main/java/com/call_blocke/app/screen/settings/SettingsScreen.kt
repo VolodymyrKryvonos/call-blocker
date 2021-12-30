@@ -6,8 +6,10 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Divider
-import androidx.compose.material.Snackbar
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -16,9 +18,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
+import com.call_blocke.db.Preference
 import com.rokobit.adstv.ui.element.*
 import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.primaryDimens
@@ -37,9 +43,11 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
 
         val isLoading by mViewModel.onLoading.observeAsState(false)
         val isSuccessUpdated by mViewModel.onSuccessUpdated.observeAsState(false)
-
         val context = LocalContext.current
 
+        val preference = Preference(context)
+        var selected by remember { mutableStateOf(preference.ipType) }
+        val radioGroupOptions = listOf("Test", "Production", "Custom")
         Column(modifier = Modifier.weight(1f)) {
             Title(text = stringResource(id = R.string.settings_title))
             Label(text = stringResource(id = R.string.settings_set_sms_per_day))
@@ -138,7 +146,6 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                 modifier = Modifier.height(primaryDimens),
                 color = Color.Transparent
             )
-            val context = LocalContext.current
 
             Button(
                 title = "Send logs",
@@ -148,6 +155,53 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                     context.startActivity(getLogsShareIntent(context))
                 }
             )
+            //Test only
+            Divider(
+                modifier = Modifier.height(primaryDimens),
+                color = Color.Transparent
+            )
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                val onSelectedChange = { text: String ->
+                    selected = text
+                    if (text != "Custom") {
+                        preference.ipType = text
+                    }
+                }
+                Column {
+                    radioGroupOptions.forEach { text ->
+                        Row(Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = (text == selected),
+                                onClick = { onSelectedChange(text) }
+                            )
+                            .padding(8.dp)
+                        ) {
+                            RadioButton(
+                                selected = (text == selected),
+                                onClick = { onSelectedChange(text) },
+                                colors = RadioButtonDefaults.colors(
+                                    unselectedColor = Color.White,
+                                    selectedColor = Color.White
+                                )
+                            )
+                            Text(
+                                text = text,
+                                style = MaterialTheme.typography.body1.merge(),
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                        }
+                    }
+                }
+            }
+            if (selected == "Custom") {
+                CustomIpInput(preference)
+            }
         }
 
         AnimatedVisibility(
@@ -178,11 +232,9 @@ fun getLogsShareIntent(context: Context): Intent {
     val sendIntent: Intent = Intent().apply {
         action = Intent.ACTION_SEND_MULTIPLE
         type = "text/plain"
-        val directory = File(context.filesDir.absolutePath+"/Log")
+        val directory = File(context.filesDir.absolutePath + "/Log")
         for (file in directory.listFiles()) {
             try {
-                Log.e("FILE", file.absolutePath)
-
                 val contentUri = FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.fileprovider",
@@ -201,4 +253,39 @@ fun getLogsShareIntent(context: Context): Intent {
         flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
     return Intent.createChooser(sendIntent, null)
+}
+
+@Composable
+fun CustomIpInput(preference: Preference) {
+    var ip by remember { mutableStateOf(preference.customIp) }
+    val invalidInput = isIpValid(ip)
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
+        TextField(
+            modifier = Modifier.fillMaxWidth(),
+            value = ip,
+            onValueChange = { ip = it },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+        val textColor = MaterialTheme.colors.error
+        if (!invalidInput)
+            Text(
+                textAlign = TextAlign.Center,
+                text = "Ip does not match the template",
+                style = MaterialTheme.typography.caption.copy(color = textColor),
+            )
+        if (invalidInput) {
+            Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
+            Button(
+                title = "Confirm",
+                modifier = Modifier.fillMaxWidth(),
+                isEnable = true,
+            ) {
+                preference.ipType = "Custom"
+                preference.customIp = ip
+            }
+        }
+    }
 }
