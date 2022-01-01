@@ -68,7 +68,7 @@ class TaskRepositoryImp : TaskRepository() {
     }
 
     override fun taskMessage(): Flow<TaskMessage> = socketBuilder
-        .onMessage
+        .messageCollector
         .map {
             SmartLog.d("Receive Message $it")
             try {

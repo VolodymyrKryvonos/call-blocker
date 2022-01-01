@@ -1,6 +1,5 @@
 package com.call_blocke.a_repository.socket
 
-import android.util.Log
 import com.call_blocke.a_repository.Const.socketIp
 import com.call_blocke.a_repository.Const.socketUrl
 import com.rokobit.adstvv_unit.loger.SmartLog
@@ -19,7 +18,7 @@ class SocketBuilder private constructor(
 ) : WebSocketListener() {
 
 
-    val onMessage = MutableSharedFlow<String>()
+    val messageCollector = MutableSharedFlow<String>()
 
     val statusConnect = MutableStateFlow(false)
 
@@ -53,9 +52,14 @@ class SocketBuilder private constructor(
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
-        Log.e("onMessageLocal", text)
+        //TODO temporary solution for exclude onMessage event replication
+        var count = 0
         GlobalScope.launch(Dispatchers.IO) {
-            onMessage.emit(text)
+            if (count == 0) {
+                count++
+                SmartLog.d("onMessage GlobalScope $text")
+                messageCollector.emit(text)
+            }
         }
     }
 
