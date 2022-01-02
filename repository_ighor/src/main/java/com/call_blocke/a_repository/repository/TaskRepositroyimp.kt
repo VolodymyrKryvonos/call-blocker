@@ -70,8 +70,11 @@ class TaskRepositoryImp : TaskRepository() {
     override val taskMessage: Flow<TaskMessage> by lazy {
         socketBuilder
             .messageCollector
-            .map {
+            .onEach {
                 SmartLog.d("Receive Message $it")
+            }
+            .map {
+                SmartLog.d("Map Message $it")
                 try {
                     Gson().fromJson<ApiResponse<TaskResponse>>(
                         it,

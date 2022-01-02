@@ -17,8 +17,7 @@ class SocketBuilder private constructor(
     var ip: String
 ) : WebSocketListener() {
 
-
-    val messageCollector = MutableStateFlow<String?>(null)
+    val messageCollector = MutableSharedFlow<String?>()
 
     val statusConnect = MutableStateFlow(false)
 
@@ -52,7 +51,7 @@ class SocketBuilder private constructor(
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
-        messageCollector.value = text
+        messageCollector.tryEmit(text)
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {

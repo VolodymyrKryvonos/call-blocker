@@ -71,7 +71,9 @@ class TaskExecutorService : Service() {
         taskRepository
             .taskMessage
             .onEach { msg ->
-                msg.list.map {
+                SmartLog.d("onEach ${msg.list.map { it.id }}")
+
+                msg.list.forEach {
                     taskManager.doTask(it)
                 }
             }

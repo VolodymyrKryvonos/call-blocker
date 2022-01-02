@@ -38,6 +38,8 @@ class TaskManager(private val context: Context) {
 
     @Synchronized
     suspend fun doTask(task: TaskEntity): Boolean {
+        SmartLog.d("doTask ${task.id}")
+
         val sim = sim(task.simSlot ?: return false) ?: return false
 
         try {
