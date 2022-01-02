@@ -109,7 +109,7 @@ abstract class TaskRepository {
 
     suspend fun replayInPhoneList() = replayTaskDao.rInPhoneList()
 
-    abstract fun taskMessage(): Flow<TaskMessage>
+    abstract val taskMessage: Flow<TaskMessage>
 
     abstract suspend fun sendTaskStatus(taskID: Int)
 

@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.util.concurrent.TimeUnit
 
-
 @DelicateCoroutinesApi
 class TaskExecutorService : Service() {
 
@@ -68,12 +67,19 @@ class TaskExecutorService : Service() {
 
     private val taskRepository = RepositoryImp.taskRepository
 
-    private val taskList = taskRepository
-        .taskMessage()
-        .catch { e ->
-            restart(applicationContext)
-            SmartLog.e("Restart service on error ${e.stackTrace} ${e.message}")
-        }
+    private val taskList by lazy {
+        taskRepository
+            .taskMessage
+            .onEach { msg ->
+                msg.list.map {
+                    taskManager.doTask(it)
+                }
+            }
+            .catch { e ->
+                restart(applicationContext)
+                SmartLog.e("Restart service on error ${e.stackTrace} ${e.message}")
+            }
+    }
 
     private val taskManager by lazy {
         TaskManager(applicationContext)
@@ -108,13 +114,7 @@ class TaskExecutorService : Service() {
 
         isRunning.postValue(true)
 
-        job = taskList
-            .onEach { msg ->
-                msg.list.map {
-                    taskManager.doTask(it)
-                }
-            }
-            .launchIn(GlobalScope)
+        job = taskList.launchIn(GlobalScope)
 
         return START_STICKY
     }
@@ -129,7 +129,7 @@ class TaskExecutorService : Service() {
 
         isRunning.postValue(false)
         job?.cancel()
-        taskList.cancellable()
+        //taskList.cancellable()
     }
 
     override fun onBind(intent: Intent?): IBinder? {

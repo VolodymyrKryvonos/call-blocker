@@ -67,66 +67,67 @@ class TaskRepositoryImp : TaskRepository() {
         ))
     }
 
-    override fun taskMessage(): Flow<TaskMessage> = socketBuilder
-        .messageCollector
-        .map {
-            SmartLog.d("Receive Message $it")
-            try {
-                Gson().fromJson<ApiResponse<TaskResponse>>(
-                    it,
-                    (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
-                )
-            } catch (e: Exception) {
-                SmartLog.e(e)
-                null
-            }
-
-        }
-        .filter {
-            if (it?.data?.smsList?.isEmpty() == true) {
-                ping.emit(true)
-            }
-            it != null
-        }
-        .map { res ->
-            TaskMessage(
-                list = res!!.data.smsList.map {
-                    TaskEntity(
-                        id = it.id,
-                        sendTo = it.msisdn,
-                        message = it.txt,
-                        simSlot = if (res.data.sim == "msisdn_1")
-                            0
-                        else
-                            1
+    override val taskMessage: Flow<TaskMessage> by lazy {
+        socketBuilder
+            .messageCollector
+            .map {
+                SmartLog.d("Receive Message $it")
+                try {
+                    Gson().fromJson<ApiResponse<TaskResponse>>(
+                        it,
+                        (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
                     )
+                } catch (e: Exception) {
+                    SmartLog.e(e)
+                    null
                 }
-            )
-        }
-        .onEach {
-            SmartLog.d("Receive taskMessage ${it.list.joinToString { it.message + " " }}")
-            save(it.list)
-        }
-        .catch { e ->
-            SmartLog.e("onParseError ${e.stackTrace} ${e.message}")
-            Log.d("taskListMessage", "catch")
-        }
-        .onStart {
-            Log.d("taskListMessage", "onStart")
-            SmartLog.e("taskListMessage onStart")
-            socketBuilder.ip =
-                when (preference?.ipType) {
-                    "Test" -> testIp
-                    "Production" -> socketIp
-                    else -> preference?.customIp ?: ""
+            }
+            .filter {
+                if (it?.data?.smsList?.isEmpty() == true) {
+                    ping.emit(true)
                 }
-            socketBuilder.connect()
-        }
-        .onCompletion {
-            SmartLog.e("taskListMessage onCompletion")
-            Log.d("taskListMessage", "onCompletion")
-            socketBuilder.disconnect()
-        }
+                it != null
+            }
+            .map { res ->
+                TaskMessage(
+                    list = res!!.data.smsList.map {
+                        TaskEntity(
+                            id = it.id,
+                            sendTo = it.msisdn,
+                            message = it.txt,
+                            simSlot = if (res.data.sim == "msisdn_1")
+                                0
+                            else
+                                1
+                        )
+                    }
+                )
+            }
+            .onEach {
+                SmartLog.d("Receive taskMessage ${it.list.joinToString { it.message + " " }}")
+                save(it.list)
+            }
+            .catch { e ->
+                SmartLog.e("onParseError ${e.stackTrace} ${e.message}")
+                Log.d("taskListMessage", "catch")
+            }
+            .onStart {
+                Log.d("taskListMessage", "onStart")
+                SmartLog.e("taskListMessage onStart")
+                socketBuilder.ip =
+                    when (preference?.ipType) {
+                        "Test" -> testIp
+                        "Production" -> socketIp
+                        else -> preference?.customIp ?: ""
+                    }
+                socketBuilder.connect()
+            }
+            .onCompletion {
+                SmartLog.e("taskListMessage onCompletion")
+                Log.d("taskListMessage", "onCompletion")
+                socketBuilder.disconnect()
+            }
+    }
 
     override suspend fun sendTaskStatus(taskID: Int) {
         val task = task(taskID)
