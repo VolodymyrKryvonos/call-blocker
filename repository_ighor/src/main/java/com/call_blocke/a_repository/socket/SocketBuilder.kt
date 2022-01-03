@@ -1,14 +1,15 @@
 package com.call_blocke.a_repository.socket
 
+import android.os.Handler
+import android.os.Looper
 import com.call_blocke.a_repository.Const.socketIp
 import com.call_blocke.a_repository.Const.socketUrl
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
-import java.io.PrintWriter
-import java.io.StringWriter
 
 @DelicateCoroutinesApi
 class SocketBuilder private constructor(
@@ -64,23 +65,22 @@ class SocketBuilder private constructor(
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
-
-        val sw = StringWriter()
-        val pw = PrintWriter(sw)
-        t.printStackTrace(pw)
-        SmartLog.d("onFailure connection $sw")
+        SmartLog.d("onFailure connection ${getStackTrace(t)}")
         statusConnect.value = false
         if (isOn) {
-            try {
-                disconnect()
-            } catch (e: Exception) {
-                SmartLog.e(e)
-            }
-            try {
-                connect()
-            } catch (e: Exception) {
-                SmartLog.e(e)
-            }
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    disconnect()
+                } catch (e: Exception) {
+                    SmartLog.e(e)
+                }
+                try {
+                    connect()
+                } catch (e: Exception) {
+                    SmartLog.e(e)
+                }
+            }, 60 * 1000)
+
         }
     }
 

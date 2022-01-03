@@ -11,6 +11,7 @@ import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.delay
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -106,7 +107,7 @@ class TaskManager(private val context: Context) {
             val smsManager: SmsManager = try {
                 SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
             } catch (e: Exception) {
-                SmartLog.e("OnSimSelect ${e.stackTrace} ${e.message}")
+                SmartLog.e("OnSimSelect ${getStackTrace(e)} ${e.message}")
                 e.printStackTrace()
                 cont.resume(false)
                 return@suspendCoroutine
@@ -136,7 +137,7 @@ class TaskManager(private val context: Context) {
                     null
                 )
             } catch (e: Exception) {
-                SmartLog.e("OnSendTextMessage ${e.stackTrace} ${e.message}")
+                SmartLog.e("OnSendTextMessage ${getStackTrace(e)} ${e.message}")
             }
         }
 

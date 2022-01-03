@@ -22,6 +22,7 @@ import com.call_blocke.app.TaskManager
 import com.call_blocke.app.worker_manager.RestartServiceWorker
 import com.call_blocke.repository.RepositoryImp
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -40,7 +41,7 @@ class TaskExecutorService : Service() {
         val isRunning = MutableLiveData(false)
 
         fun start(context: Context) {
-            SmartLog.d("start service 2.1.4")
+            SmartLog.d("start service 2.1.5")
             context.startService(Intent(context, TaskExecutorService::class.java))
             val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(15, TimeUnit.MINUTES)
                 .setInitialDelay(15, TimeUnit.MINUTES)
@@ -79,7 +80,7 @@ class TaskExecutorService : Service() {
             }
             .catch { e ->
                 restart(applicationContext)
-                SmartLog.e("Restart service on error ${e.stackTrace} ${e.message}")
+                SmartLog.e("Restart service on error ${getStackTrace(e)} ${e.message}")
             }
     }
 

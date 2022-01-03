@@ -15,6 +15,7 @@ import com.call_blocke.rest_work_imp.TaskRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.*
 
@@ -111,7 +112,7 @@ class TaskRepositoryImp : TaskRepository() {
                 save(it.list)
             }
             .catch { e ->
-                SmartLog.e("onParseError ${e.stackTrace} ${e.message}")
+                SmartLog.e("onParseError ${getStackTrace(e)} ${e.message}")
                 Log.d("taskListMessage", "catch")
             }
             .onStart {

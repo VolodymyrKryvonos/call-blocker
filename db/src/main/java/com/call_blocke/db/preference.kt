@@ -2,6 +2,7 @@ package com.call_blocke.db
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.google.gson.Gson
 
@@ -15,7 +16,7 @@ class Preference(context: Context) {
     var userPassword: String?
         get() = sharedPreferences.getString("userPassword", null)
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putString("userPassword", value)
                 commit()
             }
@@ -24,7 +25,7 @@ class Preference(context: Context) {
     var userName: String?
         get() = sharedPreferences.getString("userName", null)
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putString("userName", value)
                 commit()
             }
@@ -33,7 +34,7 @@ class Preference(context: Context) {
     var userToken: String?
         get() = sharedPreferences.getString("user_token", null)
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putString("user_token", value)
                 commit()
             }
@@ -49,7 +50,11 @@ class Preference(context: Context) {
         }
 
     var ipType: String
-        get() = sharedPreferences.getString("ipType", "") ?: "Production"
+        get() {
+            val type = sharedPreferences.getString("ipType", "") ?: "Production"
+            Log.e("Type", "Type$type")
+            return if (type.isNotEmpty()) type else "Production"
+        }
         set(value) {
             with(sharedPreferences.edit()) {
                 putString("ipType", value)
@@ -78,7 +83,7 @@ class Preference(context: Context) {
     var smsPerDaySimFirst: Int
         get() = sharedPreferences.getInt("smsPerDaySimFirst", 0)
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putInt("smsPerDaySimFirst", value)
                 commit()
             }
@@ -87,7 +92,7 @@ class Preference(context: Context) {
     var smsPerDaySimSecond: Int
         get() = sharedPreferences.getInt("smsPerDaySimSecond", 0)
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putInt("smsPerDaySimSecond", value)
                 commit()
             }
@@ -96,7 +101,7 @@ class Preference(context: Context) {
     var lastSimSlotUsed: Int
         get() = sharedPreferences.getInt("last_sim_slot_used", 0)
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putInt("last_sim_slot_used", value)
                 commit()
             }
@@ -116,7 +121,7 @@ class Preference(context: Context) {
             return SystemDetailEntity()
         }
         set(value) {
-            with (sharedPreferences.edit()) {
+            with(sharedPreferences.edit()) {
                 putString("system_detail", Gson().toJson(value))
                 commit()
             }

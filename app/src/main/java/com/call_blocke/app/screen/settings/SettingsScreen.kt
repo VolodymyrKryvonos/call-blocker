@@ -32,6 +32,8 @@ import com.rokobit.adstv.ui.secondaryColor
 import com.rokobit.adstv.ui.secondaryDimens
 import kotlinx.coroutines.delay
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 @ExperimentalAnimationApi
@@ -47,6 +49,7 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
 
         val preference = Preference(context)
         var selected by remember { mutableStateOf(preference.ipType) }
+        Log.e("Selected", "Selected:${preference.ipType}")
         val radioGroupOptions = listOf("Test", "Production", "Custom")
         Column(modifier = Modifier.weight(1f)) {
             Title(text = stringResource(id = R.string.settings_title))
@@ -155,6 +158,19 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                     context.startActivity(getLogsShareIntent(context))
                 }
             )
+            Divider(
+                modifier = Modifier.height(primaryDimens),
+                color = Color.Transparent
+            )
+
+            Button(
+                title = "Clear logs",
+                modifier = Modifier.fillMaxWidth(),
+                isEnable = true,
+                onClick = {
+                    clearLogs(context)
+                }
+            )
             //Test only
             Divider(
                 modifier = Modifier.height(primaryDimens),
@@ -233,26 +249,45 @@ fun getLogsShareIntent(context: Context): Intent {
         action = Intent.ACTION_SEND_MULTIPLE
         type = "text/plain"
         val directory = File(context.filesDir.absolutePath + "/Log")
-        for (file in directory.listFiles()) {
-            try {
-                val contentUri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.fileprovider",
-                    file
-                )
-                files.add(contentUri)
-            } catch (e: Exception) {
-                Log.e("getUriForFileException", e.message.toString())
-            }
+        val filesList = directory.listFiles()
+        if (filesList != null) {
+            for (file in filesList) {
+                try {
+                    val contentUri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        file
+                    )
+                    files.add(contentUri)
+                } catch (e: Exception) {
+                    Log.e("getUriForFileException", e.message.toString())
+                }
 
+            }
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
+            getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.forEach {
+                Log.e("getParcelableArrayListExtra", it.toString())
+            }
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         }
-        putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
-        getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.forEach {
-            Log.e("getParcelableArrayListExtra", it.toString())
-        }
-        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
     }
     return Intent.createChooser(sendIntent, null)
+}
+
+private fun clearLogs(context: Context) {
+    val directory = File(context.filesDir.absolutePath + "/Log")
+    val filesList = directory.listFiles()
+    if (filesList!=null){
+        for (file in filesList){
+            Log.e("FileName Path", file.name + " " + file.absolutePath)
+            file.delete()
+            if (file.exists()){
+                if(!file.canonicalFile.delete()){
+                    context.deleteFile(file.name)
+                }
+            }
+        }
+    }
 }
 
 @Composable

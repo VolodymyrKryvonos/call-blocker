@@ -39,6 +39,7 @@ public class FileLoggingTree extends Timber.DebugTree {
             // Create file
             File file  = generateFile(path, fileName);
 
+            Log.e("FileName Path",file.getName() + " " + file.getAbsolutePath());
             // If file created or exists save logs
             if (file != null) {
                 FileWriter writer = new FileWriter(file, true);
