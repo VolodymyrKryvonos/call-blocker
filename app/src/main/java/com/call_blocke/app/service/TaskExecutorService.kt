@@ -13,6 +13,7 @@ import android.os.IBinder
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -80,7 +81,7 @@ class TaskExecutorService : Service() {
             }
             .catch { e ->
                 restart(applicationContext)
-                SmartLog.e("Restart service on error ${getStackTrace(e)} ${e.message}")
+                SmartLog.e("Restart service on error ${getStackTrace(e)} \n${e.message}")
             }
     }
 
@@ -112,7 +113,6 @@ class TaskExecutorService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         SmartLog.d("onStartCommand")
 
-        registerNetworkCallback()
         startForeground()
 
         isRunning.postValue(true)
@@ -126,9 +126,14 @@ class TaskExecutorService : Service() {
         super.onTaskRemoved(rootIntent)
     }
 
+    override fun onCreate() {
+        super.onCreate()
+        registerNetworkCallback()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        SmartLog.d("onDestroy")
+        SmartLog.d("Service onDestroy")
 
         isRunning.postValue(false)
         job?.cancel()

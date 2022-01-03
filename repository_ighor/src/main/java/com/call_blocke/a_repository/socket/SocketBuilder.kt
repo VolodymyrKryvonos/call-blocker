@@ -38,9 +38,14 @@ class SocketBuilder private constructor(
     }
 
     fun disconnect() {
-        SmartLog.d("onDisconnect")
+        SmartLog.d("onDisconnect Socket")
         isOn = false
-        connector?.close(1000, null)
+        if(connector?.close(1000, "disconnect") == true){
+            SmartLog.d("Closed successful")
+        }else{
+            SmartLog.d("Closed previously or connector is null")
+        }
+        connector = null
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -52,6 +57,7 @@ class SocketBuilder private constructor(
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
+        SmartLog.d("Observers count ${messageCollector.subscriptionCount.value}")
         GlobalScope.launch(Dispatchers.IO) {
             messageCollector.emit(text)
         }
