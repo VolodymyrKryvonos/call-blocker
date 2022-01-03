@@ -8,6 +8,7 @@ import com.call_blocke.rest_work_imp.RepositoryBuilder
 import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocke.rest_work_imp.TaskRepository
 import com.call_blocke.rest_work_imp.UserRepository
+import kotlinx.coroutines.DelicateCoroutinesApi
 
 object RepositoryImp {
 
@@ -19,6 +20,7 @@ object RepositoryImp {
         SettingsRepositoryImp()
     }
 
+    @DelicateCoroutinesApi
     val taskRepository: TaskRepository by lazy {
         TaskRepositoryImp()
     }

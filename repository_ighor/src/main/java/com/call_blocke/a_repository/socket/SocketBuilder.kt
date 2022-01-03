@@ -4,21 +4,25 @@ import android.os.Handler
 import android.os.Looper
 import com.call_blocke.a_repository.Const.socketIp
 import com.call_blocke.a_repository.Const.socketUrl
-import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 @DelicateCoroutinesApi
 class SocketBuilder private constructor(
     private val userToken: String,
     private val uuid: String,
     var ip: String
-) : WebSocketListener() {
+) : WebSocketListener(), CoroutineScope {
 
-    val messageCollector = MutableSharedFlow<String?>()
+    override val coroutineContext: CoroutineContext
+        get() = EmptyCoroutineContext
+
+    val messageCollector = MutableStateFlow<String?>(null)
 
     val statusConnect = MutableStateFlow(false)
 
@@ -57,8 +61,8 @@ class SocketBuilder private constructor(
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
-        SmartLog.d("Observers count ${messageCollector.subscriptionCount.value}")
-        GlobalScope.launch(Dispatchers.IO) {
+
+        launch(Dispatchers.IO) {
             messageCollector.emit(text)
         }
     }
