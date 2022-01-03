@@ -71,9 +71,6 @@ class TaskRepositoryImp : TaskRepository() {
     override val taskMessage: Flow<TaskMessage> by lazy {
         socketBuilder
             .messageCollector
-            .onEach {
-                SmartLog.d("Receive Message $it")
-            }
             .map {
                 SmartLog.d("Map Message $it")
                 try {
@@ -108,11 +105,9 @@ class TaskRepositoryImp : TaskRepository() {
                 )
             }
             .onEach {
-                SmartLog.d("Receive taskMessage ${it.list.joinToString { it.message + " " }}")
                 save(it.list)
             }
             .catch { e ->
-                SmartLog.e("onParseError ${getStackTrace(e)} ${e.message}")
                 Log.d("taskListMessage", "catch")
             }
             .onStart {

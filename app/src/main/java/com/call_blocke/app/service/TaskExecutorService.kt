@@ -22,6 +22,7 @@ import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
 import com.call_blocke.app.worker_manager.RestartServiceWorker
 import com.call_blocke.repository.RepositoryImp
+import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -31,10 +32,28 @@ import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+
+object TaskExecutorImp {
+    private var taskList: Flow<TaskMessage>? = null
+
+    fun buildTaskList(): Flow<TaskMessage> {
+        if (taskList == null)
+            taskList = RepositoryImp.taskRepository.taskMessage
+
+        return taskList!!
+    }
+}
 
 @DelicateCoroutinesApi
-class TaskExecutorService : Service() {
+class TaskExecutorService : Service(), CoroutineScope {
+
+    override val coroutineContext: CoroutineContext
+        get() = EmptyCoroutineContext
 
     private var player: MediaPlayer? = null
 
@@ -69,20 +88,9 @@ class TaskExecutorService : Service() {
 
     private val taskRepository = RepositoryImp.taskRepository
 
-    private val taskList by lazy {
-        taskRepository
-            .taskMessage
-            .onEach { msg ->
-                SmartLog.d("onEach ${msg.list.map { it.id }}")
-
-                msg.list.forEach {
-                    taskManager.doTask(it)
-                }
-            }
-            .catch { e ->
-                restart(applicationContext)
-                SmartLog.e("Restart service on error ${getStackTrace(e)} \n${e.message}")
-            }
+    private val taskList: Flow<TaskMessage> by lazy {
+        TaskExecutorImp
+            .buildTaskList()
     }
 
     private val taskManager by lazy {
@@ -108,8 +116,6 @@ class TaskExecutorService : Service() {
         }
     }
 
-    private var job: Job? = null
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         SmartLog.d("onStartCommand")
 
@@ -117,7 +123,15 @@ class TaskExecutorService : Service() {
 
         isRunning.postValue(true)
 
-        job = taskList.launchIn(GlobalScope)
+        taskList
+            .onEach { msg ->
+            SmartLog.d("onEach ${msg.list.map { it.id }}")
+
+            msg.list.forEach {
+                taskManager.doTask(it)
+            }
+        }
+            .launchIn(this)
 
         return START_STICKY
     }
@@ -135,9 +149,9 @@ class TaskExecutorService : Service() {
         super.onDestroy()
         SmartLog.d("Service onDestroy")
 
+        this.cancel()
+
         isRunning.postValue(false)
-        job?.cancel()
-        //taskList.cancellable()
     }
 
     override fun onBind(intent: Intent?): IBinder? {
