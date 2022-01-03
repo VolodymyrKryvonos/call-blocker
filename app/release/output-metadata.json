@@ -11,9 +11,9 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 2,
-      "versionName": "2.1.2",
-      "outputFile": "sms-sender-remote-v2.1.2.apk"
+      "versionCode": 4,
+      "versionName": "2.1.4",
+      "outputFile": "sms-sender-remote-v2.1.4.apk"
     }
   ],
   "elementType": "File"

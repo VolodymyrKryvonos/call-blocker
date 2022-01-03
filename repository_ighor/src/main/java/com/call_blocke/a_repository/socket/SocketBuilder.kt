@@ -51,7 +51,9 @@ class SocketBuilder private constructor(
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
-        messageCollector.tryEmit(text)
+        GlobalScope.launch(Dispatchers.IO) {
+            messageCollector.emit(text)
+        }
     }
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {

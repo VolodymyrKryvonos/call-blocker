@@ -40,7 +40,7 @@ class TaskExecutorService : Service() {
         val isRunning = MutableLiveData(false)
 
         fun start(context: Context) {
-            SmartLog.d("start service")
+            SmartLog.d("start service 2.1.4")
             context.startService(Intent(context, TaskExecutorService::class.java))
             val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(15, TimeUnit.MINUTES)
                 .setInitialDelay(15, TimeUnit.MINUTES)
