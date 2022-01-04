@@ -51,10 +51,7 @@ object TaskExecutorImp {
 }
 
 @DelicateCoroutinesApi
-class TaskExecutorService : Service(), CoroutineScope {
-
-    override val coroutineContext: CoroutineContext
-        get() = EmptyCoroutineContext
+class TaskExecutorService : Service() {
 
     private var player: MediaPlayer? = null
 
@@ -116,7 +113,7 @@ class TaskExecutorService : Service(), CoroutineScope {
             super.onLost(network)
         }
     }
-
+    private var job: Job? = null
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         SmartLog.d("onStartCommand")
 
@@ -124,15 +121,13 @@ class TaskExecutorService : Service(), CoroutineScope {
 
         isRunning.postValue(true)
 
-        taskList
-            .onEach { msg ->
+        job = taskList.onEach { msg ->
             SmartLog.d("onEach ${msg.list.map { it.id }}")
 
             msg.list.forEach {
                 taskManager.doTask(it)
             }
-        }
-            .launchIn(this)
+        }.launchIn(GlobalScope)
 
         return START_STICKY
     }
@@ -150,9 +145,9 @@ class TaskExecutorService : Service(), CoroutineScope {
         super.onDestroy()
         SmartLog.d("Service onDestroy")
 
-        this.cancel()
-
         isRunning.postValue(false)
+        job?.cancel()
+        job = null
     }
 
     override fun onBind(intent: Intent?): IBinder? {

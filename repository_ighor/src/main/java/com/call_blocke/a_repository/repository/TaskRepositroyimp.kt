@@ -72,7 +72,7 @@ class TaskRepositoryImp : TaskRepository() {
         socketBuilder
             .messageCollector
             .map {
-                SmartLog.d("Map Message $it")
+                SmartLog.d("Receive Message $it")
                 try {
                     Gson().fromJson<ApiResponse<TaskResponse>>(
                         it,
