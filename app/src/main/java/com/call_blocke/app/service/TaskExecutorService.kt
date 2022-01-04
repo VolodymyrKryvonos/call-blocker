@@ -17,6 +17,7 @@ import androidx.lifecycle.asLiveData
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.call_blocke.app.BuildConfig.VERSION_NAME
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
@@ -61,7 +62,7 @@ class TaskExecutorService : Service(), CoroutineScope {
         val isRunning = MutableLiveData(false)
 
         fun start(context: Context) {
-            SmartLog.d("start service 2.1.5")
+            SmartLog.d("start service $VERSION_NAME")
             context.startService(Intent(context, TaskExecutorService::class.java))
             val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(15, TimeUnit.MINUTES)
                 .setInitialDelay(15, TimeUnit.MINUTES)
