@@ -7,6 +7,7 @@ import com.call_blocke.a_repository.Const.socketUrl
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
 import kotlin.coroutines.CoroutineContext
@@ -20,9 +21,9 @@ class SocketBuilder private constructor(
 ) : WebSocketListener(), CoroutineScope {
 
     override val coroutineContext: CoroutineContext
-        get() = EmptyCoroutineContext
+        get() = Dispatchers.IO + SupervisorJob()
 
-    val messageCollector = MutableStateFlow<String?>(null)
+    val messageCollector = MutableSharedFlow<String?>(0)
 
     val statusConnect = MutableStateFlow(false)
 
