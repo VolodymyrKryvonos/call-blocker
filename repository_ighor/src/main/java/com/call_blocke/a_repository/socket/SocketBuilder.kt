@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 @DelicateCoroutinesApi
 class SocketBuilder private constructor(
@@ -39,7 +38,6 @@ class SocketBuilder private constructor(
             .build()
         if (!statusConnect.value)
             connector = OkHttpClient().newWebSocket(url, this@SocketBuilder)
-
     }
 
     fun disconnect() {
