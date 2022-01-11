@@ -31,7 +31,7 @@ abstract class TaskRepository {
         //confirmTasksStatus()
 
         val tasks = try {
-           loadTasks()
+            loadTasks()
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
@@ -39,6 +39,8 @@ abstract class TaskRepository {
 
         taskDao.save(tasks)
     }
+
+    abstract fun reconnect()
 
     protected suspend fun save(data: List<TaskEntity>) {
         taskDao.save(data)

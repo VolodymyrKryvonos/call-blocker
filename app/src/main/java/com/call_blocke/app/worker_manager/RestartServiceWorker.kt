@@ -1,12 +1,9 @@
 package com.call_blocke.app.worker_manager
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log
-import androidx.work.Worker
-import androidx.work.WorkerParameters
-import com.call_blocke.app.MainActivity
-import com.call_blocke.app.service.TaskExecutorService
+import androidx.work.*
+import com.rokobit.adstvv_unit.loger.SmartLog
 
 class RestartServiceWorker(
     private val context: Context,
@@ -14,8 +11,17 @@ class RestartServiceWorker(
 ) : Worker(context, workerParams) {
     override fun doWork(): Result {
         Log.e("RestartServiceWorker", "RestartServiceWorker")
-        TaskExecutorService.restart(context)
-        context.startActivity(Intent(context, MainActivity::class.java))
+        val workManager = WorkManager.getInstance(context)
+        val workInfo = workManager
+            .getWorkInfosForUniqueWork(ServiceWorker.WORK_NAME)
+        if (workInfo.isDone || workInfo.isCancelled) {
+            SmartLog.e("Restart worker")
+            workManager.cancelUniqueWork(ServiceWorker.WORK_NAME)
+            workManager.beginUniqueWork(
+                ServiceWorker.WORK_NAME, ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<ServiceWorker>().build()
+            ).enqueue()
+        }
         return Result.success()
     }
 }

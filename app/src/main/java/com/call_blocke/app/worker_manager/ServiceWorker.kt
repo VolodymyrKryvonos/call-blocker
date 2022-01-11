@@ -20,19 +20,18 @@ import com.call_blocke.app.service.TaskExecutorService
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
 
 class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as
                 NotificationManager
-
-    private val taskRepository = RepositoryImp.taskRepository
 
     private val taskList: Flow<TaskMessage> by lazy {
         TaskExecutorImp
@@ -45,18 +44,18 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
 
     override suspend fun doWork(): Result {
         TaskExecutorService.isRunning.postValue(true)
-
-        TaskExecutorImp.job = taskList.onEach { msg ->
-            SmartLog.d("onEach ${msg.list.map { it.id }}")
-
-            msg.list.forEach {
-                taskManager.doTask(it)
-            }
-        }.launchIn(GlobalScope)
-
         setForeground(createForegroundInfo())
+        withContext(Dispatchers.IO) {
+            TaskExecutorImp.job = taskList.onEach { msg ->
+                SmartLog.d("onEach ${msg.list.map { it.id }}")
+                msg.list.forEach {
+                    taskManager.doTask(it)
+                }
+            }.launchIn(this)
+        }
         while (TaskExecutorImp.job?.isActive == true) {
-            delay(5000)
+            delay(1000 * 60 * 30)
+            RepositoryImp.taskRepository.reconnect()
         }
         return Result.success()
     }
@@ -91,5 +90,9 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         notificationManager.createNotificationChannel(chan)
         return channelId
+    }
+
+    companion object {
+        const val WORK_NAME = "ServiceWorker"
     }
 }

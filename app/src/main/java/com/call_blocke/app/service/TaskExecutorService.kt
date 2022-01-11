@@ -13,23 +13,22 @@ import android.os.IBinder
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
-import androidx.work.ExistingWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.work.*
 import com.call_blocke.app.BuildConfig.VERSION_NAME
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
+import com.call_blocke.app.worker_manager.RestartServiceWorker
 import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.util.concurrent.TimeUnit
 
 object TaskExecutorImp {
     private var taskList: Flow<TaskMessage>? = null
@@ -43,7 +42,6 @@ object TaskExecutorImp {
     }
 }
 
-@DelicateCoroutinesApi
 class TaskExecutorService : Service() {
 
     private var player: MediaPlayer? = null
@@ -55,19 +53,18 @@ class TaskExecutorService : Service() {
 
             SmartLog.d("start service $VERSION_NAME")
             WorkManager.getInstance(context).beginUniqueWork(
-                "ServiceWorker", ExistingWorkPolicy.REPLACE,
+                ServiceWorker.WORK_NAME, ExistingWorkPolicy.REPLACE,
                 OneTimeWorkRequestBuilder<ServiceWorker>().build()
             ).enqueue()
-//            context.startService(Intent(context, TaskExecutorService::class.java))
-//            val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(15, TimeUnit.MINUTES)
-//                .setInitialDelay(15, TimeUnit.MINUTES)
-//                .build()
-//            WorkManager.getInstance(context)
-//                .enqueueUniquePeriodicWork(
-//                    "RestartServiceWorker",
-//                    ExistingPeriodicWorkPolicy.KEEP,
-//                    work
-//                )
+            val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(15, TimeUnit.MINUTES)
+                .setInitialDelay(15, TimeUnit.MINUTES)
+                .build()
+            WorkManager.getInstance(context)
+                .enqueueUniquePeriodicWork(
+                    "RestartServiceWorker",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    work
+                )
         }
 
         fun stop(context: Context) {
@@ -84,7 +81,6 @@ class TaskExecutorService : Service() {
         }
     }
 
-    private val taskRepository = RepositoryImp.taskRepository
 
     private val taskList: Flow<TaskMessage> by lazy {
         TaskExecutorImp

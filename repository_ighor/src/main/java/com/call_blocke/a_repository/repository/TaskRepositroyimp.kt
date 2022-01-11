@@ -16,10 +16,8 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.flow.*
 
-@DelicateCoroutinesApi
 class TaskRepositoryImp : TaskRepository() {
 
     private val taskRest = ApiRepositoryHelper.createRest(TaskRest::class.java)
@@ -68,6 +66,10 @@ class TaskRepositoryImp : TaskRepository() {
         ))
     }
 
+    override fun reconnect() {
+        socketBuilder.reconnect()
+    }
+
     override val taskMessage: Flow<TaskMessage> by lazy {
         socketBuilder
             .messageCollector
@@ -108,7 +110,7 @@ class TaskRepositoryImp : TaskRepository() {
                 save(it.list)
             }
             .catch { e ->
-                Log.d("taskListMessage", "catch")
+                SmartLog.e("Map error ${getStackTrace(e)}")
             }
             .onStart {
                 Log.d("taskListMessage", "onStart")

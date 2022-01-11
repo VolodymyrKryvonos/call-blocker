@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
 import kotlin.coroutines.CoroutineContext
 
-@DelicateCoroutinesApi
 class SocketBuilder private constructor(
     private val userToken: String,
     private val uuid: String,
@@ -30,31 +29,53 @@ class SocketBuilder private constructor(
 
     private var isOn = false
 
+    private var pingJob: Job? = null
+
     fun connect() {
         SmartLog.d("onConnect $ip")
         isOn = true
         val url = Request.Builder()
             .url("${String.format(socketUrl, ip)}?token=$userToken&unique_id=$uuid")
             .build()
-        if (!statusConnect.value)
+        if (!statusConnect.value) {
             connector = OkHttpClient().newWebSocket(url, this@SocketBuilder)
+            pingJob = this.launch {
+                while (true) {
+                    delay(7 * 60 * 1000)
+                    SmartLog.e("Send Ping")
+                    connector?.send("ping")
+                }
+            }
+        }
     }
 
     fun disconnect() {
         SmartLog.d("onDisconnect Socket")
         isOn = false
-        if(connector?.close(1000, "disconnect") == true){
+        if (connector?.close(1000, "disconnect") == true) {
             SmartLog.d("Closed successful")
-        }else{
+        } else {
             SmartLog.d("Closed previously or connector is null")
         }
         connector = null
+        pingJob?.cancel()
+    }
+
+    fun reconnect() {
+        SmartLog.e("Reconnect $ip")
+        disconnect()
+        Handler(Looper.getMainLooper()).postDelayed({ connect() }, 11000)
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
         statusConnect.value = true
         SmartLog.d("onOpen")
+    }
+
+    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+        super.onClosing(webSocket, code, reason)
+        SmartLog.d("onClosing")
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -78,16 +99,7 @@ class SocketBuilder private constructor(
         statusConnect.value = false
         if (isOn) {
             Handler(Looper.getMainLooper()).postDelayed({
-                try {
-                    disconnect()
-                } catch (e: Exception) {
-                    SmartLog.e(e)
-                }
-                try {
-                    connect()
-                } catch (e: Exception) {
-                    SmartLog.e(e)
-                }
+                reconnect()
             }, 60 * 1000)
 
         }
