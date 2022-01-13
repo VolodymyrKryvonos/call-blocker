@@ -10,6 +10,7 @@ import com.call_blocke.a_repository.socket.SocketBuilder
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
+import com.call_blocke.db.entity.TaskStatusData
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.call_blocke.rest_work_imp.TaskRepository
 import com.google.gson.Gson
@@ -148,11 +149,44 @@ class TaskRepositoryImp : TaskRepository() {
             )
         )
 
-        socketBuilder.sendMessage(
-            Gson().toJson(
-                req
+        if (!socketBuilder.sendMessage(
+                Gson().toJson(
+                    req
+                )
             )
-        )
+        ) {
+            SmsBlockerDatabase.taskStatusDao.insertTaskStatus(
+                TaskStatusData(
+                    id = req.data.id,
+                    status = req.data.status,
+                    simId = req.data.simId
+                )
+            )
+        }
+
+    }
+
+    override suspend fun sendTaskStatuses() {
+        val statues = SmsBlockerDatabase.taskStatusDao.getAllTaskStatus()
+        val statuesMaped = statues.map {
+            TaskStatusRequest(
+                data = TaskStatusDataRequest(
+                    id = it.id,
+                    status = it.status,
+                    simId = it.simId
+                )
+            )
+        }
+        for ((i, status) in statuesMaped.withIndex()) {
+            if (!socketBuilder.sendMessage(
+                    Gson().toJson(
+                        status
+                    )
+                )
+            ) {
+                SmsBlockerDatabase.taskStatusDao.deleteTaskStatus(statues[i])
+            }
+        }
     }
 
     override fun serverConnectStatus(): StateFlow<Boolean> = socketBuilder.statusConnect

@@ -8,6 +8,7 @@ import androidx.room.Room
 import com.call_blocke.db.entity.ReplayTaskDao
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocke.db.entity.TaskDao
+import com.call_blocke.db.entity.TaskStatusDao
 
 object SmsBlockerDatabase {
     private var preference: Preference? = null
@@ -74,6 +75,9 @@ object SmsBlockerDatabase {
 
     val replayDao: ReplayTaskDao
         get() = (database ?: throw Exception("please init db module")).replayTaskDao()
+
+    val taskStatusDao: TaskStatusDao
+        get() = (database ?: throw Exception("please init db module")).taskStatusDao()
 
     var lastSimSlotUsed: Int
         get() = (preference ?: throw Exception("please init db module")).lastSimSlotUsed

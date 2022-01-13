@@ -39,13 +39,6 @@ class SocketBuilder private constructor(
             .build()
         if (!statusConnect.value) {
             connector = OkHttpClient().newWebSocket(url, this@SocketBuilder)
-            pingJob = this.launch {
-                while (true) {
-                    delay(7 * 60 * 1000)
-                    SmartLog.e("Send Ping")
-                    connector?.send("ping")
-                }
-            }
         }
     }
 
@@ -58,7 +51,6 @@ class SocketBuilder private constructor(
             SmartLog.d("Closed previously or connector is null")
         }
         connector = null
-        pingJob?.cancel()
     }
 
     fun reconnect() {
@@ -75,7 +67,10 @@ class SocketBuilder private constructor(
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosing(webSocket, code, reason)
-        SmartLog.d("onClosing")
+        SmartLog.d("onClosing $reason code = $code")
+        if (reason != "disconnect") {
+            reconnect()
+        }
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
@@ -105,11 +100,13 @@ class SocketBuilder private constructor(
         }
     }
 
-    fun sendMessage(data: String) {
-        try {
-            connector?.send(data)
+    fun sendMessage(data: String): Boolean {
+        return try {
+            SmartLog.e("sendMessage $data")
+            connector?.send(data) == true
         } catch (e: Exception) {
             SmartLog.e("onSend error $e")
+            false
         }
     }
 

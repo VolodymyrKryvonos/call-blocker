@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.work.CoroutineWorker
@@ -20,12 +22,10 @@ import com.call_blocke.app.service.TaskExecutorService
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.withContext
 
 class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
@@ -43,6 +43,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     }
 
     override suspend fun doWork(): Result {
+        registerNetworkCallback()
         TaskExecutorService.isRunning.postValue(true)
         setForeground(createForegroundInfo())
         withContext(Dispatchers.IO) {
@@ -90,6 +91,45 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         notificationManager.createNotificationChannel(chan)
         return channelId
+    }
+
+
+    private fun registerNetworkCallback() {
+        val connectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        try {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+        }
+        try {
+            connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+
+        }
+    }
+
+
+    private val networkCallback = object :
+        ConnectivityManager.NetworkCallback() {
+        var lost = false
+        override fun onAvailable(network: Network) {
+            SmartLog.e("Connected to the internet")
+            if (lost) {
+                RepositoryImp.taskRepository.reconnect()
+            }
+            lost = false
+            GlobalScope.launch {
+                delay(10000)
+                RepositoryImp.taskRepository.sendTaskStatuses()
+            }
+            super.onAvailable(network)
+        }
+
+        override fun onLost(network: Network) {
+            lost = true
+            SmartLog.e("Lost internet connection")
+            super.onLost(network)
+        }
     }
 
     companion object {

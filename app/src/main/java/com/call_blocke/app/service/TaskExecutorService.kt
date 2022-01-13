@@ -14,7 +14,6 @@ import android.os.Looper
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.work.*
-import com.call_blocke.app.BuildConfig.VERSION_NAME
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
@@ -22,6 +21,7 @@ import com.call_blocke.app.worker_manager.RestartServiceWorker
 import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
+import com.google.android.datatransport.BuildConfig.VERSION_NAME
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
@@ -56,8 +56,8 @@ class TaskExecutorService : Service() {
                 ServiceWorker.WORK_NAME, ExistingWorkPolicy.REPLACE,
                 OneTimeWorkRequestBuilder<ServiceWorker>().build()
             ).enqueue()
-            val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(15, TimeUnit.MINUTES)
-                .setInitialDelay(15, TimeUnit.MINUTES)
+            val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(5, TimeUnit.MINUTES)
+                .setInitialDelay(5, TimeUnit.MINUTES)
                 .build()
             WorkManager.getInstance(context)
                 .enqueueUniquePeriodicWork(

@@ -115,6 +115,8 @@ abstract class TaskRepository {
 
     abstract suspend fun sendTaskStatus(taskID: Int)
 
+    abstract suspend fun sendTaskStatuses()
+
     suspend fun deliveredCountToday(simIndex: Int): Int {
         val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
 

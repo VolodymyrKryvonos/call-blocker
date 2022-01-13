@@ -12,9 +12,14 @@ class RestartServiceWorker(
     override fun doWork(): Result {
         Log.e("RestartServiceWorker", "RestartServiceWorker")
         val workManager = WorkManager.getInstance(context)
-        val workInfo = workManager
-            .getWorkInfosForUniqueWork(ServiceWorker.WORK_NAME)
-        if (workInfo.isDone || workInfo.isCancelled) {
+        val workInfos = workManager
+            .getWorkInfosForUniqueWork(ServiceWorker.WORK_NAME).get()
+        if (workInfos.size > 1) {
+            SmartLog.e("More then one service started")
+            return Result.retry()
+        }
+        SmartLog.e("Worker state ${workInfos.firstOrNull()?.state?.name}")
+        if (workInfos.firstOrNull()?.state?.isFinished == true) {
             SmartLog.e("Restart worker")
             workManager.cancelUniqueWork(ServiceWorker.WORK_NAME)
             workManager.beginUniqueWork(
