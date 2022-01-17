@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.call_blocke.app.service.TaskExecutorService
+import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
 
-    val taskExecutorIsRunning = TaskExecutorService.isRunning
+    val taskExecutorIsRunning = ServiceWorker.isRunning
 
     val systemInfoLiveData = MutableLiveData(SmsBlockerDatabase.systemDetail)
 
@@ -37,11 +37,11 @@ class MainViewModel : ViewModel() {
     val deviceID = userRepository.deviceID
 
     fun runExecutor(context: Context) {
-        TaskExecutorService.start(context = context)
+        ServiceWorker.start(context = context)
     }
 
     fun stopExecutor(context: Context) {
-        TaskExecutorService.stop(context = context)
+        ServiceWorker.stop(context = context)
     }
 
     fun reloadSystemInfo() {

@@ -11,7 +11,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.call_blocke.app.R
-import com.call_blocke.app.service.TaskExecutorService
+import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
 
 class SimSlotReceiver : BroadcastReceiver() {
@@ -22,7 +22,7 @@ class SimSlotReceiver : BroadcastReceiver() {
         if (intent?.getStringExtra("ss") != "READY")
             return
 
-        TaskExecutorService.stop(context = context ?: return)
+        ServiceWorker.stop(context = context ?: return)
 
         SmsBlockerDatabase.isSimChanged = true
 
@@ -37,7 +37,6 @@ class SimSlotReceiver : BroadcastReceiver() {
             .setContentTitle(context.getString(R.string.sim_slot_change_title))
             .setContentText(context.getString(R.string.sim_slot_change_desc))
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(Notification.PRIORITY_HIGH)
             .build()
 
         val notificationManager: NotificationManager =

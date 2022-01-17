@@ -10,15 +10,16 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.PowerManager
 import androidx.annotation.RequiresApi
-import androidx.work.CoroutineWorker
-import androidx.work.ForegroundInfo
-import androidx.work.WorkerParameters
+import androidx.lifecycle.MutableLiveData
+import androidx.work.*
+import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
-import com.call_blocke.app.service.TaskExecutorImp
-import com.call_blocke.app.service.TaskExecutorService
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
@@ -26,9 +27,64 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.util.concurrent.TimeUnit
+
+object TaskExecutorImp {
+    private var taskList: Flow<TaskMessage>? = null
+
+    var job: Job? = null
+    fun buildTaskList(): Flow<TaskMessage> {
+        if (taskList == null)
+            taskList = RepositoryImp.taskRepository.taskMessage
+
+        return taskList!!
+    }
+}
 
 class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
+    private val wakeLock: PowerManager.WakeLock by lazy {
+        (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
+            newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::MyWakelockTag")
+        }
+    }
+
+    companion object {
+        val isRunning = MutableLiveData(false)
+
+        const val WORK_NAME = "ServiceWorker"
+
+        fun start(context: Context) {
+            SmartLog.d("start service ${BuildConfig.VERSION_NAME}")
+            WorkManager.getInstance(context).beginUniqueWork(
+                WORK_NAME, ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<ServiceWorker>().build()
+            ).enqueue()
+            val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(5, TimeUnit.MINUTES)
+                .setInitialDelay(5, TimeUnit.MINUTES)
+                .build()
+            WorkManager.getInstance(context)
+                .enqueueUniquePeriodicWork(
+                    "RestartServiceWorker",
+                    ExistingPeriodicWorkPolicy.KEEP,
+                    work
+                )
+        }
+
+        fun stop(context: Context) {
+            SmartLog.d("stop service")
+            WorkManager.getInstance(context).cancelAllWork()
+            TaskExecutorImp.job?.cancel()
+            isRunning.value = false
+        }
+
+        fun restart(context: Context) {
+            SmartLog.d("restart service")
+            stop(context)
+            Handler(Looper.getMainLooper()).postDelayed({ start(context) }, 5000)
+        }
+    }
+
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as
                 NotificationManager
@@ -43,8 +99,9 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     }
 
     override suspend fun doWork(): Result {
+        wakeLock.acquire(1000 * 60 * 35)
         registerNetworkCallback()
-        TaskExecutorService.isRunning.postValue(true)
+        isRunning.postValue(true)
         setForeground(createForegroundInfo())
         withContext(Dispatchers.IO) {
             TaskExecutorImp.job = taskList.onEach { msg ->
@@ -56,6 +113,8 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         }
         while (TaskExecutorImp.job?.isActive == true) {
             delay(1000 * 60 * 30)
+            wakeLock.release()
+            wakeLock.acquire(1000 * 60 * 35)
             RepositoryImp.taskRepository.reconnect()
         }
         return Result.success()
@@ -109,30 +168,29 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     }
 
 
-    private val networkCallback = object :
-        ConnectivityManager.NetworkCallback() {
-        var lost = false
-        override fun onAvailable(network: Network) {
-            SmartLog.e("Connected to the internet")
-            if (lost) {
-                RepositoryImp.taskRepository.reconnect()
+    private val networkCallback by lazy {
+        object :
+            ConnectivityManager.NetworkCallback() {
+            var lost = false
+            override fun onAvailable(network: Network) {
+                SmartLog.e("Connected to the internet")
+                if (lost) {
+                    RepositoryImp.taskRepository.reconnect()
+                }
+                lost = false
+                GlobalScope.launch {
+                    delay(10000)
+                    RepositoryImp.taskRepository.sendTaskStatuses()
+                }
+                super.onAvailable(network)
             }
-            lost = false
-            GlobalScope.launch {
-                delay(10000)
-                RepositoryImp.taskRepository.sendTaskStatuses()
-            }
-            super.onAvailable(network)
-        }
 
-        override fun onLost(network: Network) {
-            lost = true
-            SmartLog.e("Lost internet connection")
-            super.onLost(network)
+            override fun onLost(network: Network) {
+                lost = true
+                SmartLog.e("Lost internet connection")
+                super.onLost(network)
+            }
         }
     }
 
-    companion object {
-        const val WORK_NAME = "ServiceWorker"
-    }
 }

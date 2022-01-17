@@ -10,21 +10,27 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS"/>
     <uses-permission android:name="android.permission.RECEIVE_WAP_PUSH"/>
     <uses-permission android:name="android.permission.SEND_SMS"/>
-    <uses-permission android:name="android.permission.WRITE_SMS"/>
+    <uses-permission android:name="android.permission.WRITE_SMS" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
+    <uses-permission
+        android:name="android.permission.READ_PRIVILEGED_PHONE_STATE"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"
+    <uses-permission
+        android:name="android.permission.READ_PHONE_NUMBERS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!-- @SystemApi @hide Allows an application to call APIs that allow it to do interactions
      across the users on the device, using singleton services and
      user-targeted broadcasts.  This permission is not available to
      third party applications. -->
-    <permission android:name="android.permission.INTERACT_ACROSS_USERS"
+    <permission
+        android:name="android.permission.INTERACT_ACROSS_USERS"
         android:protectionLevel="signature|system|privileged" />
 
     <!-- @hide Fuller form of {@link android.Manifest.permission#INTERACT_ACROSS_USERS}
@@ -62,10 +68,12 @@
             android:name=".MainActivity"
             android:exported="true"
             android:directBootAware="true"
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SENDTO" />
+                <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="sms" />
