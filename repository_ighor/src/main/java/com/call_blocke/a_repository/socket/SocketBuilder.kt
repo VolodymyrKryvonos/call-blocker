@@ -51,6 +51,7 @@ class SocketBuilder private constructor(
         } else {
             SmartLog.d("Closed previously or connector is null")
         }
+        connector
         connector = null
     }
 

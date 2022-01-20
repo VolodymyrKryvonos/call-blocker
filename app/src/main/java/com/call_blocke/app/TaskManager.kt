@@ -7,6 +7,7 @@ import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
+import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
@@ -41,7 +42,17 @@ class TaskManager(private val context: Context) {
     suspend fun doTask(task: TaskEntity): Boolean {
         SmartLog.d("doTask ${task.id}")
 
-        val sim = sim(task.simSlot ?: return false) ?: return false
+        if (task.simSlot == null) {
+            taskRepository.taskOnError(task)
+            ServiceWorker.stop(context)
+            return false
+        }
+        val sim = sim(task.simSlot!!)
+        if (sim == null) {
+            taskRepository.taskOnError(task)
+            ServiceWorker.stop(context)
+            return false
+        }
         try {
             taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
         } catch (e: Exception) {
@@ -89,6 +100,9 @@ class TaskManager(private val context: Context) {
     private fun sim(id: Int): SubscriptionInfo? {
         val simList = SimUtil.getSIMInfo(context)
         SmartLog.e("SimList $simList")
+        if (simList.isEmpty()) {
+            return null
+        }
         for (sim in simList) {
             SmartLog.e("Sim ${sim.number}")
         }

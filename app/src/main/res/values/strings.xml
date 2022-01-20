@@ -35,7 +35,7 @@
 
     <string name="settings_title">Settings</string>
     <string name="settings_set_sms_per_day">Set sms count per day</string>
-    <string name="settings_first_sim_slot_sms_count_hint">Fist sms slot</string>
+    <string name="settings_first_sim_slot_sms_count_hint">First sms slot</string>
     <string name="settings_secound_sim_slot_sms_count_hint">Second sim slot</string>
     <string name="settings_set_sms_per_day_button">Apply</string>
     <string name="settings_on_success_updated">Success</string>
@@ -67,7 +67,7 @@
 
     <string name="sim_slot_change_title">Warning</string>
     <string name="sim_slot_change_desc">SIM card has been changed. Please reset the SIM</string>
-    <string name="ok">Ok</string>
+    <string name="ok">OK</string>
     <string name="turn_of_optimization">Turn off battery optimization</string>
     <string name="device_id">"Device ID:  "</string>
 

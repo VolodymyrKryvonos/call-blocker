@@ -146,9 +146,9 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                     }
                 }
 
-                isFirstFieldError = forFist <= 0
+                isFirstFieldError = forFist < 0
                 if (isSecondSimAllow)
-                    isSecondFieldError = forSecond <= 0
+                    isSecondFieldError = forSecond < 0
 
                 if (isFirstFieldError || isSecondFieldError)
                     return@Button
