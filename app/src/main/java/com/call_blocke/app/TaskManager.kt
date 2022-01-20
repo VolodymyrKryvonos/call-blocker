@@ -42,7 +42,6 @@ class TaskManager(private val context: Context) {
         SmartLog.d("doTask ${task.id}")
 
         val sim = sim(task.simSlot ?: return false) ?: return false
-
         try {
             taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
         } catch (e: Exception) {
@@ -89,10 +88,16 @@ class TaskManager(private val context: Context) {
 
     private fun sim(id: Int): SubscriptionInfo? {
         val simList = SimUtil.getSIMInfo(context)
-
+        SmartLog.e("SimList $simList")
+        for (sim in simList) {
+            SmartLog.e("Sim ${sim.number}")
+        }
         if (simList.size <= id)
             return null
 
+        if (simList[id].number.length < 5) {
+            return null
+        }
         return simList[id]
     }
 

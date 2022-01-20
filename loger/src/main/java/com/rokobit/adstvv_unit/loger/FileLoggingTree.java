@@ -46,9 +46,7 @@ public class FileLoggingTree extends Timber.DebugTree {
                 writer.append("<p style=\"background:lightgray;\"><strong "
                         + "style=\"background:lightblue;\">&nbsp&nbsp")
                         .append(logTimeStamp)
-                        .append(" :&nbsp&nbsp</strong><strong>&nbsp&nbsp")
-                        .append(tag)
-                        .append("</strong> - ")
+                        .append(" :&nbsp&nbsp</strong>")
                         .append(message)
                         .append("</p>");
                 writer.flush();

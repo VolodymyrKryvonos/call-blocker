@@ -1,7 +1,9 @@
 package com.rokobit.adstv.ui.element
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Icon
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
@@ -24,6 +26,8 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalAutofill
 import androidx.compose.ui.platform.LocalAutofillTree
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -41,9 +45,11 @@ fun Title(text: String, contentAlignment: TextAlign = TextAlign.Start) = Text(
 )
 
 @Composable
-fun Label(text: String,
-          color: Color = primaryColor,
-          contentAlignment: TextAlign = TextAlign.Start) = Text(
+fun Label(
+    text: String,
+    color: Color = primaryColor,
+    contentAlignment: TextAlign = TextAlign.Start
+) = Text(
     text = text,
     fontSize = 24.sp,
     fontFamily = mainFont,
@@ -52,9 +58,11 @@ fun Label(text: String,
 )
 
 @Composable
-fun Text(text: String,
-         color: Color = primaryColor,
-         contentAlignment: TextAlign = TextAlign.Start) = Text(
+fun Text(
+    text: String,
+    color: Color = primaryColor,
+    contentAlignment: TextAlign = TextAlign.Start
+) = Text(
     text = text,
     fontSize = 18.sp,
     fontFamily = mainFont,
@@ -64,9 +72,11 @@ fun Text(text: String,
 )
 
 @Composable
-fun TextNormal(text: String,
-         color: Color = primaryColor,
-         contentAlignment: TextAlign = TextAlign.Start) = Text(
+fun TextNormal(
+    text: String,
+    color: Color = primaryColor,
+    contentAlignment: TextAlign = TextAlign.Start
+) = Text(
     text = text,
     fontSize = 14.sp,
     fontFamily = mainFont,
@@ -84,15 +94,24 @@ fun Field(
     value: MutableState<String> = remember {
         mutableStateOf("")
     },
-    autofillTypes: List<AutofillType> = emptyList()
+    autofillTypes: List<AutofillType> = emptyList(),
+    onValueChange: (String) -> Unit = {
+        value.value = it
+        //isError.value = false
+    },
+    keyboardType: KeyboardType = KeyboardType.Text
 ) {
     val shape = RoundedCornerShape(20)
 
     OutlinedTextField(
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.None,
+            autoCorrect = true,
+            keyboardType = keyboardType
+        ),
         value = value.value,
-        onValueChange = {
-            value.value = it
-            //isError.value = false
+        onValueChange = onValueChange.also {
+            Log.e("onValueChange", value.value)
         },
         label = {
             Text(
@@ -104,7 +123,7 @@ fun Field(
         enabled = isEnable,
         textStyle = TextStyle(
             fontSize = 18.sp,
-            fontFamily = mainFont
+            fontFamily = mainFont,
         ),
         shape = shape,
         singleLine = true,

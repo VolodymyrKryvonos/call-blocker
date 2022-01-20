@@ -42,10 +42,11 @@ class SocketBuilder private constructor(
         }
     }
 
-    fun disconnect() {
+    fun disconnect(reason: String = "disconnect") {
         SmartLog.d("onDisconnect Socket")
         isOn = false
-        if (connector?.close(1000, "disconnect") == true) {
+        pingJob?.cancel()
+        if (connector?.close(1000, reason) == true) {
             SmartLog.d("Closed successful")
         } else {
             SmartLog.d("Closed previously or connector is null")
@@ -55,12 +56,21 @@ class SocketBuilder private constructor(
 
     fun reconnect() {
         SmartLog.e("Reconnect $ip")
-        disconnect()
+        disconnect("reconnect")
         Handler(Looper.getMainLooper()).postDelayed({ connect() }, 11000)
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
+        pingJob = launch(Dispatchers.IO) {
+            while (true) {
+                delay(5 * 60 * 1000)
+                SmartLog.e("Send Ping")
+                if (connector?.send("ping") == true) {
+                    SmartLog.e("Sent successful")
+                }
+            }
+        }
         statusConnect.value = true
         SmartLog.d("onOpen")
     }
@@ -68,7 +78,8 @@ class SocketBuilder private constructor(
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosing(webSocket, code, reason)
         SmartLog.d("onClosing $reason code = $code")
-        if (reason != "disconnect") {
+        if (reason != "disconnect" && reason != "reconnect") {
+            SmartLog.e("Reconnect from server")
             reconnect()
         }
     }
@@ -84,7 +95,8 @@ class SocketBuilder private constructor(
 
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosed(webSocket, code, reason)
-        SmartLog.d("onClosed")
+        SmartLog.d("onClosed $reason")
+        pingJob?.cancel()
         statusConnect.value = false
     }
 
@@ -92,11 +104,11 @@ class SocketBuilder private constructor(
         super.onFailure(webSocket, t, response)
         SmartLog.d("onFailure connection ${getStackTrace(t)}")
         statusConnect.value = false
+        pingJob?.cancel()
         if (isOn) {
             Handler(Looper.getMainLooper()).postDelayed({
                 reconnect()
-            }, 60 * 1000)
-
+            }, 30 * 1000)
         }
     }
 
@@ -135,11 +147,14 @@ class SocketBuilder private constructor(
             return data
         }
 
-        fun build() = SocketBuilder(
-            userToken = userToken!!,
-            uuid = uuid!!,
-            ip = ip ?: socketIp
-        )
+        fun build(): SocketBuilder {
+            SmartLog.e("SocketBuilder build")
+            return SocketBuilder(
+                userToken = userToken!!,
+                uuid = uuid!!,
+                ip = ip ?: socketIp
+            )
+        }
 
     }
 

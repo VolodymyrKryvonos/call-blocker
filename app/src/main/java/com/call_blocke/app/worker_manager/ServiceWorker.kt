@@ -10,8 +10,6 @@ import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
@@ -23,6 +21,7 @@ import com.call_blocke.app.TaskManager
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
@@ -69,19 +68,61 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                     ExistingPeriodicWorkPolicy.KEEP,
                     work
                 )
+            registerNetworkCallback(context)
         }
 
         fun stop(context: Context) {
             SmartLog.d("stop service")
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            try {
+                SmartLog.e("unregisterNetworkCallback $networkCallback")
+                connectivityManager.unregisterNetworkCallback(networkCallback)
+            } catch (e: Exception) {
+                SmartLog.e("unregisterNetworkCallback error $e")
+            }
             WorkManager.getInstance(context).cancelAllWork()
             TaskExecutorImp.job?.cancel()
             isRunning.value = false
         }
 
-        fun restart(context: Context) {
-            SmartLog.d("restart service")
-            stop(context)
-            Handler(Looper.getMainLooper()).postDelayed({ start(context) }, 5000)
+        private fun registerNetworkCallback(context: Context) {
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            try {
+                SmartLog.e("unregisterNetworkCallback $networkCallback")
+                connectivityManager.unregisterNetworkCallback(networkCallback)
+            } catch (e: Exception) {
+                SmartLog.e("unregisterNetworkCallback error $e")
+            }
+            try {
+                SmartLog.e("registerDefaultNetworkCallback $networkCallback")
+                connectivityManager.registerDefaultNetworkCallback(networkCallback)
+            } catch (e: Exception) {
+                SmartLog.e("registerDefaultNetworkCallback error ${getStackTrace(e)}")
+            }
+        }
+
+        private val networkCallback by lazy {
+            object :
+                ConnectivityManager.NetworkCallback() {
+                var lost = false
+                override fun onAvailable(network: Network) {
+                    super.onAvailable(network)
+                    SmartLog.e("Connected to the internet")
+                    lost = false
+                    GlobalScope.launch {
+                        delay(70 * 1000)
+                        RepositoryImp.taskRepository.sendTaskStatuses()
+                    }
+                }
+
+                override fun onLost(network: Network) {
+                    super.onLost(network)
+                    lost = true
+                    SmartLog.e("Lost internet connection")
+                }
+            }
         }
     }
 
@@ -99,8 +140,8 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     }
 
     override suspend fun doWork(): Result {
+        SmartLog.e("Start worker")
         wakeLock.acquire(1000 * 60 * 35)
-        registerNetworkCallback()
         isRunning.postValue(true)
         setForeground(createForegroundInfo())
         withContext(Dispatchers.IO) {
@@ -151,46 +192,4 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         notificationManager.createNotificationChannel(chan)
         return channelId
     }
-
-
-    private fun registerNetworkCallback() {
-        val connectivityManager =
-            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        try {
-            connectivityManager.unregisterNetworkCallback(networkCallback)
-        } catch (e: Exception) {
-        }
-        try {
-            connectivityManager.registerDefaultNetworkCallback(networkCallback)
-        } catch (e: Exception) {
-
-        }
-    }
-
-
-    private val networkCallback by lazy {
-        object :
-            ConnectivityManager.NetworkCallback() {
-            var lost = false
-            override fun onAvailable(network: Network) {
-                SmartLog.e("Connected to the internet")
-                if (lost) {
-                    RepositoryImp.taskRepository.reconnect()
-                }
-                lost = false
-                GlobalScope.launch {
-                    delay(10000)
-                    RepositoryImp.taskRepository.sendTaskStatuses()
-                }
-                super.onAvailable(network)
-            }
-
-            override fun onLost(network: Network) {
-                lost = true
-                SmartLog.e("Lost internet connection")
-                super.onLost(network)
-            }
-        }
-    }
-
 }

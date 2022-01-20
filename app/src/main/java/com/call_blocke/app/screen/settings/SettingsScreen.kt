@@ -32,7 +32,6 @@ import com.rokobit.adstv.ui.secondaryColor
 import com.rokobit.adstv.ui.secondaryDimens
 import kotlinx.coroutines.delay
 import java.io.File
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -93,14 +92,30 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                 hint = stringResource(id = R.string.settings_first_sim_slot_sms_count_hint),
                 value = smsOneCountValue,
                 isEnable = !isLoading && isFirstSimAllow,
-                isError = isFirstFieldError
+                isError = isFirstFieldError,
+                onValueChange = {
+                    if (it.toIntOrNull() ?: 0 > 400 || it.length > 3) {
+                        smsOneCountValue.value = 400.toString()
+                    } else {
+                        smsOneCountValue.value = it
+                    }
+                },
+                keyboardType = KeyboardType.Number
             )
             Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
             Field(
                 hint = stringResource(id = R.string.settings_secound_sim_slot_sms_count_hint),
                 value = smsTwoCountValue,
                 isEnable = !isLoading && isSecondSimAllow,
-                isError = isSecondFieldError
+                isError = isSecondFieldError,
+                onValueChange = {
+                    if (it.toIntOrNull() ?: 0 > 400 || it.length > 3) {
+                        smsTwoCountValue.value = 400.toString()
+                    } else {
+                        smsTwoCountValue.value = it
+                    }
+                },
+                keyboardType = KeyboardType.Number
             )
 
             Divider(

@@ -2,7 +2,9 @@ package com.call_blocke.app.worker_manager
 
 import android.content.Context
 import android.util.Log
-import androidx.work.*
+import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import com.rokobit.adstvv_unit.loger.SmartLog
 
 class RestartServiceWorker(
@@ -21,11 +23,7 @@ class RestartServiceWorker(
         SmartLog.e("Worker state ${workInfos.firstOrNull()?.state?.name}")
         if (workInfos.firstOrNull()?.state?.isFinished == true) {
             SmartLog.e("Restart worker")
-            workManager.cancelUniqueWork(ServiceWorker.WORK_NAME)
-            workManager.beginUniqueWork(
-                ServiceWorker.WORK_NAME, ExistingWorkPolicy.REPLACE,
-                OneTimeWorkRequestBuilder<ServiceWorker>().build()
-            ).enqueue()
+            ServiceWorker.start(context)
         }
         return Result.success()
     }
