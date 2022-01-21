@@ -8,16 +8,16 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import com.call_blocke.app.R
 import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
+import com.rokobit.adstvv_unit.loger.SmartLog
 
 class SimSlotReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d("SimSlotReceiver", "SimSlotReceiver")
+        SmartLog.d("SimSlotReceiver")
 
         if (intent?.getStringExtra("ss") != "READY")
             return

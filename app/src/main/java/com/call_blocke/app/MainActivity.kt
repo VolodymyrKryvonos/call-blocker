@@ -32,7 +32,6 @@ import com.call_blocke.app.screen.SplashScreen
 import com.call_blocke.app.screen.SplashViewModel
 import com.call_blocke.app.screen.auth.AuthScreen
 import com.call_blocke.app.screen.auth.AuthViewModel
-import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.Them
 import com.rokobit.adstv.ui.backgroundBrush
@@ -70,7 +69,6 @@ class MainActivity : ComponentActivity() {
                         .observeAsState(initial = SmsBlockerDatabase.isSimChanged)
 
                     if (isSimChanged) {
-                        ServiceWorker.stop(this@MainActivity)
                         Column {
                             Box(modifier = Modifier.weight(1f))
 

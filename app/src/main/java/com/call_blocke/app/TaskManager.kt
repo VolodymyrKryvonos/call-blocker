@@ -44,11 +44,11 @@ class TaskManager(private val context: Context) {
 
         if (task.simSlot == null) {
             taskRepository.taskOnError(task)
-            ServiceWorker.stop(context)
             return false
         }
         val sim = sim(task.simSlot!!)
         if (sim == null) {
+            SmartLog.e("Sim card is null")
             taskRepository.taskOnError(task)
             ServiceWorker.stop(context)
             return false
@@ -103,15 +103,8 @@ class TaskManager(private val context: Context) {
         if (simList.isEmpty()) {
             return null
         }
-        for (sim in simList) {
-            SmartLog.e("Sim ${sim.number}")
-        }
         if (simList.size <= id)
             return null
-
-        if (simList[id].number.length < 5) {
-            return null
-        }
         return simList[id]
     }
 

@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.work.WorkManager
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
@@ -158,7 +157,6 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 if (i == 1) {
                     if (isExecutorRunning) {
                         SmartLog.e("User stop service")
-                        WorkManager.getInstance(context).cancelAllWork()
                         mViewMode.stopExecutor(context)
                     } else {
                         SmartLog.e("User start service")

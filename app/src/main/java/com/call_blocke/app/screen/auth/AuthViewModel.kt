@@ -3,6 +3,7 @@ package com.call_blocke.app.screen.auth
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.call_blocke.app.BuildConfig
 import com.call_blocke.repository.RepositoryImp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -21,7 +22,7 @@ class AuthViewModel : ViewModel() {
         isLoading.postValue(true)
 
         val isSuccess = userRepository.login(
-            email, password
+            email, password, BuildConfig.VERSION_NAME
         )
 
         isLoading.postValue(false)

@@ -1,12 +1,12 @@
 package com.call_blocke.a_repository.repository
 
 import android.content.Context
-import com.call_blocke.a_repository.rest.UserRest
-import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.rest_work_imp.UserRepository
 import android.os.Build
 import com.call_blocke.a_repository.model.*
+import com.call_blocke.a_repository.rest.UserRest
+import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.SystemDetailEntity
+import com.call_blocke.rest_work_imp.UserRepository
 
 class UserRepositoryImp : UserRepository() {
 
@@ -15,12 +15,18 @@ class UserRepositoryImp : UserRepository() {
             UserRest::class.java
         )
 
-    override suspend fun doLogin(email: String, password: String, context: Context): String {
+    override suspend fun doLogin(
+        email: String,
+        password: String,
+        context: Context,
+        version: String
+    ): String {
         return userRest.signIn(
             LoginRequest(
                 uniqueId = SmsBlockerDatabase.deviceID,
                 email = email,
-                password = password
+                password = password,
+                version = version
             )
         ).data.success.token
     }

@@ -32,6 +32,9 @@ class SocketBuilder private constructor(
     private var pingJob: Job? = null
 
     fun connect() {
+        if (ip.isEmpty()) {
+            ip = "195.201.13.172"
+        }
         SmartLog.d("onConnect $ip")
         isOn = true
         val url = Request.Builder()

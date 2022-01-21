@@ -12,7 +12,12 @@ abstract class UserRepository {
      * @param password is accounts`s password field
      * @return auth token
      */
-    protected abstract suspend fun doLogin(email: String, password: String, context: Context): String
+    protected abstract suspend fun doLogin(
+        email: String,
+        password: String,
+        context: Context,
+        version: String
+    ): String
 
     /**
      * Implement rest
@@ -29,9 +34,9 @@ abstract class UserRepository {
      * @param password is accounts`s password field
      * @return success result
      */
-    suspend fun login(email: String, password: String): Boolean {
+    suspend fun login(email: String, password: String, version: String): Boolean {
         val userToken: String? = try {
-            doLogin(email, password, RepositoryBuilder.mContext)
+            doLogin(email, password, RepositoryBuilder.mContext, version)
         } catch (e: Exception) {
             e.printStackTrace()
             null

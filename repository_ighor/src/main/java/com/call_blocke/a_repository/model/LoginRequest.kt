@@ -6,5 +6,7 @@ data class LoginRequest(
     @SerializedName("unique_id")
     override val uniqueId: String,
     override val email: String,
-    override val password: String
+    override val password: String,
+    @SerializedName("version_of_package")
+    val version: String
 ): AuthRequest
