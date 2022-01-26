@@ -10,6 +10,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 class SocketBuilder private constructor(
@@ -29,8 +30,6 @@ class SocketBuilder private constructor(
 
     private var isOn = false
 
-    private var pingJob: Job? = null
-
     fun connect() {
         if (ip.isEmpty()) {
             ip = "195.201.13.172"
@@ -41,14 +40,16 @@ class SocketBuilder private constructor(
             .url("${String.format(socketUrl, ip)}?token=$userToken&unique_id=$uuid")
             .build()
         if (!statusConnect.value) {
-            connector = OkHttpClient().newWebSocket(url, this@SocketBuilder)
+            connector = OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .pingInterval(40, TimeUnit.SECONDS).build()
+                .newWebSocket(url, this@SocketBuilder)
         }
     }
 
     fun disconnect(reason: String = "disconnect") {
         SmartLog.d("onDisconnect Socket")
         isOn = false
-        pingJob?.cancel()
         if (connector?.close(1000, reason) == true) {
             SmartLog.d("Closed successful")
         } else {
@@ -66,15 +67,6 @@ class SocketBuilder private constructor(
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
-        pingJob = launch(Dispatchers.IO) {
-            while (true) {
-                delay(5 * 60 * 1000)
-                SmartLog.e("Send Ping")
-                if (connector?.send("ping") == true) {
-                    SmartLog.e("Sent successful")
-                }
-            }
-        }
         statusConnect.value = true
         SmartLog.d("onOpen")
     }
@@ -91,7 +83,6 @@ class SocketBuilder private constructor(
     override fun onMessage(webSocket: WebSocket, text: String) {
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
-
         launch(Dispatchers.IO) {
             messageCollector.emit(text)
         }
@@ -100,7 +91,6 @@ class SocketBuilder private constructor(
     override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
         super.onClosed(webSocket, code, reason)
         SmartLog.d("onClosed $reason")
-        pingJob?.cancel()
         statusConnect.value = false
     }
 
@@ -108,7 +98,6 @@ class SocketBuilder private constructor(
         super.onFailure(webSocket, t, response)
         SmartLog.d("onFailure connection ${getStackTrace(t)}")
         statusConnect.value = false
-        pingJob?.cancel()
         if (isOn) {
             Handler(Looper.getMainLooper()).postDelayed({
                 reconnect()

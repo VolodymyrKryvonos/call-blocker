@@ -11,6 +11,8 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.os.Build
 import android.os.PowerManager
+import android.provider.Settings
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.MutableLiveData
 import androidx.work.*
@@ -18,6 +20,9 @@ import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
+import com.call_blocke.app.worker_manager.UStats.getStats
+import com.call_blocke.app.worker_manager.UStats.getUsageStatsList
+import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
@@ -26,7 +31,9 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import java.io.File
 import java.util.concurrent.TimeUnit
+
 
 object TaskExecutorImp {
     private var taskList: Flow<TaskMessage>? = null
@@ -69,6 +76,16 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                     work
                 )
             registerNetworkCallback(context)
+//            logProcesses(context)
+        }
+
+        private fun logProcesses(context: Context) {
+            if (getUsageStatsList(context).isEmpty()) {
+                val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                context.startActivity(intent)
+            }
+            GlobalScope.launch(Dispatchers.IO) { getStats(context) }
+
         }
 
         fun stop(context: Context) {
@@ -148,7 +165,13 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             TaskExecutorImp.job = taskList.onEach { msg ->
                 SmartLog.d("onEach ${msg.list.map { it.id }}")
                 msg.list.forEach {
-                    taskManager.doTask(it)
+                    if (it.message == "GET_LOGS") {
+                        Log.e("ServiceWorker sendLogs", it.message)
+                        sendLogs()
+                    } else {
+                        Log.e("ServiceWorker doTask", it.message)
+                        taskManager.doTask(it)
+                    }
                 }
             }.launchIn(this)
         }
@@ -159,6 +182,13 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             RepositoryImp.taskRepository.reconnect()
         }
         return Result.success()
+    }
+
+    private suspend fun sendLogs() {
+        val directory = File(context.filesDir.absolutePath + "/Log")
+        val filesList = directory.listFiles()
+        val file = filesList?.lastOrNull()
+        file?.let { RepositoryImp.logRepository.sendLogs(it, SmsBlockerDatabase.deviceID) }
     }
 
 
