@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.CoroutineContext
 
 
 object TaskExecutorImp {
@@ -114,7 +115,10 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                     super.onAvailable(network)
                     SmartLog.e("Connected to the internet")
                     lost = false
-                    GlobalScope.launch {
+                    object : CoroutineScope {
+                        override val coroutineContext: CoroutineContext
+                            get() = Dispatchers.IO
+                    }.launch {
                         delay(70 * 1000)
                         RepositoryImp.taskRepository.sendTaskStatuses()
                     }

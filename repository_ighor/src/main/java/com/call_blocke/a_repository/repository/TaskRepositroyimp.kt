@@ -18,6 +18,8 @@ import com.google.gson.reflect.TypeToken
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 class TaskRepositoryImp : TaskRepository() {
 
@@ -90,7 +92,9 @@ class TaskRepositoryImp : TaskRepository() {
                 if (it?.data?.smsList?.isEmpty() == true) {
                     ping.emit(true)
                 }
-                it != null
+                ((it != null) && (System.currentTimeMillis() - getDate(
+                    it.options.dateTime ?: ""
+                ).time <= 35 * 60 * 1000))
             }
             .map { res ->
                 TaskMessage(
@@ -131,6 +135,15 @@ class TaskRepositoryImp : TaskRepository() {
             }
     }
 
+    private fun getDate(stringDate: String): Date {
+        return try {
+            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
+            return format.parse(stringDate) ?: Date()
+        } catch (e: Exception) {
+            Date()
+        }
+    }
+
     override suspend fun sendTaskStatus(taskID: Int) {
         val task = task(taskID)
 
@@ -155,6 +168,7 @@ class TaskRepositoryImp : TaskRepository() {
                 )
             )
         ) {
+            SmartLog.e("Failed send status $req")
             SmsBlockerDatabase.taskStatusDao.insertTaskStatus(
                 TaskStatusData(
                     id = req.data.id,
@@ -185,6 +199,8 @@ class TaskRepositoryImp : TaskRepository() {
                 )
             ) {
                 SmsBlockerDatabase.taskStatusDao.deleteTaskStatus(statues[i])
+            } else {
+                SmartLog.e("Failed send status $status")
             }
         }
     }

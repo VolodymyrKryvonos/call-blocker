@@ -6,9 +6,12 @@ import com.call_blocke.a_repository.Const.socketIp
 import com.call_blocke.a_repository.Const.socketUrl
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import okhttp3.*
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
@@ -55,7 +58,6 @@ class SocketBuilder private constructor(
         } else {
             SmartLog.d("Closed previously or connector is null")
         }
-        connector
         connector = null
     }
 
@@ -106,6 +108,7 @@ class SocketBuilder private constructor(
     }
 
     fun sendMessage(data: String): Boolean {
+
         return try {
             SmartLog.e("sendMessage $data")
             connector?.send(data) == true
