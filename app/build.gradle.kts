@@ -104,4 +104,5 @@ dependencies {
     implementation(project(":loger"))
 
     implementation("androidx.work:work-runtime-ktx:2.6.0")
+    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.8.1")
 }

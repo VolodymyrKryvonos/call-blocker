@@ -31,11 +31,11 @@ class TaskManager(private val context: Context) {
     private var sentSmsNCountSecond = 0
 
     private val smsLimit by lazy {
-        Settings.Global.getInt(resolver, "sms_outgoing_check_max_count", 5)
+        Settings.Global.getInt(resolver, "sms_outgoing_check_max_count", 1)
     }
 
     private val smsLimitInterval by lazy {
-        Settings.Global.getLong(resolver, "sms_outgoing_check_interval_ms", 30000)
+        Settings.Global.getLong(resolver, "sms_outgoing_check_interval_ms", 2000)
     }
 
     @Synchronized
