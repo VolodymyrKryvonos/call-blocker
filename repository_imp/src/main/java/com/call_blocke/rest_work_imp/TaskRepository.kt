@@ -113,6 +113,8 @@ abstract class TaskRepository {
 
     abstract val taskMessage: Flow<TaskMessage>
 
+    abstract val connectionStatusFlow: Flow<Boolean>
+
     abstract suspend fun sendTaskStatus(taskID: Int)
 
     abstract suspend fun sendTaskStatuses()

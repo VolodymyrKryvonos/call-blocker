@@ -27,6 +27,8 @@ class SocketBuilder private constructor(
 
     val messageCollector = MutableSharedFlow<String?>(0)
 
+    val connectionStatusFlow = MutableSharedFlow<Boolean>(0)
+
     val statusConnect = MutableStateFlow(false)
 
     private var connector: WebSocket? = null
@@ -71,6 +73,10 @@ class SocketBuilder private constructor(
         super.onOpen(webSocket, response)
         statusConnect.value = true
         SmartLog.d("onOpen")
+        launch(Dispatchers.IO) {
+            SmartLog.d("emit onOpen")
+            connectionStatusFlow.emit(true)
+        }
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
@@ -94,12 +100,14 @@ class SocketBuilder private constructor(
         super.onClosed(webSocket, code, reason)
         SmartLog.d("onClosed $reason")
         statusConnect.value = false
+        launch(Dispatchers.IO) { connectionStatusFlow.emit(false) }
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
         SmartLog.d("onFailure connection ${getStackTrace(t)}")
         statusConnect.value = false
+        launch(Dispatchers.IO) { connectionStatusFlow.emit(false) }
         if (isOn) {
             Handler(Looper.getMainLooper()).postDelayed({
                 reconnect()

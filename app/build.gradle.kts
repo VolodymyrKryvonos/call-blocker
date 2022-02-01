@@ -29,7 +29,7 @@ android {
 
     defaultConfig {
         applicationId = "com.callblocker.app"
-        minSdk = Config.minSdkVersion.toInt()
+        minSdk = (Config.minSdkVersion.toInt())
         targetSdk = Config.targetVersion.toInt()
         versionCode = Config.versionCode
         versionName = Config.versionName
@@ -104,5 +104,4 @@ dependencies {
     implementation(project(":loger"))
 
     implementation("androidx.work:work-runtime-ktx:2.6.0")
-    debugImplementation("com.squareup.leakcanary:leakcanary-android:2.8.1")
 }

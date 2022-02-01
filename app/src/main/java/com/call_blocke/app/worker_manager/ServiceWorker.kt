@@ -7,8 +7,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.net.ConnectivityManager
-import android.net.Network
 import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
@@ -22,14 +20,15 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
-import com.rokobit.adstvv_unit.loger.utils.getStackTrace
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.CoroutineContext
 
 
 object TaskExecutorImp {
@@ -59,77 +58,40 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
 
         fun start(context: Context) {
             SmartLog.d("start service ${BuildConfig.VERSION_NAME}")
-            WorkManager.getInstance(context).beginUniqueWork(
+            startWorkers(context)
+        }
+
+        private fun startWorkers(context: Context) {
+            val workManager = WorkManager.getInstance(context)
+            workManager.beginUniqueWork(
                 WORK_NAME, ExistingWorkPolicy.REPLACE,
                 OneTimeWorkRequestBuilder<ServiceWorker>().build()
             ).enqueue()
+
             val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(5, TimeUnit.MINUTES)
                 .setInitialDelay(5, TimeUnit.MINUTES)
                 .build()
-            WorkManager.getInstance(context)
+            workManager
                 .enqueueUniquePeriodicWork(
                     "RestartServiceWorker",
                     ExistingPeriodicWorkPolicy.KEEP,
                     work
                 )
-            registerNetworkCallback(context)
+
+            workManager.enqueueUniquePeriodicWork(
+                "ClearLogsWorker",
+                ExistingPeriodicWorkPolicy.KEEP,
+                PeriodicWorkRequestBuilder<ClearLogsWorker>(12, TimeUnit.HOURS)
+                    .setInitialDelay(0, TimeUnit.MILLISECONDS)
+                    .build()
+            )
         }
 
         fun stop(context: Context) {
             SmartLog.d("stop service")
-            val connectivityManager =
-                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            try {
-                SmartLog.e("unregisterNetworkCallback $networkCallback")
-                connectivityManager.unregisterNetworkCallback(networkCallback)
-            } catch (e: Exception) {
-                SmartLog.e("unregisterNetworkCallback error $e")
-            }
             WorkManager.getInstance(context).cancelAllWork()
             TaskExecutorImp.job?.cancel()
             isRunning.value = false
-        }
-
-        private fun registerNetworkCallback(context: Context) {
-            val connectivityManager =
-                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            try {
-                SmartLog.e("unregisterNetworkCallback $networkCallback")
-                connectivityManager.unregisterNetworkCallback(networkCallback)
-            } catch (e: Exception) {
-                SmartLog.e("unregisterNetworkCallback error $e")
-            }
-            try {
-                SmartLog.e("registerDefaultNetworkCallback $networkCallback")
-                connectivityManager.registerDefaultNetworkCallback(networkCallback)
-            } catch (e: Exception) {
-                SmartLog.e("registerDefaultNetworkCallback error ${getStackTrace(e)}")
-            }
-        }
-
-        private val networkCallback by lazy {
-            object :
-                ConnectivityManager.NetworkCallback() {
-                var lost = false
-                override fun onAvailable(network: Network) {
-                    super.onAvailable(network)
-                    SmartLog.e("Connected to the internet")
-                    lost = false
-                    object : CoroutineScope {
-                        override val coroutineContext: CoroutineContext
-                            get() = Dispatchers.IO
-                    }.launch {
-                        delay(70 * 1000)
-                        RepositoryImp.taskRepository.sendTaskStatuses()
-                    }
-                }
-
-                override fun onLost(network: Network) {
-                    super.onLost(network)
-                    lost = true
-                    SmartLog.e("Lost internet connection")
-                }
-            }
         }
     }
 
@@ -152,6 +114,12 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         isRunning.postValue(true)
         setForeground(createForegroundInfo())
         withContext(Dispatchers.IO) {
+            RepositoryImp.taskRepository.connectionStatusFlow.onEach {
+                SmartLog.e("Connect status $it")
+                if (it) {
+                    RepositoryImp.taskRepository.sendTaskStatuses()
+                }
+            }.launchIn(this)
             TaskExecutorImp.job = taskList.onEach { msg ->
                 SmartLog.d("onEach ${msg.list.map { it.id }}")
                 msg.list.forEach {
@@ -163,6 +131,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                 }
             }.launchIn(this)
         }
+
         while (TaskExecutorImp.job?.isActive == true) {
             delay(1000 * 60 * 30)
             wakeLock.release()
@@ -175,8 +144,11 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     private suspend fun sendLogs() {
         val directory = File(context.filesDir.absolutePath + "/Log")
         val filesList = directory.listFiles()
-        val file = filesList?.lastOrNull()
-        file?.let { RepositoryImp.logRepository.sendLogs(it, SmsBlockerDatabase.deviceID) }
+        if (filesList != null) {
+            for (file in filesList) {
+                file?.let { RepositoryImp.logRepository.sendLogs(it, SmsBlockerDatabase.deviceID) }
+            }
+        }
     }
 
 

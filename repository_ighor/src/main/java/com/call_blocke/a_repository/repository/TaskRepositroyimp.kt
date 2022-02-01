@@ -73,6 +73,8 @@ class TaskRepositoryImp : TaskRepository() {
         socketBuilder.reconnect()
     }
 
+    override val connectionStatusFlow: Flow<Boolean> by lazy { socketBuilder.connectionStatusFlow }
+
     override val taskMessage: Flow<TaskMessage> by lazy {
         socketBuilder
             .messageCollector
@@ -192,7 +194,7 @@ class TaskRepositoryImp : TaskRepository() {
             )
         }
         for ((i, status) in statuesMaped.withIndex()) {
-            if (!socketBuilder.sendMessage(
+            if (socketBuilder.sendMessage(
                     Gson().toJson(
                         status
                     )

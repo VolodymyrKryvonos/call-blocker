@@ -11,6 +11,7 @@ android {
     buildToolsVersion = (Version.buildTool)
 
     defaultConfig {
+        minSdk = (Config.minSdkVersion.toInt())
         minSdkPreview = (Config.minSdkVersion)
         targetSdk =  (Config.targetVersion.toInt())
     }

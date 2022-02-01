@@ -4,11 +4,16 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -32,7 +37,6 @@ import com.rokobit.adstv.ui.secondaryColor
 import com.rokobit.adstv.ui.secondaryDimens
 import kotlinx.coroutines.delay
 import java.io.File
-import java.util.*
 
 
 @ExperimentalAnimationApi
@@ -50,7 +54,12 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
         var selected by remember { mutableStateOf(preference.ipType) }
         Log.e("Selected", "Selected:${preference.ipType}")
         val radioGroupOptions = listOf("Test", "Production", "Custom")
-        Column(modifier = Modifier.weight(1f)) {
+        val scrollState = rememberScrollState()
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(state = scrollState)
+        ) {
             Title(text = stringResource(id = R.string.settings_title))
             Label(text = stringResource(id = R.string.settings_set_sms_per_day))
 
@@ -258,6 +267,7 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
         }
     }
 
+
 fun getLogsShareIntent(context: Context): Intent {
     val files = arrayListOf<Uri>()
     val sendIntent: Intent = Intent().apply {
@@ -292,12 +302,12 @@ fun getLogsShareIntent(context: Context): Intent {
 private fun clearLogs(context: Context) {
     val directory = File(context.filesDir.absolutePath + "/Log")
     val filesList = directory.listFiles()
-    if (filesList!=null){
-        for (file in filesList){
+    if (filesList != null) {
+        for (file in filesList) {
             Log.e("FileName Path", file.name + " " + file.absolutePath)
             file.delete()
-            if (file.exists()){
-                if(!file.canonicalFile.delete()){
+            if (file.exists()) {
+                if (!file.canonicalFile.delete()) {
                     context.deleteFile(file.name)
                 }
             }
