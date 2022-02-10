@@ -31,13 +31,25 @@ class SimSlotReceiver : BroadcastReceiver() {
 
     private fun notify(context: Context) {
         val channelId =
-            createNotificationChannel(context, "my_service", "My Background Service")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createNotificationChannel(context, "my_service", "My Background Service")
+            } else {
+                ""
+            }
 
-        val notification: Notification = Notification.Builder(context, channelId)
-            .setContentTitle(context.getString(R.string.sim_slot_change_title))
-            .setContentText(context.getString(R.string.sim_slot_change_desc))
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .build()
+        val notification: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(context, channelId)
+                .setContentTitle(context.getString(R.string.sim_slot_change_title))
+                .setContentText(context.getString(R.string.sim_slot_change_desc))
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .build()
+        } else {
+            Notification.Builder(context)
+                .setContentTitle(context.getString(R.string.sim_slot_change_title))
+                .setContentText(context.getString(R.string.sim_slot_change_desc))
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .build()
+        }
 
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

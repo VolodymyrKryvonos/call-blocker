@@ -105,6 +105,7 @@ class TaskRepositoryImp : TaskRepository() {
                             id = it.id,
                             sendTo = it.msisdn,
                             message = it.txt,
+                            highPriority = false,//it.isHighPriority,
                             simSlot = if (res.data.sim == "msisdn_1")
                                 0
                             else
@@ -155,6 +156,7 @@ class TaskRepositoryImp : TaskRepository() {
                     TaskStatus.PROCESS -> "processed"
                     TaskStatus.DELIVERED -> "delivered"
                     TaskStatus.BUFFERED -> "received"
+                    TaskStatus.TIME_RANGE_VIOLATED -> "time_range_violated"
                     else -> "undelivered"
                 },
                 id = task.id,

@@ -159,15 +159,29 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             }
 
         val channelId =
-            createNotificationChannel("my_worker", "My Background Worker")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                createNotificationChannel("my_worker", "My Background Worker")
+            } else {
+                ""
+            }
 
-        val notification: Notification = Notification.Builder(applicationContext, channelId)
-            .setContentTitle("Task executor")
-            .setContentText("On run")
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentIntent(pendingIntent)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .build()
+        val notification: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(applicationContext, channelId)
+                .setContentTitle("Task executor")
+                .setContentText("On run")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pendingIntent)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .build()
+        } else {
+            Notification.Builder(applicationContext)
+                .setContentTitle("Task executor")
+                .setContentText("On run")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pendingIntent)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .build()
+        }
         return ForegroundInfo(1001, notification)
     }
 

@@ -74,6 +74,13 @@ abstract class TaskRepository {
         })
     }
 
+    suspend fun taskOnViolatedTimeRange(taskEntity: TaskEntity) {
+        updateTask(taskEntity.apply {
+            deliveredAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
+            taskEntity.status = TaskStatus.TIME_RANGE_VIOLATED
+        })
+    }
+
     suspend fun taskOnError(taskEntity: TaskEntity) {
         updateTask(taskEntity.apply {
             deliveredAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis

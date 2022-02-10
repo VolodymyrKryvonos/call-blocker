@@ -3,6 +3,7 @@ package com.call_blocke.app
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.*
+import android.os.Build
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
@@ -53,6 +54,13 @@ class TaskManager(private val context: Context) {
             ServiceWorker.stop(context)
             return false
         }
+
+//        val calendar = Calendar.getInstance()
+//        if(!task.highPriority && calendar.get(Calendar.HOUR_OF_DAY) in 21 downTo 8){
+//            taskRepository.taskOnViolatedTimeRange(task)
+//            return false
+//        }
+
         try {
             taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
         } catch (e: Exception) {
@@ -79,7 +87,6 @@ class TaskManager(private val context: Context) {
         } else if (task.simSlot == 1) {
             sentSmsNCountSecond++
         }
-
         val status = sendSms(sim, task)
 
         if (status) {
@@ -117,7 +124,11 @@ class TaskManager(private val context: Context) {
             val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
 
             val smsManager: SmsManager = try {
-                SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+                    SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
+                } else {
+                    SmsManager.getDefault()
+                }
             } catch (e: Exception) {
                 SmartLog.e("OnSimSelect ${getStackTrace(e)} ${e.message}")
                 e.printStackTrace()
