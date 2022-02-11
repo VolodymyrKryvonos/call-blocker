@@ -23,7 +23,6 @@ class TaskManager(private val context: Context) {
     private val taskRepository = RepositoryImp.taskRepository
 
     private val mHandler = android.os.Handler(Looper.getMainLooper())
-    private val mHandler2 = android.os.Handler(Looper.getMainLooper())
 
 
     private val resolver: ContentResolver = context.contentResolver
@@ -36,7 +35,7 @@ class TaskManager(private val context: Context) {
     }
 
     private val smsLimitInterval by lazy {
-        Settings.Global.getLong(resolver, "sms_outgoing_check_interval_ms", 2000)
+        Settings.Global.getLong(resolver, "sms_outgoing_check_interval_ms", 3000)
     }
 
     @Synchronized

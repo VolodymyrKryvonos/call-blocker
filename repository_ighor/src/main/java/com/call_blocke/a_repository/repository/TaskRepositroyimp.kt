@@ -1,6 +1,5 @@
 package com.call_blocke.a_repository.repository
 
-import android.util.Log
 import com.call_blocke.a_repository.Const.socketIp
 import com.call_blocke.a_repository.Const.testIp
 import com.call_blocke.a_repository.model.*
@@ -75,6 +74,7 @@ class TaskRepositoryImp : TaskRepository() {
 
     override val connectionStatusFlow: Flow<Boolean> by lazy { socketBuilder.connectionStatusFlow }
 
+
     override val taskMessage: Flow<TaskMessage> by lazy {
         socketBuilder
             .messageCollector
@@ -121,7 +121,6 @@ class TaskRepositoryImp : TaskRepository() {
                 SmartLog.e("Map error ${getStackTrace(e)}")
             }
             .onStart {
-                Log.d("taskListMessage", "onStart")
                 SmartLog.e("taskListMessage onStart")
                 socketBuilder.ip =
                     when (preference?.ipType) {
@@ -133,7 +132,6 @@ class TaskRepositoryImp : TaskRepository() {
             }
             .onCompletion {
                 SmartLog.e("taskListMessage onCompletion")
-                Log.d("taskListMessage", "onCompletion")
                 socketBuilder.disconnect()
             }
     }

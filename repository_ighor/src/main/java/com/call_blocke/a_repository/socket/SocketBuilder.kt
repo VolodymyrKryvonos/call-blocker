@@ -110,6 +110,7 @@ class SocketBuilder private constructor(
         launch(Dispatchers.IO) { connectionStatusFlow.emit(false) }
         if (isOn) {
             Handler(Looper.getMainLooper()).postDelayed({
+                SmartLog.e("reconnect onFailure")
                 reconnect()
             }, 30 * 1000)
         }

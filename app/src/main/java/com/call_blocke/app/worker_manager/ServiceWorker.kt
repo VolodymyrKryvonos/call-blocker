@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.withContext
@@ -36,6 +37,7 @@ object TaskExecutorImp {
 
     var job: Job? = null
     fun buildTaskList(): Flow<TaskMessage> {
+        RepositoryImp.taskRepository
         if (taskList == null)
             taskList = RepositoryImp.taskRepository.taskMessage
 
@@ -136,7 +138,10 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             delay(1000 * 60 * 30)
             wakeLock.release()
             wakeLock.acquire(1000 * 60 * 35)
-            RepositoryImp.taskRepository.reconnect()
+            if (!RepositoryImp.taskRepository.connectionStatusFlow.last()) {
+                SmartLog.e("Timeout reconnect")
+                RepositoryImp.taskRepository.reconnect()
+            }
         }
         return Result.success()
     }
