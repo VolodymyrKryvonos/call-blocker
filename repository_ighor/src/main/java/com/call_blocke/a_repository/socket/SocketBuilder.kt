@@ -64,9 +64,11 @@ class SocketBuilder private constructor(
     }
 
     fun reconnect() {
-        SmartLog.e("Reconnect $ip")
-        disconnect("reconnect")
-        Handler(Looper.getMainLooper()).postDelayed({ connect() }, 11000)
+        if (isOn) {
+            SmartLog.e("Reconnect $ip")
+            disconnect("reconnect")
+            Handler(Looper.getMainLooper()).postDelayed({ connect() }, 11000)
+        }
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -108,12 +110,11 @@ class SocketBuilder private constructor(
         SmartLog.d("onFailure connection ${getStackTrace(t)}")
         statusConnect.value = false
         launch(Dispatchers.IO) { connectionStatusFlow.emit(false) }
-        if (isOn) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                SmartLog.e("reconnect onFailure")
-                reconnect()
-            }, 30 * 1000)
-        }
+        Handler(Looper.getMainLooper()).postDelayed({
+            SmartLog.e("reconnect onFailure")
+            reconnect()
+        }, 30 * 1000)
+
     }
 
     fun sendMessage(data: String): Boolean {

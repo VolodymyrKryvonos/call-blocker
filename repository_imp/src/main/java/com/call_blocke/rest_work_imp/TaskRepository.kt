@@ -118,13 +118,13 @@ abstract class TaskRepository {
 
     suspend fun replayInPhoneList() = replayTaskDao.rInPhoneList()
 
-    abstract val taskMessage: Flow<TaskMessage>
-
     abstract val connectionStatusFlow: Flow<Boolean>
 
     abstract suspend fun sendTaskStatus(taskID: Int)
 
     abstract suspend fun sendTaskStatuses()
+
+    abstract suspend fun taskMessage(): Flow<TaskMessage>
 
     suspend fun deliveredCountToday(simIndex: Int): Int {
         val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))

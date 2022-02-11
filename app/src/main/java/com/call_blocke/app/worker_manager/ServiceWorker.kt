@@ -33,16 +33,7 @@ import java.util.concurrent.TimeUnit
 
 
 object TaskExecutorImp {
-    private var taskList: Flow<TaskMessage>? = null
-
-    var job: Job? = null
-    fun buildTaskList(): Flow<TaskMessage> {
-        RepositoryImp.taskRepository
-        if (taskList == null)
-            taskList = RepositoryImp.taskRepository.taskMessage
-
-        return taskList!!
-    }
+     var job: Job? = null
 }
 
 class ServiceWorker(var context: Context, parameters: WorkerParameters) :
@@ -101,10 +92,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         context.getSystemService(Context.NOTIFICATION_SERVICE) as
                 NotificationManager
 
-    private val taskList: Flow<TaskMessage> by lazy {
-        TaskExecutorImp
-            .buildTaskList()
-    }
+    private var taskList: Flow<TaskMessage>? = null
 
     private val taskManager by lazy {
         TaskManager(applicationContext)
@@ -112,6 +100,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
 
     override suspend fun doWork(): Result {
         SmartLog.e("Start worker")
+        taskList = RepositoryImp.taskRepository.taskMessage()
         wakeLock.acquire(1000 * 60 * 35)
         isRunning.postValue(true)
         setForeground(createForegroundInfo())
@@ -122,7 +111,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                     RepositoryImp.taskRepository.sendTaskStatuses()
                 }
             }.launchIn(this)
-            TaskExecutorImp.job = taskList.onEach { msg ->
+            TaskExecutorImp.job = taskList!!.onEach { msg ->
                 SmartLog.d("onEach ${msg.list.map { it.id }}")
                 msg.list.forEach {
                     if (it.message == "GET_LOGS") {

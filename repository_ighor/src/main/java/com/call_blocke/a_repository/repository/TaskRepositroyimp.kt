@@ -15,8 +15,13 @@ import com.call_blocke.rest_work_imp.TaskRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.rokobit.adstvv_unit.loger.SmartLog
-import com.rokobit.adstvv_unit.loger.utils.getStackTrace
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -74,66 +79,56 @@ class TaskRepositoryImp : TaskRepository() {
 
     override val connectionStatusFlow: Flow<Boolean> by lazy { socketBuilder.connectionStatusFlow }
 
+    override suspend fun taskMessage(): Flow<TaskMessage> = channelFlow {
+        socketBuilder.ip =
+            when (preference?.ipType) {
+                "Test" -> testIp
+                "Production" -> socketIp
+                else -> preference?.customIp ?: ""
+            }
+        socketBuilder.connect()
+        withContext(Dispatchers.IO) {
+            socketBuilder.messageCollector.collect {
+                async {
+                    SmartLog.d("Receive Message $it")
+                    toTaskMessage(it)?.let { it1 -> send(it1) }
+                }.start()
+            }
+        }
+    }.onCompletion {
+        SmartLog.e("taskListMessage onCompletion")
+        socketBuilder.disconnect()
+    }
 
-    override val taskMessage: Flow<TaskMessage> by lazy {
-        socketBuilder
-            .messageCollector
-            .map {
-                SmartLog.d("Receive Message $it")
-                try {
-                    Gson().fromJson<ApiResponse<TaskResponse>>(
-                        it,
-                        (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
-                    )
-                } catch (e: Exception) {
-                    SmartLog.e(e)
-                    null
-                }
-            }
-            .filter {
-                if (it?.data?.smsList?.isEmpty() == true) {
-                    ping.emit(true)
-                }
-                ((it != null) && (System.currentTimeMillis() - getDate(
-                    it.options.dateTime ?: ""
+    private suspend fun toTaskMessage(msg: String?): TaskMessage? {
+        try {
+            val parsedMsg = Gson().fromJson<ApiResponse<TaskResponse>>(
+                msg,
+                (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
+            )
+            if (((parsedMsg != null) && (System.currentTimeMillis() - getDate(
+                    parsedMsg.options.dateTime ?: ""
                 ).time <= 35 * 60 * 1000))
-            }
-            .map { res ->
-                TaskMessage(
-                    list = res!!.data.smsList.map {
+            ) {
+                return TaskMessage(
+                    list = parsedMsg.data.smsList.map {
                         TaskEntity(
                             id = it.id,
                             sendTo = it.msisdn,
                             message = it.txt,
                             highPriority = false,//it.isHighPriority,
-                            simSlot = if (res.data.sim == "msisdn_1")
+                            simSlot = if (parsedMsg.data.sim == "msisdn_1")
                                 0
                             else
                                 1
                         )
                     }
-                )
+                ).also { save(it.list) }
             }
-            .onEach {
-                save(it.list)
-            }
-            .catch { e ->
-                SmartLog.e("Map error ${getStackTrace(e)}")
-            }
-            .onStart {
-                SmartLog.e("taskListMessage onStart")
-                socketBuilder.ip =
-                    when (preference?.ipType) {
-                        "Test" -> testIp
-                        "Production" -> socketIp
-                        else -> preference?.customIp ?: ""
-                    }
-                socketBuilder.connect()
-            }
-            .onCompletion {
-                SmartLog.e("taskListMessage onCompletion")
-                socketBuilder.disconnect()
-            }
+        } catch (e: Exception) {
+            SmartLog.e(e)
+        }
+        return null
     }
 
     private fun getDate(stringDate: String): Date {
