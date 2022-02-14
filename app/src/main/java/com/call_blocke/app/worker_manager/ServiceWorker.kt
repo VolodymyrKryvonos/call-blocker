@@ -10,7 +10,6 @@ import android.graphics.Color
 import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.MutableLiveData
 import androidx.work.*
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.MainActivity
@@ -20,20 +19,14 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.rokobit.adstvv_unit.loger.SmartLog
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import java.io.File
 import java.util.concurrent.TimeUnit
 
 
 object TaskExecutorImp {
-     var job: Job? = null
+    var job: Job? = null
 }
 
 class ServiceWorker(var context: Context, parameters: WorkerParameters) :
@@ -45,7 +38,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     }
 
     companion object {
-        val isRunning = MutableLiveData(false)
+        val isRunning = MutableStateFlow(false)
 
         const val WORK_NAME = "ServiceWorker"
 
@@ -84,7 +77,9 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             SmartLog.d("stop service")
             WorkManager.getInstance(context).cancelAllWork()
             TaskExecutorImp.job?.cancel()
-            isRunning.value = false
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                isRunning.emit(false)
+            }
         }
     }
 
@@ -102,7 +97,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         SmartLog.e("Start worker")
         taskList = RepositoryImp.taskRepository.taskMessage()
         wakeLock.acquire(1000 * 60 * 35)
-        isRunning.postValue(true)
+        isRunning.emit(true)
         setForeground(createForegroundInfo())
         withContext(Dispatchers.IO) {
             RepositoryImp.taskRepository.connectionStatusFlow.onEach {

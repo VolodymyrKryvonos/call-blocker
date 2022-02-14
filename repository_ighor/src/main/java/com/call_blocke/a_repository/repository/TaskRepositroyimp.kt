@@ -15,6 +15,8 @@ import com.call_blocke.rest_work_imp.TaskRepository
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
@@ -91,13 +93,23 @@ class TaskRepositoryImp : TaskRepository() {
             socketBuilder.messageCollector.collect {
                 async {
                     SmartLog.d("Receive Message $it")
-                    toTaskMessage(it)?.let { it1 -> send(it1) }
+                    toTaskMessage(it)?.let { taskMessage ->
+                        if (taskMessage.list.any { it.simSlot != null || it.simSlot != -1 }) {
+                            send(taskMessage)
+                        }
+                    }
                 }.start()
             }
         }
     }.onCompletion {
-        SmartLog.e("taskListMessage onCompletion")
-        socketBuilder.disconnect()
+        val msg = if (it != null && it !is CancellationException) {
+            socketBuilder.reconnect()
+            "onCompletion ${getStackTrace(it)}"
+        } else {
+            socketBuilder.disconnect()
+            "taskListMessage onCompletion"
+        }
+        SmartLog.e(msg)
     }
 
     private suspend fun toTaskMessage(msg: String?): TaskMessage? {
@@ -117,10 +129,11 @@ class TaskRepositoryImp : TaskRepository() {
                             sendTo = it.msisdn,
                             message = it.txt,
                             highPriority = false,//it.isHighPriority,
-                            simSlot = if (parsedMsg.data.sim == "msisdn_1")
-                                0
-                            else
-                                1
+                            simSlot = when (parsedMsg.data.sim) {
+                                "msisdn_1" -> 0
+                                "msisdn_2" -> 1
+                                else -> -1
+                            }
                         )
                     }
                 ).also { save(it.list) }
@@ -153,9 +166,11 @@ class TaskRepositoryImp : TaskRepository() {
                     else -> "undelivered"
                 },
                 id = task.id,
-                simId = if (task.simSlot == 1)
-                    "msisdn_2"
-                else "msisdn_1"
+                simId = when (task.simSlot) {
+                    1 -> "msisdn_2"
+                    0 -> "msisdn_1"
+                    else -> "msisdn_1"
+                }
             )
         )
 

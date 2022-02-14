@@ -8,7 +8,6 @@ import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
-import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
@@ -42,7 +41,11 @@ class TaskManager(private val context: Context) {
     suspend fun doTask(task: TaskEntity): Boolean {
         SmartLog.d("doTask ${task.id}")
 
-        if (task.simSlot == null) {
+        if (task.simSlot == null || task.simSlot == -1) {
+            taskRepository.taskOnError(task)
+            return false
+        }
+        if (task.simSlot == -1) {
             taskRepository.taskOnError(task)
             return false
         }
@@ -50,9 +53,13 @@ class TaskManager(private val context: Context) {
         if (sim == null) {
             SmartLog.e("Sim card is null")
             taskRepository.taskOnError(task)
-            ServiceWorker.stop(context)
             return false
         }
+
+
+        taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
+        taskRepository.taskOnDelivered(taskEntity = task)
+        return false
 
 //        val calendar = Calendar.getInstance()
 //        if(!task.highPriority && calendar.get(Calendar.HOUR_OF_DAY) in 21 downTo 8){

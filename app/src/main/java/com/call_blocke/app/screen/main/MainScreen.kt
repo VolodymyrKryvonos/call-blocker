@@ -122,7 +122,7 @@ fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primar
 @ExperimentalMaterialApi
 @Composable
 fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
-    val isExecutorRunning: Boolean by mViewMode.taskExecutorIsRunning.observeAsState(initial = false)
+    val isExecutorRunning: Boolean by mViewMode.taskExecutorIsRunning.collectAsState(initial = false)
     val context = LocalContext.current
 
     LazyVerticalGrid(

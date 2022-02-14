@@ -1,6 +1,7 @@
 package com.call_blocke.a_repository.repository
 
 import android.content.Context
+import android.os.Build
 import com.call_blocke.a_repository.model.RefreshDataForSimRequest
 import com.call_blocke.a_repository.model.SmsPerDayRequest
 import com.call_blocke.a_repository.model.TasksRequest
@@ -17,18 +18,28 @@ class SettingsRepositoryImp : SettingsRepository() {
         )
 
     override suspend fun updateSmsPerDay(context: Context) {
-        val simInfo = SimUtil.getSIMInfo(context)
-
-        if (simInfo.isEmpty())
-            return
-
-        settingsRest.setSmsPerDay(SmsPerDayRequest(
-            forSimFirst  = currentSmsContFirstSimSlot,
-            forSimSecond = currentSmsContSecondSimSlot,
-            firstSimName = if (simInfo.isNotEmpty()) simInfo[0].carrierName.toString() else "default",
-            secondSimName = if (simInfo.size > 1) simInfo[1].carrierName.toString() else "none",
-            countryCode = if (simInfo.isNotEmpty()) simInfo[0].countryIso else "default"
-        ))
+        val simInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            SimUtil.getSIMInfo(context)
+        } else {
+            null
+        }
+        var firstSimName = "default"
+        var secondSimName = "none"
+        var countryCode = "default"
+        if (simInfo?.isNotEmpty() == true && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+            firstSimName = simInfo[0].carrierName.toString()
+            secondSimName = simInfo[1]?.carrierName.toString()
+            countryCode = simInfo[0].countryIso
+        }
+        settingsRest.setSmsPerDay(
+            SmsPerDayRequest(
+                forSimFirst = currentSmsContFirstSimSlot,
+                forSimSecond = currentSmsContSecondSimSlot,
+                firstSimName = firstSimName,
+                secondSimName = secondSimName,
+                countryCode = countryCode
+            )
+        )
     }
 
     override suspend fun blackPhoneNumberList(): List<String> {
@@ -40,12 +51,14 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
     override suspend fun refreshDataForSim(simSlot: Int) {
-        settingsRest.resetSim(RefreshDataForSimRequest(
-            simName = if (simSlot == 0)
-                "msisdn_1"
-            else
-                "msisdn_2"
-        ))
+        settingsRest.resetSim(
+            RefreshDataForSimRequest(
+                simName = if (simSlot == 0)
+                    "msisdn_1"
+                else
+                    "msisdn_2"
+            )
+        )
     }
 
     override suspend fun simInfo(): List<FullSimInfoModel> {

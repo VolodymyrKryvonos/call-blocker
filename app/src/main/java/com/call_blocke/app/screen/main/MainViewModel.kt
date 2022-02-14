@@ -8,11 +8,12 @@ import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
 
-    val taskExecutorIsRunning = ServiceWorker.isRunning
+    val taskExecutorIsRunning: StateFlow<Boolean> = ServiceWorker.isRunning
 
     val systemInfoLiveData = MutableLiveData(SmsBlockerDatabase.systemDetail)
 

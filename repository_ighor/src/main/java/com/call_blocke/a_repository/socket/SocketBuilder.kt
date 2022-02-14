@@ -33,6 +33,8 @@ class SocketBuilder private constructor(
 
     private var connector: WebSocket? = null
 
+    private var failureCount = 0
+
     private var isOn = false
 
     fun connect() {
@@ -73,6 +75,7 @@ class SocketBuilder private constructor(
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
+        failureCount = 0
         statusConnect.value = true
         SmartLog.d("onOpen")
         launch(Dispatchers.IO) {
@@ -110,11 +113,13 @@ class SocketBuilder private constructor(
         SmartLog.d("onFailure connection ${getStackTrace(t)}")
         statusConnect.value = false
         launch(Dispatchers.IO) { connectionStatusFlow.emit(false) }
-        Handler(Looper.getMainLooper()).postDelayed({
-            SmartLog.e("reconnect onFailure")
-            reconnect()
-        }, 30 * 1000)
 
+        if (failureCount < 3) reconnect() else
+            Handler(Looper.getMainLooper()).postDelayed(
+                { reconnect() }, 10
+            )
+
+        failureCount++
     }
 
     fun sendMessage(data: String): Boolean {

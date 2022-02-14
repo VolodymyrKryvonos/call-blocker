@@ -1,6 +1,5 @@
 package com.rokobit.adstvv_unit.loger
 
-import android.util.Log
 import com.google.gson.Gson
 import timber.log.Timber
 
@@ -10,7 +9,6 @@ object SmartLog {
 
     fun d(message: String) {
         Timber.d(message)
-        Log.e("onMessageLocal1", message)
     }
 
     fun d(message: Any) {

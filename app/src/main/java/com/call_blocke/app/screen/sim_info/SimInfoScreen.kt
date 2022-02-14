@@ -105,5 +105,12 @@ private fun SimInfoCard(info: SubscriptionInfo, data: FullSimInfoModel) = Card(
         }
 
         Spacer(modifier = Modifier.height(8.dp))
+
+        Row {
+            Text(text = "Sim id", modifier = Modifier.weight(1f))
+            Text(text = "${info.iccId}")
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
     }
 }

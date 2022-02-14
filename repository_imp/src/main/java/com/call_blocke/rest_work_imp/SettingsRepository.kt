@@ -4,6 +4,7 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
+import android.os.Build
 import android.provider.BlockedNumberContract.BlockedNumbers
 import com.call_blocke.db.SmsBlockerDatabase
 
@@ -26,28 +27,6 @@ abstract class SettingsRepository {
         }
     }
 
-    suspend fun reloadBlackList(context: Context) {
-        val list = try {
-            blackPhoneNumberList()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
-
-        list.forEach {
-            try {
-                val values = ContentValues()
-                values.put(BlockedNumbers.COLUMN_ORIGINAL_NUMBER, it)
-                val uri = context.contentResolver.insert(
-                    BlockedNumbers.CONTENT_URI,
-                    values
-                )
-            } catch (e: java.lang.Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
     protected abstract suspend fun updateSmsPerDay(context: Context)
 
     protected abstract suspend fun blackPhoneNumberList(): List<String>
@@ -57,11 +36,15 @@ abstract class SettingsRepository {
     abstract suspend fun simInfo(): List<FullSimInfoModel>
 
     fun blackList(context: Context): List<String> {
-        val c: Cursor = context.contentResolver.query(
-            BlockedNumbers.CONTENT_URI, arrayOf(
-                BlockedNumbers.COLUMN_ORIGINAL_NUMBER
-            ), null, null, null
-        ) ?: return emptyList()
+        val c: Cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            context.contentResolver.query(
+                BlockedNumbers.CONTENT_URI, arrayOf(
+                    BlockedNumbers.COLUMN_ORIGINAL_NUMBER
+                ), null, null, null
+            ) ?: return emptyList()
+        } else {
+            return emptyList()
+        }
 
         val data = arrayListOf<String>()
 
