@@ -1,5 +1,6 @@
 package com.call_blocke.rest_work_imp
 
+import android.util.Log
 import com.call_blocke.db.Preference
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.TaskEntity
@@ -68,6 +69,17 @@ abstract class TaskRepository {
     }
 
     suspend fun taskOnDelivered(taskEntity: TaskEntity) {
+        when (taskEntity.simSlot) {
+            0 -> {
+                SmsBlockerDatabase.smsTodaySentFirstSim++
+                Log.e("smsTodaySentFirstSim: ", SmsBlockerDatabase.smsTodaySentFirstSim.toString())
+            }
+            1 -> {
+                SmsBlockerDatabase.smsTodaySentSecondSim++
+                Log.e("smsTodaySentFirstSim: ", SmsBlockerDatabase.smsTodaySentSecondSim.toString())
+            }
+            else -> {}
+        }
         updateTask(taskEntity.apply {
             deliveredAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
             taskEntity.status = TaskStatus.DELIVERED

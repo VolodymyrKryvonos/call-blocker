@@ -58,6 +58,18 @@ object SmsBlockerDatabase {
     val deviceID: String
         get() = (preference ?: throw Exception("please init db module")).deviceID
 
+    var smsTodaySentFirstSim: Int
+        get() = (preference ?: throw Exception("please init db module")).smsTodaySentFirstSim
+        set(value) {
+            preference?.smsTodaySentFirstSim = value
+        }
+
+    var smsTodaySentSecondSim: Int
+        get() = (preference ?: throw Exception("please init db module")).smsTodaySentSecondSim
+        set(value) {
+            preference?.smsTodaySentSecondSim = value
+        }
+
     var smsPerDaySimFirst: Int
         get() = (preference ?: throw Exception("please init db module")).smsPerDaySimFirst
         set(value) {

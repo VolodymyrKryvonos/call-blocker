@@ -15,6 +15,7 @@ import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
+import com.call_blocke.app.util.TelephonyInfo
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
@@ -43,9 +44,18 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         const val WORK_NAME = "ServiceWorker"
 
         fun start(context: Context) {
-            SmartLog.d("start service ${BuildConfig.VERSION_NAME}")
+            val telephonyInfo: TelephonyInfo = TelephonyInfo.getInstance(context)
+            SmartLog.e("${getDeviceName()} start service ${BuildConfig.VERSION_NAME}")
+
             startWorkers(context)
         }
+
+        fun getDeviceName(): String {
+            val manufacturer = Build.MANUFACTURER
+            val model = Build.MODEL
+            return "$manufacturer $model"
+        }
+
 
         private fun startWorkers(context: Context) {
             val workManager = WorkManager.getInstance(context)
@@ -75,8 +85,8 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
 
         fun stop(context: Context) {
             SmartLog.d("stop service")
-            WorkManager.getInstance(context).cancelAllWork()
             TaskExecutorImp.job?.cancel()
+            WorkManager.getInstance(context).cancelAllWork()
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                 isRunning.emit(false)
             }

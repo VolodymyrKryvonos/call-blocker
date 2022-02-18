@@ -102,14 +102,14 @@ class TaskRepositoryImp : TaskRepository() {
             }
         }
     }.onCompletion {
-        val msg = if (it != null && it !is CancellationException) {
+        if (it != null && it !is CancellationException) {
+            SmartLog.e("onCompletion ${getStackTrace(it)}")
             socketBuilder.reconnect()
-            "onCompletion ${getStackTrace(it)}"
-        } else {
-            socketBuilder.disconnect()
-            "taskListMessage onCompletion"
+            return@onCompletion
         }
-        SmartLog.e(msg)
+        SmartLog.e("onCompletion")
+        socketBuilder.disconnect()
+
     }
 
     private suspend fun toTaskMessage(msg: String?): TaskMessage? {
@@ -118,6 +118,14 @@ class TaskRepositoryImp : TaskRepository() {
                 msg,
                 (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
             )
+            if (SmsBlockerDatabase.smsTodaySentFirstSim >= SmsBlockerDatabase.smsPerDaySimFirst && parsedMsg.data.sim == "msisdn_1") {
+                SmartLog.e("Sms limit exhausted for first sim")
+                return null
+            }
+            if (SmsBlockerDatabase.smsTodaySentSecondSim >= SmsBlockerDatabase.smsPerDaySimSecond && parsedMsg.data.sim == "msisdn_2") {
+                SmartLog.e("Sms limit exhausted for second sim")
+                return null
+            }
             if (((parsedMsg != null) && (System.currentTimeMillis() - getDate(
                     parsedMsg.options.dateTime ?: ""
                 ).time <= 35 * 60 * 1000))

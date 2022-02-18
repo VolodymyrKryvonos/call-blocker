@@ -1,7 +1,6 @@
 package com.call_blocke.a_repository.repository
 
 import android.content.Context
-import android.os.Build
 import com.call_blocke.a_repository.model.RefreshDataForSimRequest
 import com.call_blocke.a_repository.model.SmsPerDayRequest
 import com.call_blocke.a_repository.model.TasksRequest
@@ -18,17 +17,16 @@ class SettingsRepositoryImp : SettingsRepository() {
         )
 
     override suspend fun updateSmsPerDay(context: Context) {
-        val simInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+        val simInfo =
             SimUtil.getSIMInfo(context)
-        } else {
-            null
-        }
         var firstSimName = "default"
         var secondSimName = "none"
         var countryCode = "default"
-        if (simInfo?.isNotEmpty() == true && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+        if (simInfo?.isNotEmpty() == true) {
             firstSimName = simInfo[0].carrierName.toString()
-            secondSimName = simInfo[1]?.carrierName.toString()
+            if (simInfo.size > 1) {
+                secondSimName = simInfo[1]?.carrierName.toString()
+            }
             countryCode = simInfo[0].countryIso
         }
         settingsRest.setSmsPerDay(

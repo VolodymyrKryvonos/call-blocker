@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import okhttp3.*
-import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 class SocketBuilder private constructor(
@@ -48,15 +47,15 @@ class SocketBuilder private constructor(
             .build()
         if (!statusConnect.value) {
             connector = OkHttpClient.Builder()
-                .retryOnConnectionFailure(true)
-                .pingInterval(40, TimeUnit.SECONDS).build()
+                .build()
                 .newWebSocket(url, this@SocketBuilder)
         }
     }
 
     fun disconnect(reason: String = "disconnect") {
-        SmartLog.d("onDisconnect Socket")
-        isOn = false
+        SmartLog.d("onDisconnect Socket reason = $reason")
+        if (reason == "disconnect")
+            isOn = false
         if (connector?.close(1000, reason) == true) {
             SmartLog.d("Closed successful")
         } else {
@@ -66,10 +65,10 @@ class SocketBuilder private constructor(
     }
 
     fun reconnect() {
+        SmartLog.e("Reconnect $ip")
+        disconnect("reconnect")
         if (isOn) {
-            SmartLog.e("Reconnect $ip")
-            disconnect("reconnect")
-            Handler(Looper.getMainLooper()).postDelayed({ connect() }, 11000)
+            Handler(Looper.getMainLooper()).postDelayed({ connect() }, 5000)
         }
     }
 
@@ -116,7 +115,7 @@ class SocketBuilder private constructor(
 
         if (failureCount < 3) reconnect() else
             Handler(Looper.getMainLooper()).postDelayed(
-                { reconnect() }, 10
+                { reconnect() }, 10000
             )
 
         failureCount++

@@ -193,6 +193,7 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                 isEnable = true,
                 onClick = {
                     clearLogs(context)
+                    mViewModel.onSuccessUpdated.postValue(true)
                 }
             )
             //Test only
@@ -240,7 +241,7 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                 }
             }
             if (selected == "Custom") {
-                CustomIpInput(preference)
+                CustomIpInput(preference, mViewModel)
             }
         }
 
@@ -316,7 +317,7 @@ private fun clearLogs(context: Context) {
 }
 
 @Composable
-fun CustomIpInput(preference: Preference) {
+fun CustomIpInput(preference: Preference, mViewModel: SettingsViewModel) {
     var ip by remember { mutableStateOf(preference.customIp) }
     val invalidInput = isIpValid(ip)
     Column(
@@ -345,6 +346,7 @@ fun CustomIpInput(preference: Preference) {
             ) {
                 preference.ipType = "Custom"
                 preference.customIp = ip
+                mViewModel.onSuccessUpdated.postValue(true)
             }
         }
     }

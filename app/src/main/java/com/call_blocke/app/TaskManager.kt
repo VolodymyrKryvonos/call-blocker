@@ -3,11 +3,11 @@ package com.call_blocke.app
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.*
-import android.os.Build
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
+import com.call_blocke.app.util.TelephonyInfo
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
@@ -45,18 +45,18 @@ class TaskManager(private val context: Context) {
             taskRepository.taskOnError(task)
             return false
         }
-        if (task.simSlot == -1) {
-            taskRepository.taskOnError(task)
-            return false
-        }
+
+        val telephonyInfo: TelephonyInfo = TelephonyInfo.getInstance(context)
+        SmartLog.e("Sim1 ready = ${telephonyInfo.isSIM1Ready}")
+        SmartLog.e("Sim2 ready = ${telephonyInfo.isSIM2Ready}")
+
         val sim = sim(task.simSlot!!)
         if (sim == null) {
             SmartLog.e("Sim card is null")
             taskRepository.taskOnError(task)
             return false
         }
-
-
+//        test
         taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
         taskRepository.taskOnDelivered(taskEntity = task)
         return false
@@ -130,11 +130,7 @@ class TaskManager(private val context: Context) {
             val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
 
             val smsManager: SmsManager = try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                    SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
-                } else {
-                    SmsManager.getDefault()
-                }
+                SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
             } catch (e: Exception) {
                 SmartLog.e("OnSimSelect ${getStackTrace(e)} ${e.message}")
                 e.printStackTrace()

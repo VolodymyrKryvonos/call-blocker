@@ -6,8 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
+import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class SettingsViewModel : ViewModel() {
@@ -31,7 +31,7 @@ class SettingsViewModel : ViewModel() {
     fun updateSmsPerDay(forSimFirst: Int, forSimSecond: Int) = viewModelScope.launch(Dispatchers.IO) {
         onLoading.postValue(true)
 
-        delay(2000L)
+        SmartLog.e("Update sms limit sim1: $forSimFirst, sim2: $forSimSecond")
 
         settingsRepository.setSmsPerDay(
             forFirstSim = forSimFirst,

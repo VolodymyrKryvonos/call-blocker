@@ -80,6 +80,24 @@ class Preference(context: Context) {
             }
         }
 
+    var smsTodaySentFirstSim: Int
+        get() = sharedPreferences.getInt("smsTodaySentFirstSim", 0)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putInt("smsTodaySentFirstSim", value)
+                commit()
+            }
+        }
+
+    var smsTodaySentSecondSim: Int
+        get() = sharedPreferences.getInt("smsTodaySentSecondSim", 0)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putInt("smsTodaySentSecondSim", value)
+                commit()
+            }
+        }
+
     var smsPerDaySimFirst: Int
         get() = sharedPreferences.getInt("smsPerDaySimFirst", 0)
         set(value) {
