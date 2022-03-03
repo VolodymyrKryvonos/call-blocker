@@ -15,7 +15,7 @@ import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
-import com.call_blocke.app.util.TelephonyInfo
+import com.call_blocke.app.scheduler.SmsLimitRefreshScheduler
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
@@ -23,6 +23,7 @@ import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.File
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 
@@ -44,13 +45,19 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         const val WORK_NAME = "ServiceWorker"
 
         fun start(context: Context) {
-            val telephonyInfo: TelephonyInfo = TelephonyInfo.getInstance(context)
+            val today = Calendar.getInstance(TimeZone.getTimeZone("CET"))
+            val lastRefresh =
+                Calendar.getInstance().also { it.timeInMillis = SmsBlockerDatabase.lastRefreshTime }
+            if (today.get(Calendar.DATE) != lastRefresh.get(Calendar.DATE)) {
+                SmsBlockerDatabase.smsTodaySentFirstSim = 0
+                SmsBlockerDatabase.smsTodaySentSecondSim = 0
+            }
             SmartLog.e("${getDeviceName()} start service ${BuildConfig.VERSION_NAME}")
-
             startWorkers(context)
+            SmsLimitRefreshScheduler.startExecutionAt(0, 0, 0)
         }
 
-        fun getDeviceName(): String {
+        private fun getDeviceName(): String {
             val manufacturer = Build.MANUFACTURER
             val model = Build.MODEL
             return "$manufacturer $model"
@@ -85,6 +92,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
 
         fun stop(context: Context) {
             SmartLog.d("stop service")
+            SmsLimitRefreshScheduler.stop()
             TaskExecutorImp.job?.cancel()
             WorkManager.getInstance(context).cancelAllWork()
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {

@@ -28,6 +28,7 @@ import androidx.navigation.NavHostController
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.rest_work_imp.SimUtil
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.rokobit.adstv.ui.*
@@ -112,10 +113,32 @@ fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primar
     Text(text = stringResource(id = R.string.main_header_left_count) + " " + systemInfo.leftCount)
     Text(text = stringResource(id = R.string.main_header_delivered_count) + " " + systemInfo.deliveredCount)
     Text(text = stringResource(id = R.string.main_header_undelivered_count) + " " + systemInfo.undeliveredCount)
+    SentSmsInfo(mViewMode)
 
     Spacer(modifier = Modifier.height(primaryDimens))
-
     Text(text = stringResource(id = R.string.device_id) + mViewMode.deviceID)
+}
+
+@Composable
+fun SentSmsInfo(mViewModel: MainViewModel) {
+    val sims by mViewModel.simsInfo().observeAsState(initial = null)
+    val context = LocalContext.current
+    for ((index, fullSimInfoModel) in sims?.withIndex() ?: emptyList()) {
+        if (SimUtil.isFirstSimAllow(context) && index == 0) {
+            Row {
+                Text(text = "Sim 1 ")
+                Text(text = "${fullSimInfoModel.simDelivered} SMS of ${SmsBlockerDatabase.smsPerDaySimFirst} today")
+
+            }
+        }
+
+        if (SimUtil.isSecondSimAllow(context) && index == 1) {
+            Row {
+                Text(text = "Sim 2 ")
+                Text(text = "${fullSimInfoModel.simDelivered} SMS of ${SmsBlockerDatabase.smsPerDaySimSecond} today")
+            }
+        }
+    }
 }
 
 @ExperimentalFoundationApi
@@ -124,7 +147,9 @@ fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primar
 fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
     val isExecutorRunning: Boolean by mViewMode.taskExecutorIsRunning.collectAsState(initial = false)
     val context = LocalContext.current
-
+    val isSimChanged by SmsBlockerDatabase
+        .onSimChanged
+        .observeAsState(initial = SmsBlockerDatabase.isSimChanged)
     LazyVerticalGrid(
         cells = GridCells.Adaptive(140.dp),
         contentPadding = PaddingValues(primaryDimens / 2)
@@ -152,7 +177,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     6 -> stringResource(id = R.string.main_menu_sim_info)
                     else -> stringResource(id = R.string.main_menu_log_out)
                 },
-                isEnable = true
+                isEnable = if (i == 1) !SmsBlockerDatabase.isSimChanged else true
             ) {
                 if (i == 1) {
                     if (isExecutorRunning) {

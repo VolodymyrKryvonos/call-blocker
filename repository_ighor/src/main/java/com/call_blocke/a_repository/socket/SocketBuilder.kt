@@ -24,6 +24,8 @@ class SocketBuilder private constructor(
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
 
+    val reconnectHandler: Handler = Handler(Looper.getMainLooper())
+
     val messageCollector = MutableSharedFlow<String?>(0)
 
     val connectionStatusFlow = MutableSharedFlow<Boolean>(0)
@@ -54,8 +56,10 @@ class SocketBuilder private constructor(
 
     fun disconnect(reason: String = "disconnect") {
         SmartLog.d("onDisconnect Socket reason = $reason")
-        if (reason == "disconnect")
+        if (reason == "disconnect") {
+            reconnectHandler.removeCallbacksAndMessages(null)
             isOn = false
+        }
         if (connector?.close(1000, reason) == true) {
             SmartLog.d("Closed successful")
         } else {
@@ -67,9 +71,11 @@ class SocketBuilder private constructor(
     fun reconnect() {
         SmartLog.e("Reconnect $ip")
         disconnect("reconnect")
-        if (isOn) {
-            Handler(Looper.getMainLooper()).postDelayed({ connect() }, 5000)
-        }
+        reconnectHandler.postDelayed({
+            if (isOn) {
+                connect()
+            }
+        }, 5000)
     }
 
     override fun onOpen(webSocket: WebSocket, response: Response) {

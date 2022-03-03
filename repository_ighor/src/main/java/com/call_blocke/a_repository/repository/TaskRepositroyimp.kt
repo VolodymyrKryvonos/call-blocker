@@ -118,18 +118,23 @@ class TaskRepositoryImp : TaskRepository() {
                 msg,
                 (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
             )
-            if (SmsBlockerDatabase.smsTodaySentFirstSim >= SmsBlockerDatabase.smsPerDaySimFirst && parsedMsg.data.sim == "msisdn_1") {
-                SmartLog.e("Sms limit exhausted for first sim")
-                return null
-            }
-            if (SmsBlockerDatabase.smsTodaySentSecondSim >= SmsBlockerDatabase.smsPerDaySimSecond && parsedMsg.data.sim == "msisdn_2") {
-                SmartLog.e("Sms limit exhausted for second sim")
-                return null
-            }
+//            if (SmsBlockerDatabase.smsTodaySentFirstSim >= SmsBlockerDatabase.smsPerDaySimFirst && parsedMsg.data.sim == "msisdn_1") {
+//                SmartLog.e("Sms limit exhausted for first sim")
+//                return null
+//            }
+//            if (SmsBlockerDatabase.smsTodaySentSecondSim >= SmsBlockerDatabase.smsPerDaySimSecond && parsedMsg.data.sim == "msisdn_2") {
+//                SmartLog.e("Sms limit exhausted for second sim")
+//                return null
+//            }
             if (((parsedMsg != null) && (System.currentTimeMillis() - getDate(
                     parsedMsg.options.dateTime ?: ""
                 ).time <= 35 * 60 * 1000))
             ) {
+                val simSlot = when (parsedMsg.data.sim) {
+                    "msisdn_1" -> 0
+                    "msisdn_2" -> 1
+                    else -> return null
+                }
                 return TaskMessage(
                     list = parsedMsg.data.smsList.map {
                         TaskEntity(
@@ -137,11 +142,7 @@ class TaskRepositoryImp : TaskRepository() {
                             sendTo = it.msisdn,
                             message = it.txt,
                             highPriority = false,//it.isHighPriority,
-                            simSlot = when (parsedMsg.data.sim) {
-                                "msisdn_1" -> 0
-                                "msisdn_2" -> 1
-                                else -> -1
-                            }
+                            simSlot = simSlot
                         )
                     }
                 ).also { save(it.list) }

@@ -19,16 +19,11 @@ class SettingsRepositoryImp : SettingsRepository() {
     override suspend fun updateSmsPerDay(context: Context) {
         val simInfo =
             SimUtil.getSIMInfo(context)
-        var firstSimName = "default"
-        var secondSimName = "none"
-        var countryCode = "default"
-        if (simInfo?.isNotEmpty() == true) {
-            firstSimName = simInfo[0].carrierName.toString()
-            if (simInfo.size > 1) {
-                secondSimName = simInfo[1]?.carrierName.toString()
-            }
-            countryCode = simInfo[0].countryIso
-        }
+        val firstSimName =
+            (simInfo.firstOrNull { it.simSlotIndex == 0 }?.carrierName ?: "none").toString()
+        val secondSimName =
+            (simInfo.firstOrNull { it.simSlotIndex == 1 }?.carrierName ?: "none").toString()
+        val countryCode = simInfo.firstOrNull()?.countryIso ?: "default"
         settingsRest.setSmsPerDay(
             SmsPerDayRequest(
                 forSimFirst = currentSmsContFirstSimSlot,

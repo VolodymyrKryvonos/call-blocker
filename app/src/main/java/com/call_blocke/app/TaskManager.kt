@@ -57,9 +57,9 @@ class TaskManager(private val context: Context) {
             return false
         }
 //        test
-        taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
-        taskRepository.taskOnDelivered(taskEntity = task)
-        return false
+//        taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
+//        taskRepository.taskOnDelivered(taskEntity = task)
+//        return false
 
 //        val calendar = Calendar.getInstance()
 //        if(!task.highPriority && calendar.get(Calendar.HOUR_OF_DAY) in 21 downTo 8){

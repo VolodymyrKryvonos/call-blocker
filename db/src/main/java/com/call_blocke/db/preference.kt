@@ -80,6 +80,16 @@ class Preference(context: Context) {
             }
         }
 
+
+    var lastRefreshTime: Long
+        get() = sharedPreferences.getLong("lastRefreshTime", 0)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putLong("lastRefreshTime", value)
+                commit()
+            }
+        }
+
     var smsTodaySentFirstSim: Int
         get() = sharedPreferences.getInt("smsTodaySentFirstSim", 0)
         set(value) {
@@ -141,6 +151,42 @@ class Preference(context: Context) {
         set(value) {
             with(sharedPreferences.edit()) {
                 putString("system_detail", Gson().toJson(value))
+                commit()
+            }
+        }
+
+    var firstSimId: String?
+        get() = sharedPreferences.getString("firstSimId", "none") ?: "none"
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("firstSimId", value)
+                commit()
+            }
+        }
+
+    var secondSimId: String?
+        get() = sharedPreferences.getString("secondSimId", "none") ?: "none"
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("secondSimId", value)
+                commit()
+            }
+        }
+
+    var firstSimChanged: Boolean
+        get() = sharedPreferences.getBoolean("firstSimChanged", false)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putBoolean("firstSimChanged", value)
+                commit()
+            }
+        }
+
+    var secondSimChanged: Boolean
+        get() = sharedPreferences.getBoolean("secondSimChanged", false)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putBoolean("secondSimChanged", value)
                 commit()
             }
         }

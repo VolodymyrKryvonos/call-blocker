@@ -24,9 +24,9 @@ class SettingsViewModel : ViewModel() {
 
     val onSuccessUpdated = MutableLiveData(false)
 
-    fun isFirstSimAllow(context: Context): Boolean = SimUtil.getSIMInfo(context).isNotEmpty()
+    fun isFirstSimAllow(context: Context): Boolean = SimUtil.isFirstSimAllow(context)
 
-    fun isSecondSimAllow(context: Context): Boolean = SimUtil.getSIMInfo(context).size > 1
+    fun isSecondSimAllow(context: Context): Boolean = SimUtil.isSecondSimAllow(context)
 
     fun updateSmsPerDay(forSimFirst: Int, forSimSecond: Int) = viewModelScope.launch(Dispatchers.IO) {
         onLoading.postValue(true)

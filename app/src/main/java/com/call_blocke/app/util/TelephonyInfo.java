@@ -12,6 +12,7 @@ public final class TelephonyInfo {
     private String imeiSIM2;
     private boolean isSIM1Ready;
     private boolean isSIM2Ready;
+    private String phoneNumber;
 
     public String getImsiSIM1() {
         return imeiSIM1;
@@ -33,6 +34,9 @@ public final class TelephonyInfo {
         return isSIM1Ready;
     }
 
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
     /*public static void setSIM1Ready(boolean isSIM1Ready) {
         TelephonyInfo.isSIM1Ready = isSIM1Ready;
     }*/
@@ -57,11 +61,7 @@ public final class TelephonyInfo {
         if (telephonyInfo == null) {
 
             telephonyInfo = new TelephonyInfo();
-
             TelephonyManager telephonyManager = ((TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE));
-
-            telephonyInfo.imeiSIM1 = telephonyManager.getDeviceId();
-            telephonyInfo.imeiSIM2 = null;
 
             try {
                 telephonyInfo.imeiSIM1 = getDeviceIdBySlot(context, "getDeviceIdGemini", 0);

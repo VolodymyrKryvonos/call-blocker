@@ -51,8 +51,8 @@ class RefreshViewModel : ViewModel() {
             SmsBlockerDatabase.smsTodaySentSecondSim = 0
         }
         SmartLog.e("Reset sim slot = $simSlotID")
+        SmsBlockerDatabase.isSimChanged = false
         taskRepository.clearFor(simIndex = simSlotID)
-
         onLoading.postValue(false)
     }
 }

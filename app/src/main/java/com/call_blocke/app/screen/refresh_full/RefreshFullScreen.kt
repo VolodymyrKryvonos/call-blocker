@@ -1,6 +1,7 @@
 package com.call_blocke.app.screen.refresh_full
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,11 +16,13 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
+import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
@@ -50,7 +53,11 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally) {
             mViewModel.firstSim(context)?.let {
-                SimSlotBtn(simName = it.carrierName.toString()) {
+                SimSlotBtn(
+                    simName = it.carrierName.toString(),
+                    simChanged = SmsBlockerDatabase.firstSimChanged
+                ) {
+                    SmsBlockerDatabase.firstSimChanged = false
                     mViewModel.reset(0)
                 }
             }
@@ -58,7 +65,11 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
             Spacer(modifier = Modifier.width(primaryDimens))
 
             mViewModel.secondSim(context)?.let {
-                SimSlotBtn(simName = it.carrierName.toString()) {
+                SimSlotBtn(
+                    simName = it.carrierName.toString(),
+                    simChanged = SmsBlockerDatabase.secondSimChanged
+                ) {
+                    SmsBlockerDatabase.secondSimChanged = false
                     mViewModel.reset(1)
                 }
             }
@@ -69,18 +80,19 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
 
 @ExperimentalMaterialApi
 @Composable
-private fun SimSlotBtn(simName: String, onClick: () -> Unit) = Card(
+private fun SimSlotBtn(simName: String, simChanged: Boolean, onClick: () -> Unit) = Card(
     modifier = Modifier
         .fillMaxWidth()
         .padding(primaryDimens),
     shape = RoundedCornerShape(15),
     backgroundColor = secondaryColor,
     elevation = 6.dp,
-    onClick = onClick,
+    border = if (simChanged) BorderStroke(2.dp, Color.Red) else null,
+    onClick = { onClick() }
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(primaryDimens)
+        modifier = Modifier.padding(primaryDimens),
     ) {
 
         Image(

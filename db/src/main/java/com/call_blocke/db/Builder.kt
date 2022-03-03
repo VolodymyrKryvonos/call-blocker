@@ -82,6 +82,12 @@ object SmsBlockerDatabase {
             preference?.smsPerDaySimSecond = value
         }
 
+    var lastRefreshTime: Long
+        get() = (preference ?: throw Exception("please init db module")).lastRefreshTime
+        set(value) {
+            preference?.lastRefreshTime = value
+        }
+
     val taskDao: TaskDao
         get() = (database ?: throw Exception("please init db module")).taskDao()
 
@@ -100,8 +106,33 @@ object SmsBlockerDatabase {
     var systemDetail: SystemDetailEntity
         get() = (preference ?: throw Exception("please init db module")).systemDetail
         set(value) {
-           preference?.systemDetail = value
+            preference?.systemDetail = value
         }
+
+    var firstSimId: String?
+        get() = (preference ?: throw Exception("please init db module")).firstSimId
+        set(value) {
+            preference?.firstSimId = value
+        }
+
+    var secondSimId: String?
+        get() = (preference ?: throw Exception("please init db module")).secondSimId
+        set(value) {
+            preference?.secondSimId = value
+        }
+
+    var firstSimChanged: Boolean
+        get() = (preference ?: throw Exception("please init db module")).firstSimChanged
+        set(value) {
+            preference?.firstSimChanged = value
+        }
+
+    var secondSimChanged: Boolean
+        get() = (preference ?: throw Exception("please init db module")).secondSimChanged
+        set(value) {
+            preference?.secondSimChanged = value
+        }
+
 
     @SuppressLint("HardwareIds")
     fun init(context: Context) {

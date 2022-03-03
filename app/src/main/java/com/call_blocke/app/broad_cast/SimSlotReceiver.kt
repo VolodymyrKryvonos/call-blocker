@@ -12,6 +12,7 @@ import androidx.annotation.RequiresApi
 import com.call_blocke.app.R
 import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.rest_work_imp.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 
 class SimSlotReceiver : BroadcastReceiver() {
@@ -19,8 +20,23 @@ class SimSlotReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         SmartLog.d("SimSlotReceiver")
 
-        if (intent?.getStringExtra("ss") != "READY")
+        val firstSimId = SimUtil.firstSimId(context)
+        val secondSimId = SimUtil.secondSimId(context)
+
+        if (intent?.getStringExtra("ss") != "READY") {
+            SmsBlockerDatabase.firstSimId = firstSimId
+            SmsBlockerDatabase.secondSimId = secondSimId
             return
+        }
+
+        if (SimUtil.firstSimId(context) != SmsBlockerDatabase.firstSimId) {
+            SmsBlockerDatabase.firstSimId = firstSimId
+            SmsBlockerDatabase.firstSimChanged = true
+        }
+        if (SimUtil.secondSimId(context) != SmsBlockerDatabase.secondSimId) {
+            SmsBlockerDatabase.secondSimId = secondSimId
+            SmsBlockerDatabase.secondSimChanged = true
+        }
 
         ServiceWorker.stop(context = context ?: return)
 

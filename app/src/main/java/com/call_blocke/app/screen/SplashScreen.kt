@@ -4,8 +4,7 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Divider
-import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,6 +28,7 @@ import com.call_blocke.app.screen.refresh_full.RefreshScreen
 import com.call_blocke.app.screen.settings.SettingsScreen
 import com.call_blocke.app.screen.sim_info.SimInfoScreen
 import com.call_blocke.app.screen.task_list.TaskListScreen
+import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
 import kotlinx.coroutines.delay
@@ -102,6 +102,32 @@ fun Main() {
         }
         composable("sim_info") {
             SimInfoScreen()
+        }
+    }
+
+    val isSimChanged by SmsBlockerDatabase
+        .onSimChanged
+        .observeAsState(initial = SmsBlockerDatabase.isSimChanged)
+
+
+    if (isSimChanged) {
+        Column {
+            Box(modifier = Modifier.weight(1f))
+
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column {
+                    Text(
+                        text = stringResource(id = R.string.sim_slot_change_desc),
+                        color = Color.White
+                    )
+                    Button(onClick = {
+                        SmsBlockerDatabase.onSimChanged.postValue(false)
+                        navController.navigate("refresh")
+                    }) {
+                        Text("OK")
+                    }
+                }
+            }
         }
     }
 }
