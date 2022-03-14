@@ -24,16 +24,18 @@ class SimSlotReceiver : BroadcastReceiver() {
         val secondSimId = SimUtil.secondSimId(context)
 
         if (intent?.getStringExtra("ss") != "READY") {
-            SmsBlockerDatabase.firstSimId = firstSimId
-            SmsBlockerDatabase.secondSimId = secondSimId
+//            SmsBlockerDatabase.firstSimId = firstSimId
+//            SmsBlockerDatabase.secondSimId = secondSimId
             return
         }
 
-        if (SimUtil.firstSimId(context) != SmsBlockerDatabase.firstSimId) {
+        if (firstSimId != SmsBlockerDatabase.firstSimId) {
+            SmartLog.e("Sim1 was changed oldId = ${SmsBlockerDatabase.firstSimId} newId = $firstSimId")
             SmsBlockerDatabase.firstSimId = firstSimId
             SmsBlockerDatabase.firstSimChanged = true
         }
-        if (SimUtil.secondSimId(context) != SmsBlockerDatabase.secondSimId) {
+        if (secondSimId != SmsBlockerDatabase.secondSimId) {
+            SmartLog.e("Sim2 was changed oldId = ${SmsBlockerDatabase.secondSimId} newId = $secondSimId")
             SmsBlockerDatabase.secondSimId = secondSimId
             SmsBlockerDatabase.secondSimChanged = true
         }

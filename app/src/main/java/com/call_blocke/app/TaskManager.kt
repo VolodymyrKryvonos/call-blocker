@@ -16,6 +16,7 @@ import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.delay
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.min
 
 class TaskManager(private val context: Context) {
 
@@ -143,6 +144,7 @@ class TaskManager(private val context: Context) {
             object : BroadcastReceiver() {
                 override fun onReceive(arg0: Context, arg1: Intent) {
                     SmartLog.e("resultCode = $resultCode")
+
                     context.unregisterReceiver(this)
                     cont.resume(resultCode == Activity.RESULT_OK)
                 }
@@ -152,12 +154,14 @@ class TaskManager(private val context: Context) {
 
             val sentPI =
                 PendingIntent.getBroadcast(context, address.hashCode(), sentStatusIntent, 0)
+            val msgText = toGSM7BitText(text)
+            SmartLog.e("msgText = $msgText")
             try {
                 SmartLog.e("Try to sent message")
                 smsManager.sendTextMessage(
                     address,
                     null,
-                    text,
+                    msgText,
                     sentPI,
                     null
                 )
@@ -166,4 +170,13 @@ class TaskManager(private val context: Context) {
             }
         }
 
+    private val gsmAlphabet =
+        charArrayOf('|','€','^','{','}','[','~',']','\\','@','Δ','0','¡','P','¿','p','£','_','!','1','A','Q','a','q','$','Φ','"','2','B','R','b','r','¥','Γ','#','3','C','S','c','s','è','Λ','¤','4','D','T','d','t','é','Ω','%','5','E','U','e','u','ù','Π','&','6','F','V','f','v','ì','Ψ','\'','7','G','W','g','w','ò','Σ','(','8','H','X','h','x','Ç','Θ',')','9','I','Y','i','y','Ξ','*',':','J','Z','j','z','Ø','+',';','K','Ä','k','ä','ø','Æ',',','<','L','Ö','l','ö','æ','-','=','M','Ñ','m','ñ','Å','ß','.','>','N','Ü','n','ü','å','É','/','?','O','§','o','à','\n',' ','\r')
+
+    private fun toGSM7BitText(text: String) = if (text.any { !gsmAlphabet.contains(it) }) {
+        text.substring(0, min(70, text.length))
+    } else
+        text
 }
+
+

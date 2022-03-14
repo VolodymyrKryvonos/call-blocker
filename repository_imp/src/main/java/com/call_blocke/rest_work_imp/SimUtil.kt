@@ -27,15 +27,11 @@ object SimUtil {
 
     fun firstSimId(context: Context?): String? {
         val simInfo = getSIMInfo(context)
-        simInfo.ifEmpty { return null }
-        return simInfo[0].iccId
+        return simInfo.firstOrNull { it.simSlotIndex == 0 }?.iccId
     }
 
     fun secondSimId(context: Context?): String? {
         val simInfo = getSIMInfo(context)
-        if (simInfo.size > 1) {
-            return simInfo[1].iccId
-        }
-        return null
+        return simInfo.firstOrNull { it.simSlotIndex == 1 }?.iccId
     }
 }
