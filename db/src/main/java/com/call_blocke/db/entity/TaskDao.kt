@@ -40,6 +40,12 @@ interface TaskDao {
     @Query("delete from task where simSlot = :simIndex")
     suspend fun clearFor(simIndex: Int)
 
+    @Query("DELETE FROM task WHERE status LIKE 'BUFFERED'")
+    suspend fun deleteReceivedMessages()
+
+    @Query("SELECT id FROM task WHERE status LIKE 'BUFFERED'")
+    suspend fun getReceivedMessagesID(): List<Int>
+
     /*@Query("select * from replay_task where rInMsisdn = :rInMsisdn and tText = :tText limit 1")
     suspend fun findReplay(rInMsisdn: String, tText: String): ReplayTaskEntity
 

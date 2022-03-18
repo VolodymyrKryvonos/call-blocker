@@ -93,10 +93,12 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         fun stop(context: Context) {
             SmartLog.d("stop service")
             SmsLimitRefreshScheduler.stop()
+
             TaskExecutorImp.job?.cancel()
             WorkManager.getInstance(context).cancelAllWork()
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                 isRunning.emit(false)
+                RepositoryImp.taskRepository.resendReceived()
             }
         }
     }

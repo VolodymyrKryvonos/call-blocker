@@ -26,17 +26,9 @@ class RefreshViewModel : ViewModel() {
         )
     }
 
-    fun firstSim(context: Context) = if (
-        SimUtil.getSIMInfo(context).isNotEmpty()
-    ) SimUtil.getSIMInfo(context)[0]
-    else
-        null
+    fun firstSim(context: Context) = SimUtil.firstSim(context)
 
-    fun secondSim(context: Context) = if (
-        SimUtil.getSIMInfo(context).size > 1
-    ) SimUtil.getSIMInfo(context)[1]
-    else
-        null
+    fun secondSim(context: Context) = SimUtil.secondSim(context)
 
     fun reset(simSlotID: Int) = viewModelScope.launch(Dispatchers.IO) {
         onLoading.postValue(true)

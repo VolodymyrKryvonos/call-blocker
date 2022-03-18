@@ -1,11 +1,16 @@
 package com.call_blocke.app.screen.auth
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.repository.RepositoryImp
+import com.call_blocke.rest_work_imp.model.Resource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 class AuthViewModel : ViewModel() {
@@ -15,6 +20,9 @@ class AuthViewModel : ViewModel() {
     val isLoading = MutableLiveData(false)
 
     val isSuccessLogin = MutableLiveData<Boolean?>(null)
+
+    private val _resetStatus = mutableStateOf<ResetState>(ResetState.None)
+    val resetStatus: State<ResetState> = _resetStatus
 
     fun login(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
         isSuccessLogin.postValue(null)
@@ -44,4 +52,27 @@ class AuthViewModel : ViewModel() {
         isSuccessLogin.postValue(isSuccess)
     }
 
+    fun resetPass(email: String) {
+        userRepository.reset(email).onEach {
+            when (it) {
+                is Resource.Success -> {
+                    _resetStatus.value = ResetState.Success
+                }
+                is Resource.Loading -> {
+                    _resetStatus.value = ResetState.Loading
+                }
+                is Resource.Error -> {
+                    _resetStatus.value = ResetState.Error(error = it.message ?: "")
+                }
+            }
+        }.launchIn(viewModelScope)
+    }
+
+}
+
+sealed class ResetState {
+    object Loading : ResetState()
+    class Error(val error: String) : ResetState()
+    object None : ResetState()
+    object Success : ResetState()
 }

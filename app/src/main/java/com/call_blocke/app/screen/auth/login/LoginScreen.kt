@@ -34,7 +34,7 @@ import com.rokobit.adstv.ui.secondaryDimens
 fun LoginScreen(mViewModel: AuthViewModel = viewModel(), navController: NavHostController) = Column(
     horizontalAlignment = Alignment.CenterHorizontally
 ) {
-    Fields(mViewModel)
+    Fields(navController, mViewModel)
 
     Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)
 
@@ -43,7 +43,7 @@ fun LoginScreen(mViewModel: AuthViewModel = viewModel(), navController: NavHostC
 
 @ExperimentalComposeUiApi
 @Composable
-fun Fields(mViewModel: AuthViewModel = viewModel()) {
+fun Fields(navController: NavHostController, mViewModel: AuthViewModel = viewModel()) {
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val emailValue = remember {
@@ -75,11 +75,19 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
 
     Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)
 
+    TextButton(title = stringResource(id = R.string.forgot_password)) {
+        mViewModel.isSuccessLogin.postValue(null)
+        navController.navigate("reset_pass")
+    }
+
+    Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)
+
     Button(
         title = stringResource(id = R.string.login_next_button),
         modifier = Modifier.fillMaxWidth(),
         isProgress = isProgress,
-        isEnable = emailValue.value.isNotEmpty() && passwordValue.value.isNotBlank()) {
+        isEnable = emailValue.value.isNotEmpty() && passwordValue.value.isNotBlank()
+    ) {
         keyboardController?.hide()
         mViewModel.login(
             email = emailValue.value,

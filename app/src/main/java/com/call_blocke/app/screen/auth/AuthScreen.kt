@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -23,23 +22,27 @@ import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.auth.login.LoginScreen
 import com.call_blocke.app.screen.auth.register.RegisterScreen
+import com.call_blocke.app.screen.auth.reset_pass.ResetPassword
 import com.rokobit.adstv.ui.accentColor
 import com.rokobit.adstv.ui.element.Label
+import com.rokobit.adstv.ui.element.Snackbar
 import com.rokobit.adstv.ui.element.TextNormal
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
 
 @ExperimentalAnimationApi
 @ExperimentalComposeUiApi
-@Preview
 @Composable
 fun AuthScreen(mViewModel: AuthViewModel = viewModel()) {
+    val state = mViewModel.resetStatus
     Column(
         modifier = Modifier
             .padding(primaryDimens)
             .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally) {
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         val navController: NavHostController = rememberNavController()
+
 
         val currentBackStackEntry by navController.currentBackStackEntryAsState()
 
@@ -55,6 +58,9 @@ fun AuthScreen(mViewModel: AuthViewModel = viewModel()) {
             composable("login") {
                 LoginScreen(navController = navController, mViewModel = mViewModel)
             }
+            composable("reset_pass") {
+                ResetPassword(navController = navController, mViewModel = mViewModel)
+            }
             composable("register") {
                 RegisterScreen(navController = navController, mViewModel = mViewModel)
             }
@@ -63,6 +69,16 @@ fun AuthScreen(mViewModel: AuthViewModel = viewModel()) {
         Divider(modifier = Modifier.height(primaryDimens), color = Color.Transparent)
 
         TextNormal(text = "Version ${BuildConfig.VERSION_NAME}")
+    }
+
+    Column(modifier = Modifier.wrapContentSize(align = Alignment.BottomCenter)) {
+        Spacer(modifier = Modifier.weight(1.0f))
+        if (state.value is ResetState.Success) {
+            Snackbar(stringResource(id = R.string.reset_link_sent))
+        }
+        if (state.value is ResetState.Error) {
+            Snackbar((state.value as ResetState.Error).error)
+        }
     }
 }
 
@@ -82,8 +98,13 @@ fun Header(currentRoute: String) {
 
     //Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
 
-    Label(text = stringResource(id = when (currentRoute) {
-        "login" -> R.string.login_label
-        else -> R.string.register_label
-    }), color = accentColor.copy(alpha = 0.5f))
+    Label(
+        text = stringResource(
+            id = when (currentRoute) {
+                "login" -> R.string.login_label
+                "register" -> R.string.register_label
+                else -> R.string.reset_pass
+            }
+        ), color = accentColor.copy(alpha = 0.5f)
+    )
 }

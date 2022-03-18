@@ -73,19 +73,18 @@ dependencies {
 
     implementation ("androidx.fragment:fragment-ktx:1.3.5")
 
-    implementation ( "androidx.compose.runtime:runtime-livedata:${Version.compose}")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
-    implementation ( "androidx.activity:activity-compose:1.3.0-rc01")
-    implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")
-    implementation ("androidx.lifecycle:lifecycle-livedata-ktx:2.3.1")
-    implementation ("androidx.navigation:navigation-compose:2.4.0-alpha04")
+    implementation("androidx.compose.runtime:runtime-livedata:${Version.compose}")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
+    implementation("androidx.activity:activity-compose:1.3.0-rc01")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.3.1")
+    implementation("androidx.navigation:navigation-compose:2.4.0-alpha04")
 
-    implementation (project(":ui"))
+    implementation(project(":ui"))
 
-    implementation ("com.google.android.material:material:1.4.0")
-
-    implementation (project(":repository"))
-    implementation (project(":repository_imp"))
+    implementation("com.google.android.material:material:1.4.0")
+    implementation(project(":repository_di"))
+    implementation(project(":repository"))
 
     implementation(project(":db"))
 

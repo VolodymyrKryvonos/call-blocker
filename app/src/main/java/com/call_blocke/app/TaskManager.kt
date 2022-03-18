@@ -7,7 +7,6 @@ import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
-import com.call_blocke.app.util.TelephonyInfo
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
@@ -47,10 +46,6 @@ class TaskManager(private val context: Context) {
             return false
         }
 
-        val telephonyInfo: TelephonyInfo = TelephonyInfo.getInstance(context)
-        SmartLog.e("Sim1 ready = ${telephonyInfo.isSIM1Ready}")
-        SmartLog.e("Sim2 ready = ${telephonyInfo.isSIM2Ready}")
-
         val sim = sim(task.simSlot!!)
         if (sim == null) {
             SmartLog.e("Sim card is null")
@@ -58,9 +53,11 @@ class TaskManager(private val context: Context) {
             return false
         }
 //        test
-//        taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
-//        taskRepository.taskOnDelivered(taskEntity = task)
-//        return false
+        delay(2000)
+        taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
+        delay(2000)
+        taskRepository.taskOnDelivered(taskEntity = task)
+        return false
 
 //        val calendar = Calendar.getInstance()
 //        if(!task.highPriority && calendar.get(Calendar.HOUR_OF_DAY) in 21 downTo 8){
@@ -111,15 +108,10 @@ class TaskManager(private val context: Context) {
         return status
     }
 
-    private fun sim(id: Int): SubscriptionInfo? {
-        val simList = SimUtil.getSIMInfo(context)
-        SmartLog.e("SimList $simList")
-        if (simList.isEmpty()) {
-            return null
-        }
-        if (simList.size <= id)
-            return null
-        return simList[id]
+    private fun sim(id: Int): SubscriptionInfo? = if (id == 0) {
+        SimUtil.firstSim(context)
+    } else {
+        SimUtil.secondSim(context)
     }
 
     private suspend fun sendSms(simInfo: SubscriptionInfo, task: TaskEntity): Boolean {

@@ -65,5 +65,10 @@
     <string name="ok">OK</string>
     <string name="turn_of_optimization">Turn off battery optimization</string>
     <string name="device_id">"Device ID:  "</string>
+    <string name="forgot_password">Forgot Password</string>
+
+    <string name="continue_res">Continue</string>
+    <string name="reset_pass">Reset password</string>
+    <string name="reset_link_sent">Password reset link sent  to your email.</string>
 
 </resources>

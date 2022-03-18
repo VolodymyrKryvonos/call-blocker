@@ -2,9 +2,9 @@ rootProject.name = "call-blocker.unit"
 
 include(":app")
 include(":ui")
-include(":repository_imp")
+include(":repository")
 include(":loger")
 
 include(":db")
-include(":repository_ighor")
-include(":repository")
+include(":repository_impl")
+include(":repository_di")

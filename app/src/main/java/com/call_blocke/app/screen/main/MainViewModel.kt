@@ -59,6 +59,12 @@ class MainViewModel : ViewModel() {
                 forFirstSim = forSimFirst,
                 forSecondSim = forSimSecond
             )
+            if (forSimFirst == 0) {
+                settingsRepository.refreshDataForSim(0)
+            }
+            if (forSimSecond == 0) {
+                settingsRepository.refreshDataForSim(1)
+            }
         }
     }
 
