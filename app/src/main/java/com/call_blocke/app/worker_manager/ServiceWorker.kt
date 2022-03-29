@@ -53,8 +53,11 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                 SmsBlockerDatabase.smsTodaySentSecondSim = 0
             }
             SmartLog.e("${getDeviceName()} start service ${BuildConfig.VERSION_NAME}")
+            SmartLog.e("Android ${Build.VERSION.SDK_INT}")
             startWorkers(context)
             SmsLimitRefreshScheduler.startExecutionAt(0, 0, 0)
+            SmartLog.e("Sms1 ${SmsBlockerDatabase.smsPerDaySimFirst}")
+            SmartLog.e("Sms2 ${SmsBlockerDatabase.smsPerDaySimSecond}")
         }
 
         private fun getDeviceName(): String {

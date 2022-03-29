@@ -24,8 +24,7 @@ class SimSlotReceiver : BroadcastReceiver() {
         val secondSimId = SimUtil.secondSimId(context)
 
         if (intent?.getStringExtra("ss") != "READY") {
-//            SmsBlockerDatabase.firstSimId = firstSimId
-//            SmsBlockerDatabase.secondSimId = secondSimId
+            ServiceWorker.stop(context = context ?: return)
             return
         }
 
@@ -33,18 +32,16 @@ class SimSlotReceiver : BroadcastReceiver() {
             SmartLog.e("Sim1 was changed oldId = ${SmsBlockerDatabase.firstSimId} newId = $firstSimId")
             SmsBlockerDatabase.firstSimId = firstSimId
             SmsBlockerDatabase.firstSimChanged = true
+            SmsBlockerDatabase.isSimChanged = true
         }
         if (secondSimId != SmsBlockerDatabase.secondSimId) {
             SmartLog.e("Sim2 was changed oldId = ${SmsBlockerDatabase.secondSimId} newId = $secondSimId")
             SmsBlockerDatabase.secondSimId = secondSimId
             SmsBlockerDatabase.secondSimChanged = true
+            SmsBlockerDatabase.isSimChanged = true
         }
 
         ServiceWorker.stop(context = context ?: return)
-
-        SmsBlockerDatabase.isSimChanged = true
-
-        notify(context = context)
     }
 
     private fun notify(context: Context) {
@@ -76,9 +73,11 @@ class SimSlotReceiver : BroadcastReceiver() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(context: Context,
-                                          channelId: String,
-                                          channelName: String): String {
+    private fun createNotificationChannel(
+        context: Context,
+        channelId: String,
+        channelName: String
+    ): String {
         val chan = NotificationChannel(
             channelId,
             channelName, NotificationManager.IMPORTANCE_NONE
