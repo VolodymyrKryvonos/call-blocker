@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "78922921864",
-    "project_id": "smssender-975cf",
-    "storage_bucket": "smssender-975cf.appspot.com"
+    "project_number": "966328126819",
+    "project_id": "bottegasms-af85c",
+    "storage_bucket": "bottegasms-af85c.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:78922921864:android:b63c3f2963aab20266ec3d",
+        "mobilesdk_app_id": "1:966328126819:android:75a42df512c6bceddb5756",
         "android_client_info": {
-          "package_name": "com.callblocker.app"
+          "package_name": "com.call_blocke.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "78922921864-m7j5ostbpgu3vt63gpvrsajcq0ktspu1.apps.googleusercontent.com",
+          "client_id": "966328126819-tjhfafr5fdhcvvb6ikdpl9ners6r6of5.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBRT5QnD6PzdL1tTeANrQ95ac0iqv1n20g"
+          "current_key": "AIzaSyCuyPyE3JZzqXp-VesmBx5rzeUAPOchZYw"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "78922921864-m7j5ostbpgu3vt63gpvrsajcq0ktspu1.apps.googleusercontent.com",
+              "client_id": "966328126819-tjhfafr5fdhcvvb6ikdpl9ners6r6of5.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

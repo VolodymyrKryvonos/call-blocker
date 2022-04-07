@@ -1,35 +1,36 @@
 package com.call_blocke.app.worker_manager
 
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
 import androidx.work.*
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
 import com.call_blocke.app.scheduler.SmsLimitRefreshScheduler
+import com.call_blocke.app.util.ConnectionManager
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
-
-
-object TaskExecutorImp {
-    var job: Job? = null
-}
 
 class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
@@ -42,12 +43,14 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     companion object {
         val isRunning = MutableStateFlow(false)
 
+        var job: Job? = null
         const val WORK_NAME = "ServiceWorker"
 
         fun start(context: Context) {
             val today = Calendar.getInstance(TimeZone.getTimeZone("CET"))
             val lastRefresh =
-                Calendar.getInstance().also { it.timeInMillis = SmsBlockerDatabase.lastRefreshTime }
+                Calendar.getInstance()
+                    .also { it.timeInMillis = SmsBlockerDatabase.lastRefreshTime }
             if (today.get(Calendar.DATE) != lastRefresh.get(Calendar.DATE)) {
                 SmsBlockerDatabase.smsTodaySentFirstSim = 0
                 SmsBlockerDatabase.smsTodaySentSecondSim = 0
@@ -58,6 +61,15 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             SmsLimitRefreshScheduler.startExecutionAt(0, 0, 0)
             SmartLog.e("Sms1 ${SmsBlockerDatabase.smsPerDaySimFirst}")
             SmartLog.e("Sms2 ${SmsBlockerDatabase.smsPerDaySimSecond}")
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+            ) {
+                SmartLog.e("SignalStrength = ${ConnectionManager.getSignalStrength()}")
+
+            }
+            SmartLog.e("NetworkGeneration = ${ConnectionManager.getNetworkGeneration()}")
         }
 
         private fun getDeviceName(): String {
@@ -94,10 +106,11 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         }
 
         fun stop(context: Context) {
+            Firebase.crashlytics.log("stop service")
             SmartLog.d("stop service")
             SmsLimitRefreshScheduler.stop()
 
-            TaskExecutorImp.job?.cancel()
+            job?.cancel()
             WorkManager.getInstance(context).cancelAllWork()
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                 isRunning.emit(false)
@@ -129,7 +142,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                     RepositoryImp.taskRepository.sendTaskStatuses()
                 }
             }.launchIn(this)
-            TaskExecutorImp.job = taskList!!.onEach { msg ->
+            job = taskList!!.onEach { msg ->
                 SmartLog.d("onEach ${msg.list.map { it.id }}")
                 msg.list.forEach {
                     if (it.message == "GET_LOGS") {
@@ -141,7 +154,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             }.launchIn(this)
         }
 
-        while (TaskExecutorImp.job?.isActive == true) {
+        while (job?.isActive == true) {
             delay(1000 * 60 * 30)
             wakeLock.release()
             wakeLock.acquire(1000 * 60 * 35)

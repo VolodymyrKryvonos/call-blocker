@@ -1,21 +1,28 @@
 package com.call_blocke.app
 
+import android.Manifest
 import android.app.Activity
 import android.app.PendingIntent
 import android.content.*
+import android.content.pm.PackageManager
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
+import androidx.core.app.ActivityCompat
+import com.call_blocke.app.util.ConnectionManager
+import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.entity.PhoneNumber
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.min
+
 
 class TaskManager(private val context: Context) {
 
@@ -41,6 +48,14 @@ class TaskManager(private val context: Context) {
     suspend fun doTask(task: TaskEntity): Boolean {
         SmartLog.d("doTask ${task.id}")
 
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            SmartLog.e("SignalStrength = ${ConnectionManager.getSignalStrength()}")
+        }
+        SmartLog.e("NetworkGeneration = ${ConnectionManager.getNetworkGeneration()}")
         if (task.simSlot == null || task.simSlot == -1) {
             taskRepository.taskOnError(task)
             return false
@@ -136,9 +151,14 @@ class TaskManager(private val context: Context) {
             object : BroadcastReceiver() {
                 override fun onReceive(arg0: Context, arg1: Intent) {
                     SmartLog.e("resultCode = $resultCode")
-
                     context.unregisterReceiver(this)
-                    cont.resume(resultCode == Activity.RESULT_OK)
+                    val result = resultCode == Activity.RESULT_OK
+                    if (result) {
+                        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                            SmsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(address))
+                        }
+                    }
+                    cont.resume(result)
                 }
             }.also {
                 context.registerReceiver(it, IntentFilter(sentRegisterName))
@@ -150,6 +170,21 @@ class TaskManager(private val context: Context) {
             SmartLog.e("msgText = $msgText")
             try {
                 SmartLog.e("Try to sent message")
+//                val messageParts = smsManager.divideMessage(text)
+//                val pendingIntents: ArrayList<PendingIntent> =
+//                    ArrayList(messageParts.size)
+//                val nMsgParts = messageParts.size
+//
+//                for (i in 0 until messageParts.size) {
+//                    pendingIntents.add(PendingIntent.getBroadcast(context, 0, sentStatusIntent, 0))
+//                }
+//                smsManager.sendMultipartTextMessage(
+//                    address,
+//                    null,
+//                    smsManager.divideMessage(text),
+//                    pendingIntents,
+//                    null
+//                )
                 smsManager.sendTextMessage(
                     address,
                     null,
@@ -163,7 +198,144 @@ class TaskManager(private val context: Context) {
         }
 
     private val gsmAlphabet =
-        charArrayOf('|','€','^','{','}','[','~',']','\\','@','Δ','0','¡','P','¿','p','£','_','!','1','A','Q','a','q','$','Φ','"','2','B','R','b','r','¥','Γ','#','3','C','S','c','s','è','Λ','¤','4','D','T','d','t','é','Ω','%','5','E','U','e','u','ù','Π','&','6','F','V','f','v','ì','Ψ','\'','7','G','W','g','w','ò','Σ','(','8','H','X','h','x','Ç','Θ',')','9','I','Y','i','y','Ξ','*',':','J','Z','j','z','Ø','+',';','K','Ä','k','ä','ø','Æ',',','<','L','Ö','l','ö','æ','-','=','M','Ñ','m','ñ','Å','ß','.','>','N','Ü','n','ü','å','É','/','?','O','§','o','à','\n',' ','\r')
+        charArrayOf(
+            '|',
+            '€',
+            '^',
+            '{',
+            '}',
+            '[',
+            '~',
+            ']',
+            '\\',
+            '@',
+            'Δ',
+            '0',
+            '¡',
+            'P',
+            '¿',
+            'p',
+            '£',
+            '_',
+            '!',
+            '1',
+            'A',
+            'Q',
+            'a',
+            'q',
+            '$',
+            'Φ',
+            '"',
+            '2',
+            'B',
+            'R',
+            'b',
+            'r',
+            '¥',
+            'Γ',
+            '#',
+            '3',
+            'C',
+            'S',
+            'c',
+            's',
+            'è',
+            'Λ',
+            '¤',
+            '4',
+            'D',
+            'T',
+            'd',
+            't',
+            'é',
+            'Ω',
+            '%',
+            '5',
+            'E',
+            'U',
+            'e',
+            'u',
+            'ù',
+            'Π',
+            '&',
+            '6',
+            'F',
+            'V',
+            'f',
+            'v',
+            'ì',
+            'Ψ',
+            '\'',
+            '7',
+            'G',
+            'W',
+            'g',
+            'w',
+            'ò',
+            'Σ',
+            '(',
+            '8',
+            'H',
+            'X',
+            'h',
+            'x',
+            'Ç',
+            'Θ',
+            ')',
+            '9',
+            'I',
+            'Y',
+            'i',
+            'y',
+            'Ξ',
+            '*',
+            ':',
+            'J',
+            'Z',
+            'j',
+            'z',
+            'Ø',
+            '+',
+            ';',
+            'K',
+            'Ä',
+            'k',
+            'ä',
+            'ø',
+            'Æ',
+            ',',
+            '<',
+            'L',
+            'Ö',
+            'l',
+            'ö',
+            'æ',
+            '-',
+            '=',
+            'M',
+            'Ñ',
+            'm',
+            'ñ',
+            'Å',
+            'ß',
+            '.',
+            '>',
+            'N',
+            'Ü',
+            'n',
+            'ü',
+            'å',
+            'É',
+            '/',
+            '?',
+            'O',
+            '§',
+            'o',
+            'à',
+            '\n',
+            ' ',
+            '\r'
+        )
 
     private fun toGSM7BitText(text: String) = if (text.any { !gsmAlphabet.contains(it) }) {
         text.substring(0, min(70, text.length))

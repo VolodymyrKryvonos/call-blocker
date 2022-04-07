@@ -35,11 +35,11 @@ class SocketBuilder private constructor(
 
     private var connector: WebSocket? = null
 
-    private var failureCount = 0
-
     private var isOn = false
 
     fun connect() {
+
+
         if (ip.isEmpty()) {
             ip = "195.201.13.172"
         }
@@ -50,7 +50,7 @@ class SocketBuilder private constructor(
             .build()
         if (!statusConnect.value) {
             connector = OkHttpClient.Builder()
-                .pingInterval(60, TimeUnit.SECONDS)
+                .pingInterval(20, TimeUnit.SECONDS)
                 .build()
                 .newWebSocket(url, this@SocketBuilder)
         }
@@ -82,7 +82,6 @@ class SocketBuilder private constructor(
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
-        failureCount = 0
         statusConnect.value = true
         SmartLog.d("onOpen")
         launch(Dispatchers.IO) {
@@ -120,13 +119,9 @@ class SocketBuilder private constructor(
         SmartLog.d("onFailure connection ${getStackTrace(t)}")
         statusConnect.value = false
         launch(Dispatchers.IO) { connectionStatusFlow.emit(false) }
-
-        if (failureCount < 3) reconnect() else
-            Handler(Looper.getMainLooper()).postDelayed(
-                { reconnect() }, 10000
-            )
-
-        failureCount++
+        Handler(Looper.getMainLooper()).postDelayed(
+            { reconnect() }, 10000
+        )
     }
 
     fun sendMessage(data: String): Boolean {

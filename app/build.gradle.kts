@@ -8,7 +8,6 @@ plugins {
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
-    id("com.onesignal.androidsdk.onesignal-gradle-plugin")
 }
 
 android {
@@ -28,7 +27,7 @@ android {
     buildToolsVersion = Version.buildTool
 
     defaultConfig {
-        applicationId = "com.callblocker.app"
+        applicationId = "com.call_blocke.app"
         minSdk = (Config.minSdkVersion.toInt())
         targetSdk = Config.targetVersion.toInt()
         versionCode = Config.versionCode
@@ -65,13 +64,13 @@ android {
 }
 
 dependencies {
-    implementation (AppDependencies.base)
+    implementation(AppDependencies.base)
 
-    implementation (AppDependencies.kotlinUI)
+    implementation(AppDependencies.kotlinUI)
 
     implementation("androidx.appcompat:appcompat:1.3.0")
 
-    implementation ("androidx.fragment:fragment-ktx:1.3.5")
+    implementation("androidx.fragment:fragment-ktx:1.3.5")
 
     implementation("androidx.compose.runtime:runtime-livedata:${Version.compose}")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
@@ -95,8 +94,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx")
 
     implementation("com.google.firebase:firebase-crashlytics-ktx")
-
-    implementation("com.onesignal:OneSignal:4.6.3")
 
     impTester()
 

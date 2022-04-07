@@ -20,10 +20,10 @@ class SettingsRepositoryImp : SettingsRepository() {
         val simInfo =
             SimUtil.getSIMInfo(context)
         val firstSimName =
-            (simInfo.firstOrNull { it.simSlotIndex == 0 }?.carrierName ?: "none").toString()
+            (simInfo?.firstOrNull { it.simSlotIndex == 0 }?.carrierName ?: "none").toString()
         val secondSimName =
-            (simInfo.firstOrNull { it.simSlotIndex == 1 }?.carrierName ?: "none").toString()
-        val countryCode = simInfo.firstOrNull()?.countryIso ?: "default"
+            (simInfo?.firstOrNull { it.simSlotIndex == 1 }?.carrierName ?: "none").toString()
+        val countryCode = simInfo?.firstOrNull()?.countryIso ?: "default"
         settingsRest.setSmsPerDay(
             SmsPerDayRequest(
                 forSimFirst = currentSmsContFirstSimSlot,

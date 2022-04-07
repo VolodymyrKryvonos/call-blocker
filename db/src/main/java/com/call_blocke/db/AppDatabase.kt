@@ -7,7 +7,7 @@ import com.call_blocke.db.convertor.TaskStatusConvertor
 import com.call_blocke.db.entity.*
 
 @Database(
-    entities = [TaskEntity::class, ReplayTaskEntity::class, TaskStatusData::class],
+    entities = [TaskEntity::class, ReplayTaskEntity::class, TaskStatusData::class, PhoneNumber::class],
     version = 1,
     exportSchema = false
 )
@@ -21,4 +21,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun replayTaskDao(): ReplayTaskDao
 
     abstract fun taskStatusDao(): TaskStatusDao
+
+    abstract fun phoneNumberDao(): PhoneNumberDao
 }

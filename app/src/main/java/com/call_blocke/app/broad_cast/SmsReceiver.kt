@@ -3,72 +3,57 @@ package com.call_blocke.app.broad_cast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Bundle
 import android.telephony.SmsMessage
-import android.telephony.SubscriptionInfo
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.repository.RepositoryImp
-import com.call_blocke.rest_work_imp.SimUtil
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.rokobit.adstvv_unit.loger.SmartLog
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+
 
 class SmsReceiver : BroadcastReceiver() {
 
-    private val taskRepository = RepositoryImp.taskRepository
+    private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private fun simInfo(context: Context): Pair<Int, SubscriptionInfo>? {
-        val simList = SimUtil.getSIMInfo(context)
-
-        if (simList.isEmpty())
-            return null
-
-        if (simList.size == 1)
-            return Pair(0, simList[0])
-
-        val pair = Pair(
-            SmsBlockerDatabase.lastSimSlotUsed,
-            simList[SmsBlockerDatabase.lastSimSlotUsed]
-        )
-
-        SmsBlockerDatabase.lastSimSlotUsed.let {
-            if (it == 0)
-                SmsBlockerDatabase.lastSimSlotUsed = 1
-            else
-                SmsBlockerDatabase.lastSimSlotUsed = 0
-        }
-
-        return pair
-    }
-
-    @DelicateCoroutinesApi
-    override fun onReceive(context: Context?, intent: Intent?) {
-        if (context == null || intent == null)
-            return
-
-        val extras = intent.extras
-
-        GlobalScope.launch(Dispatchers.IO) {
-            val smsExtras = extras!!["pdus"] as Array<*>
-
-            for (smsExtra in smsExtras) {
-                val smsMessage = SmsMessage.createFromPdu(smsExtra as ByteArray)
-
-                val replay = taskRepository.findReplay(
-                    smsMessage.originatingAddress.toString(),
-                    smsMessage.messageBody
-                ) ?: continue
-
-                val simInfo: SubscriptionInfo = simInfo(context = context)!!.second
-
-                /*sendSms(
-                    context = context,
-                    simInfo = simInfo,
-                    address = replay.rOutMsisdn,
-                    text = replay.rTextReply
-                )*/
+    override fun onReceive(context: Context, intent: Intent) {
+        val bundle: Bundle?
+        SmsBlockerDatabase.init(context)
+        if (intent.action == "android.provider.Telephony.SMS_RECEIVED") {
+            bundle = intent.extras
+            if (bundle != null) {
+                val pduObjects = bundle["pdus"] as Array<*>?
+                if (pduObjects != null) {
+                    coroutineScope.launch {
+                        toMultipartMessage(pduObjects, bundle)
+                    }
+                    abortBroadcast()
+                }
             }
         }
+    }
+
+    private suspend fun toMultipartMessage(pduObjects: Array<*>, bundle: Bundle) {
+        val smsText = StringBuilder()
+        var senderNumber = ""
+        var currentSMS: SmsMessage?
+        var message: String?
+        for (aObject in pduObjects) {
+            currentSMS = aObject?.let { getIncomingMessage(it, bundle) }
+            senderNumber = currentSMS!!.displayOriginatingAddress
+            SmartLog.e("SMS part $senderNumber: ${currentSMS.displayMessageBody}")
+            val isExist = SmsBlockerDatabase.phoneNumberDao.isExist(senderNumber) > 0
+            if (!isExist)
+                return
+            smsText.append(currentSMS.displayMessageBody)
+        }
+        SmartLog.e("SmsReceiver $smsText $senderNumber")
+    }
+
+    private fun getIncomingMessage(aObject: Any, bundle: Bundle): SmsMessage? {
+        val format = bundle.getString("format")
+        return SmsMessage.createFromPdu(aObject as ByteArray, format)
     }
 
 }

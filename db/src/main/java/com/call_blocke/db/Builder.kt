@@ -5,10 +5,7 @@ import android.content.Context
 import android.provider.Settings
 import androidx.lifecycle.MutableLiveData
 import androidx.room.Room
-import com.call_blocke.db.entity.ReplayTaskDao
-import com.call_blocke.db.entity.SystemDetailEntity
-import com.call_blocke.db.entity.TaskDao
-import com.call_blocke.db.entity.TaskStatusDao
+import com.call_blocke.db.entity.*
 
 object SmsBlockerDatabase {
     private var preference: Preference? = null
@@ -19,9 +16,11 @@ object SmsBlockerDatabase {
 
     val onSimChanged = MutableLiveData(false)
 
+    var isInitialized: Boolean = false
+
     var isSimChanged: Boolean
         get() {
-            return (preference ?: throw Exception("please init db module")).isSimChanged
+            return (preference ?: throw DbModuleException("please init db module")).isSimChanged
         }
         set(value) {
             preference?.isSimChanged = value
@@ -30,7 +29,7 @@ object SmsBlockerDatabase {
 
     var userToken: String?
         get() {
-            return (preference ?: throw Exception("please init db module")).userToken
+            return (preference ?: throw DbModuleException("please init db module")).userToken
         }
         set(value) {
             preference?.userToken = value
@@ -39,7 +38,7 @@ object SmsBlockerDatabase {
 
     var userPassword: String
         get() {
-            val tok = (preference ?: throw Exception("please init db module")).userPassword
+            val tok = (preference ?: throw DbModuleException("please init db module")).userPassword
             return tok ?: "unknow"
         }
         set(value) {
@@ -48,7 +47,7 @@ object SmsBlockerDatabase {
 
     var userName: String
         get() {
-            val tok = (preference ?: throw Exception("please init db module")).userName
+            val tok = (preference ?: throw DbModuleException("please init db module")).userName
             return tok ?: "unknow"
         }
         set(value) {
@@ -56,79 +55,84 @@ object SmsBlockerDatabase {
         }
 
     val deviceID: String
-        get() = (preference ?: throw Exception("please init db module")).deviceID
+        get() = (preference ?: throw DbModuleException("please init db module")).deviceID
 
     var smsTodaySentFirstSim: Int
-        get() = (preference ?: throw Exception("please init db module")).smsTodaySentFirstSim
+        get() = (preference
+            ?: throw DbModuleException("please init db module")).smsTodaySentFirstSim
         set(value) {
             preference?.smsTodaySentFirstSim = value
         }
 
     var smsTodaySentSecondSim: Int
-        get() = (preference ?: throw Exception("please init db module")).smsTodaySentSecondSim
+        get() = (preference
+            ?: throw DbModuleException("please init db module")).smsTodaySentSecondSim
         set(value) {
             preference?.smsTodaySentSecondSim = value
         }
 
     var smsPerDaySimFirst: Int
-        get() = (preference ?: throw Exception("please init db module")).smsPerDaySimFirst
+        get() = (preference ?: throw DbModuleException("please init db module")).smsPerDaySimFirst
         set(value) {
             preference?.smsPerDaySimFirst = value
         }
 
     var smsPerDaySimSecond: Int
-        get() = (preference ?: throw Exception("please init db module")).smsPerDaySimSecond
+        get() = (preference ?: throw DbModuleException("please init db module")).smsPerDaySimSecond
         set(value) {
             preference?.smsPerDaySimSecond = value
         }
 
     var lastRefreshTime: Long
-        get() = (preference ?: throw Exception("please init db module")).lastRefreshTime
+        get() = (preference ?: throw DbModuleException("please init db module")).lastRefreshTime
         set(value) {
             preference?.lastRefreshTime = value
         }
 
     val taskDao: TaskDao
-        get() = (database ?: throw Exception("please init db module")).taskDao()
+        get() = (database ?: throw DbModuleException("please init db module")).taskDao()
 
     val replayDao: ReplayTaskDao
-        get() = (database ?: throw Exception("please init db module")).replayTaskDao()
+        get() = (database ?: throw DbModuleException("please init db module")).replayTaskDao()
+
+    val phoneNumberDao: PhoneNumberDao
+        get() = (database ?: throw DbModuleException("please init db module")).phoneNumberDao()
 
     val taskStatusDao: TaskStatusDao
-        get() = (database ?: throw Exception("please init db module")).taskStatusDao()
+        get() = (database ?: throw DbModuleException("please init db module")).taskStatusDao()
 
     var lastSimSlotUsed: Int
-        get() = (preference ?: throw Exception("please init db module")).lastSimSlotUsed
+        get() = (preference ?: throw DbModuleException("please init db module")).lastSimSlotUsed
         set(value) {
             preference?.lastSimSlotUsed = value
         }
 
     var systemDetail: SystemDetailEntity
-        get() = (preference ?: throw Exception("please init db module")).systemDetail
+        get() = (preference ?: throw DbModuleException("please init db module")).systemDetail
         set(value) {
             preference?.systemDetail = value
         }
 
     var firstSimId: String?
-        get() = (preference ?: throw Exception("please init db module")).firstSimId
+        get() = (preference ?: throw DbModuleException("please init db module")).firstSimId
         set(value) {
             preference?.firstSimId = value
         }
 
     var secondSimId: String?
-        get() = (preference ?: throw Exception("please init db module")).secondSimId
+        get() = (preference ?: throw DbModuleException("please init db module")).secondSimId
         set(value) {
             preference?.secondSimId = value
         }
 
     var firstSimChanged: Boolean
-        get() = (preference ?: throw Exception("please init db module")).firstSimChanged
+        get() = (preference ?: throw DbModuleException("please init db module")).firstSimChanged
         set(value) {
             preference?.firstSimChanged = value
         }
 
     var secondSimChanged: Boolean
-        get() = (preference ?: throw Exception("please init db module")).secondSimChanged
+        get() = (preference ?: throw DbModuleException("please init db module")).secondSimChanged
         set(value) {
             preference?.secondSimChanged = value
         }
@@ -136,6 +140,8 @@ object SmsBlockerDatabase {
 
     @SuppressLint("HardwareIds")
     fun init(context: Context) {
+        if (isInitialized)
+            return
         preference = Preference(context)
 
         preference?.deviceID = fun(): String {
@@ -151,5 +157,8 @@ object SmsBlockerDatabase {
         ).build()
 
         userIsAuthLiveData.postValue(userToken != null)
+        isInitialized = true
     }
+
+    class DbModuleException(override val message: String?) : Exception()
 }
