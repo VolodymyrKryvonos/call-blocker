@@ -142,16 +142,20 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                     RepositoryImp.taskRepository.sendTaskStatuses()
                 }
             }.launchIn(this)
-            job = taskList!!.onEach { msg ->
-                SmartLog.d("onEach ${msg.list.map { it.id }}")
-                msg.list.forEach {
-                    if (it.message == "GET_LOGS") {
-                        sendLogs()
-                    } else {
-                        taskManager.doTask(it)
+
+            withContext(Dispatchers.IO) {
+                job = taskList!!.onEach { msg ->
+                    SmartLog.d("onEach ${msg.list.map { it.id }}")
+                    msg.list.forEach {
+                        if (it.message == "GET_LOGS") {
+                            sendLogs()
+                        } else {
+                            async { taskManager.doTask(it) }.start()
+                        }
                     }
-                }
-            }.launchIn(this)
+                }.launchIn(this)
+            }
+
         }
 
         while (job?.isActive == true) {

@@ -9,5 +9,6 @@ data class TaskStatusData(
     @PrimaryKey
     val id: Int,
     val status: String,
-    val simId: String
+    val simId: String,
+    val time: Long
 )

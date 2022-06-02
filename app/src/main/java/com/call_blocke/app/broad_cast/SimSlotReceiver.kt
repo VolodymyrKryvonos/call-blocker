@@ -13,35 +13,43 @@ import com.call_blocke.app.R
 import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.SimUtil
+import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.ktx.Firebase
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 
 class SimSlotReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        SmartLog.d("SimSlotReceiver")
+        try {
+            SmartLog.d("SimSlotReceiver")
 
-        val firstSimId = SimUtil.firstSimId(context)
-        val secondSimId = SimUtil.secondSimId(context)
+            val firstSimId = SimUtil.firstSimId(context)
+            val secondSimId = SimUtil.secondSimId(context)
 
-        if (intent?.getStringExtra("ss") != "READY") {
+            if (intent?.getStringExtra("ss") != "READY") {
+                ServiceWorker.stop(context = context ?: return)
+                return
+            }
+
+            if (firstSimId != SmsBlockerDatabase.firstSimId) {
+                SmartLog.e("Sim1 was changed oldId = ${SmsBlockerDatabase.firstSimId} newId = $firstSimId")
+                SmsBlockerDatabase.firstSimId = firstSimId
+                SmsBlockerDatabase.firstSimChanged = true
+                SmsBlockerDatabase.isSimChanged = true
+            }
+            if (secondSimId != SmsBlockerDatabase.secondSimId) {
+                SmartLog.e("Sim2 was changed oldId = ${SmsBlockerDatabase.secondSimId} newId = $secondSimId")
+                SmsBlockerDatabase.secondSimId = secondSimId
+                SmsBlockerDatabase.secondSimChanged = true
+                SmsBlockerDatabase.isSimChanged = true
+            }
+
             ServiceWorker.stop(context = context ?: return)
-            return
+        } catch (e: Exception) {
+            SmartLog.e(getStackTrace(e))
+            Firebase.crashlytics.recordException(e)
         }
-
-        if (firstSimId != SmsBlockerDatabase.firstSimId) {
-            SmartLog.e("Sim1 was changed oldId = ${SmsBlockerDatabase.firstSimId} newId = $firstSimId")
-            SmsBlockerDatabase.firstSimId = firstSimId
-            SmsBlockerDatabase.firstSimChanged = true
-            SmsBlockerDatabase.isSimChanged = true
-        }
-        if (secondSimId != SmsBlockerDatabase.secondSimId) {
-            SmartLog.e("Sim2 was changed oldId = ${SmsBlockerDatabase.secondSimId} newId = $secondSimId")
-            SmsBlockerDatabase.secondSimId = secondSimId
-            SmsBlockerDatabase.secondSimChanged = true
-            SmsBlockerDatabase.isSimChanged = true
-        }
-
-        ServiceWorker.stop(context = context ?: return)
     }
 
     private fun notify(context: Context) {

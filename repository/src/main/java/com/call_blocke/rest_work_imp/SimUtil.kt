@@ -2,16 +2,13 @@ package com.call_blocke.rest_work_imp
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.os.Build
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
-import androidx.annotation.RequiresApi
 
 /**
  * Created by Apipas on 6/4/15.
  */
 object SimUtil {
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
     @SuppressLint("MissingPermission")
     fun getSIMInfo(context: Context?): List<SubscriptionInfo>? {
         return SubscriptionManager.from(context).activeSubscriptionInfoList

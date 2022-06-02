@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.telephony.SmsMessage
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.repository.RepositoryImp.replyRepository
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +27,7 @@ class SmsReceiver : BroadcastReceiver() {
                 val pduObjects = bundle["pdus"] as Array<*>?
                 if (pduObjects != null) {
                     coroutineScope.launch {
-                        toMultipartMessage(pduObjects, bundle)
+                        storeReply(pduObjects, bundle)
                     }
                     abortBroadcast()
                 }
@@ -34,11 +35,11 @@ class SmsReceiver : BroadcastReceiver() {
         }
     }
 
-    private suspend fun toMultipartMessage(pduObjects: Array<*>, bundle: Bundle) {
+    private suspend fun storeReply(pduObjects: Array<*>, bundle: Bundle) {
         val smsText = StringBuilder()
         var senderNumber = ""
+        var receivedDate = 0L
         var currentSMS: SmsMessage?
-        var message: String?
         for (aObject in pduObjects) {
             currentSMS = aObject?.let { getIncomingMessage(it, bundle) }
             senderNumber = currentSMS!!.displayOriginatingAddress
@@ -46,9 +47,11 @@ class SmsReceiver : BroadcastReceiver() {
             val isExist = SmsBlockerDatabase.phoneNumberDao.isExist(senderNumber) > 0
             if (!isExist)
                 return
+            receivedDate = currentSMS.timestampMillis
             smsText.append(currentSMS.displayMessageBody)
         }
         SmartLog.e("SmsReceiver $smsText $senderNumber")
+        replyRepository.storeReply(senderNumber, smsText.toString(), receivedDate)
     }
 
     private fun getIncomingMessage(aObject: Any, bundle: Bundle): SmsMessage? {

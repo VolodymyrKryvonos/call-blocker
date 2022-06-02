@@ -1,10 +1,7 @@
 package com.call_blocke.repository
 
 import android.content.Context
-import com.call_blocke.a_repository.repository.LogRepositoryImpl
-import com.call_blocke.a_repository.repository.SettingsRepositoryImp
-import com.call_blocke.a_repository.repository.TaskRepositoryImp
-import com.call_blocke.a_repository.repository.UserRepositoryImp
+import com.call_blocke.a_repository.repository.*
 import com.call_blocke.rest_work_imp.*
 
 object RepositoryImp {
@@ -23,6 +20,10 @@ object RepositoryImp {
 
     val logRepository: LogRepository by lazy {
         LogRepositoryImpl()
+    }
+
+    val replyRepository: ReplyRepository by lazy {
+        ReplyRepositoryImpl()
     }
 
     fun init(context: Context) {

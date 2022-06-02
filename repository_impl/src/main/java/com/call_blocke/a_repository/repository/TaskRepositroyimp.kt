@@ -190,6 +190,12 @@ class TaskRepositoryImp : TaskRepository() {
                     1 -> "msisdn_2"
                     0 -> "msisdn_1"
                     else -> "msisdn_1"
+                },
+                date = when (task.status) {
+                    TaskStatus.PROCESS -> task.processAt
+                    TaskStatus.DELIVERED -> task.deliveredAt
+                    TaskStatus.BUFFERED -> task.bufferedAt
+                    else -> Date().time
                 }
             )
         )
@@ -205,7 +211,8 @@ class TaskRepositoryImp : TaskRepository() {
                 TaskStatusData(
                     id = req.data.id,
                     status = req.data.status,
-                    simId = req.data.simId
+                    simId = req.data.simId,
+                    time = req.data.date
                 )
             )
         }
@@ -219,7 +226,8 @@ class TaskRepositoryImp : TaskRepository() {
                 data = TaskStatusDataRequest(
                     id = it.id,
                     status = it.status,
-                    simId = it.simId
+                    simId = it.simId,
+                    date = it.time
                 )
             )
         }
@@ -250,6 +258,7 @@ data class TaskStatusRequest(
 data class TaskStatusDataRequest(
     val status: String,
     val id: Int,
-    val simId: String
+    val simId: String,
+    val date: Long
 )
 

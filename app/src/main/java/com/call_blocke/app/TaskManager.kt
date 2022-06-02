@@ -130,10 +130,15 @@ class TaskManager(private val context: Context) {
     }
 
     private suspend fun sendSms(simInfo: SubscriptionInfo, task: TaskEntity): Boolean {
-        return sendSms(simInfo, task.sendTo, task.message)
+        return sendSms(simInfo, task.sendTo, task.message, task.id)
     }
 
-    private suspend fun sendSms(simInfo: SubscriptionInfo, address: String, text: String): Boolean =
+    private suspend fun sendSms(
+        simInfo: SubscriptionInfo,
+        address: String,
+        text: String,
+        id: Int
+    ): Boolean =
         suspendCoroutine { cont ->
             val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
 
@@ -150,7 +155,7 @@ class TaskManager(private val context: Context) {
 
             object : BroadcastReceiver() {
                 override fun onReceive(arg0: Context, arg1: Intent) {
-                    SmartLog.e("resultCode = $resultCode")
+                    SmartLog.e("resultCode = $resultCode  $id")
                     context.unregisterReceiver(this)
                     val result = resultCode == Activity.RESULT_OK
                     if (result) {
@@ -169,7 +174,7 @@ class TaskManager(private val context: Context) {
             val msgText = toGSM7BitText(text)
             SmartLog.e("msgText = $msgText")
             try {
-                SmartLog.e("Try to sent message")
+                SmartLog.e("Try to sent message $id")
 //                val messageParts = smsManager.divideMessage(text)
 //                val pendingIntents: ArrayList<PendingIntent> =
 //                    ArrayList(messageParts.size)
