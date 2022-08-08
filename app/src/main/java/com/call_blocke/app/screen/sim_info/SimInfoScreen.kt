@@ -9,8 +9,8 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,14 +32,14 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
 ) {
     val context = LocalContext.current
 
+    mViewModel.simsInfo()
     Title(text = stringResource(id = R.string.sim_info_title))
 
     val resolver: ContentResolver = context.contentResolver
 
     Spacer(modifier = Modifier.height(24.dp))
 
-    val sims by mViewModel.simsInfo().observeAsState(initial = null)
-
+    val sims by mViewModel.simInfoState.collectAsState(initial = null)
     if (sims == null)
         CircularProgressIndicator()
     else {

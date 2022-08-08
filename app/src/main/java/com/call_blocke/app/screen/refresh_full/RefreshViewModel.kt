@@ -3,13 +3,15 @@ package com.call_blocke.app.screen.refresh_full
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
+import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class RefreshViewModel : ViewModel() {
@@ -20,20 +22,31 @@ class RefreshViewModel : ViewModel() {
 
     val onLoading = MutableLiveData(false)
 
-    fun simsInfo() = liveData(Dispatchers.IO) {
-        emit(
-            settingsRepository.simInfo()
-        )
+    private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
+        MutableStateFlow(emptyList())
+    val simInfoState = _simInfoState.asStateFlow()
+
+    fun simsInfo() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _simInfoState.emit(
+                settingsRepository.simInfo()
+            )
+        }
     }
 
     fun firstSim(context: Context) = SimUtil.firstSim(context)
 
     fun secondSim(context: Context) = SimUtil.secondSim(context)
 
-    fun reset(simSlotID: Int) = viewModelScope.launch(Dispatchers.IO) {
+    fun reset(simSlotID: Int, context: Context?) = viewModelScope.launch(Dispatchers.IO) {
         onLoading.postValue(true)
         try {
-            settingsRepository.refreshDataForSim(simSlot = simSlotID)
+            val simInfo = SimUtil.simInfo(context, simSlotID)
+            settingsRepository.refreshDataForSim(
+                simSlot = simSlotID,
+                simInfo?.iccId ?: "",
+                simInfo?.number ?: ""
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -46,5 +59,6 @@ class RefreshViewModel : ViewModel() {
         SmsBlockerDatabase.isSimChanged = false
         taskRepository.clearFor(simIndex = simSlotID)
         onLoading.postValue(false)
+        simsInfo()
     }
 }

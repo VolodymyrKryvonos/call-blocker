@@ -3,15 +3,17 @@ package com.call_blocke.app.screen.main
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.settingsRepository
+import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
@@ -30,10 +32,16 @@ class MainViewModel : ViewModel() {
         RepositoryImp.taskRepository
     }
 
-    fun simsInfo() = liveData(Dispatchers.IO) {
-        emit(
-            settingsRepository.simInfo()
-        )
+    private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
+        MutableStateFlow(emptyList())
+    val simInfoState = _simInfoState.asStateFlow()
+
+    fun simsInfo() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _simInfoState.emit(
+                settingsRepository.simInfo()
+            )
+        }
     }
 
 
@@ -60,10 +68,20 @@ class MainViewModel : ViewModel() {
                 forSecondSim = forSimSecond
             )
             if (forSimFirst == 0) {
-                settingsRepository.refreshDataForSim(0)
+                val simInfo = SimUtil.simInfo(context, 0)
+                settingsRepository.refreshDataForSim(
+                    simSlot = 0,
+                    simInfo?.iccId ?: "",
+                    simInfo?.number ?: ""
+                )
             }
             if (forSimSecond == 0) {
-                settingsRepository.refreshDataForSim(1)
+                val simInfo = SimUtil.simInfo(context, 1)
+                settingsRepository.refreshDataForSim(
+                    simSlot = 1,
+                    simInfo?.iccId ?: "",
+                    simInfo?.number ?: ""
+                )
             }
         }
     }

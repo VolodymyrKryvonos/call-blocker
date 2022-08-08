@@ -103,8 +103,8 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                 isEnable = !isLoading && isFirstSimAllow,
                 isError = isFirstFieldError,
                 onValueChange = {
-                    if (it.toIntOrNull() ?: 0 > 400 || it.length > 3) {
-                        smsOneCountValue.value = 400.toString()
+                    if (it.toIntOrNull() ?: 0 > 1000 || it.length > 4) {
+                        smsOneCountValue.value = 1000.toString()
                     } else {
                         smsOneCountValue.value = it
                     }
@@ -118,8 +118,8 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                 isEnable = !isLoading && isSecondSimAllow,
                 isError = isSecondFieldError,
                 onValueChange = {
-                    if (it.toIntOrNull() ?: 0 > 400 || it.length > 3) {
-                        smsTwoCountValue.value = 400.toString()
+                    if (it.toIntOrNull() ?: 0 > 1000 || it.length > 4) {
+                        smsTwoCountValue.value = 1000.toString()
                     } else {
                         smsTwoCountValue.value = it
                     }

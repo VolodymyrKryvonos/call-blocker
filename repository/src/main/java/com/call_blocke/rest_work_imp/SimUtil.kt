@@ -14,6 +14,14 @@ object SimUtil {
         return SubscriptionManager.from(context).activeSubscriptionInfoList
     }
 
+    fun isSimAllow(context: Context, simSlot: Int): Boolean {
+        return if (simSlot == 0) {
+            isFirstSimAllow(context)
+        } else {
+            isSecondSimAllow(context)
+        }
+    }
+
     fun isFirstSimAllow(context: Context): Boolean {
         return getSIMInfo(context)?.any { it.simSlotIndex == 0 } == true
     }
@@ -40,5 +48,14 @@ object SimUtil {
     fun secondSimId(context: Context?): String? {
         val simInfo = getSIMInfo(context)
         return simInfo?.firstOrNull { it.simSlotIndex == 1 }?.iccId
+    }
+
+    fun simInfo(context: Context?, simSlot: Int): SubscriptionInfo? {
+        val simInfo = getSIMInfo(context)
+        return if (simSlot == 0) {
+            firstSim(context)
+        } else {
+            secondSim(context)
+        }
     }
 }

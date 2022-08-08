@@ -11,6 +11,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -38,27 +39,36 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
         .padding(primaryDimens)
 ) {
     val context = LocalContext.current
+    mViewModel.simsInfo()
+    val sims by mViewModel.simInfoState.collectAsState(initial = null)
 
     val isLoading by mViewModel.onLoading.observeAsState(false)
-    
+
     Title(text = stringResource(id = R.string.refresh_full_title))
     Label(text = stringResource(id = R.string.refresh_full_label))
-    
+
     Spacer(modifier = Modifier.height(24.dp))
-    
+
     if (isLoading) {
         CircularProgressIndicator()
     } else {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally) {
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             mViewModel.firstSim(context)?.let {
                 SimSlotBtn(
                     simName = it.carrierName.toString(),
-                    simChanged = SmsBlockerDatabase.firstSimChanged
+                    simChanged = SmsBlockerDatabase.firstSimChanged,
+                    simOutOfSms = sims?.firstOrNull { sim -> sim.simSlot == 0 }.let { sim ->
+                        if (sim == null) {
+                            false
+                        } else
+                            sim.simPerDay <= sim.simDelivered
+                    }
                 ) {
                     SmsBlockerDatabase.firstSimChanged = false
-                    mViewModel.reset(0)
+                    mViewModel.reset(0, context)
                 }
             }
 
@@ -67,25 +77,36 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
             mViewModel.secondSim(context)?.let {
                 SimSlotBtn(
                     simName = it.carrierName.toString(),
-                    simChanged = SmsBlockerDatabase.secondSimChanged
+                    simChanged = SmsBlockerDatabase.secondSimChanged,
+                    simOutOfSms = sims?.firstOrNull { sim -> sim.simSlot == 1 }.let { sim ->
+                        if (sim == null) {
+                            false
+                        } else
+                            sim.simPerDay <= sim.simDelivered
+                    }
                 ) {
                     SmsBlockerDatabase.secondSimChanged = false
-                    mViewModel.reset(1)
+                    mViewModel.reset(1, context)
                 }
             }
         }
     }
-    
+
 }
 
 @ExperimentalMaterialApi
 @Composable
-private fun SimSlotBtn(simName: String, simChanged: Boolean, onClick: () -> Unit) = Card(
+private fun SimSlotBtn(
+    simName: String,
+    simChanged: Boolean,
+    simOutOfSms: Boolean = false,
+    onClick: () -> Unit
+) = Card(
     modifier = Modifier
         .fillMaxWidth()
         .padding(primaryDimens),
     shape = RoundedCornerShape(15),
-    backgroundColor = secondaryColor,
+    backgroundColor = if (simOutOfSms) Color.Red else secondaryColor,
     elevation = 6.dp,
     border = if (simChanged) BorderStroke(2.dp, Color.Red) else null,
     onClick = { onClick() }

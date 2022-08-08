@@ -1,5 +1,6 @@
 package com.call_blocke.app.screen.main
 
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
@@ -9,20 +10,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.call_blocke.app.BuildConfig
@@ -48,7 +50,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
     val isLoading by mViewMode.isLoading.observeAsState(false)
 
     val isServerOnline by mViewMode.isServerOnline.collectAsState()
-
+    mViewMode.simsInfo()
     val ping by mViewMode.isPingOn.collectAsState(initial = false)
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
@@ -103,6 +105,24 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
 }
 
 @Composable
+fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) -> Unit) {
+    val eventHandler = rememberUpdatedState(onEvent)
+    val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
+
+    DisposableEffect(lifecycleOwner.value) {
+        val lifecycle = lifecycleOwner.value.lifecycle
+        val observer = LifecycleEventObserver { owner, event ->
+            eventHandler.value(owner, event)
+        }
+
+        lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.removeObserver(observer)
+        }
+    }
+}
+
+@Composable
 fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primaryDimens)) {
     val systemInfo by mViewMode.systemInfoLiveData.observeAsState(initial = SmsBlockerDatabase.systemDetail)
 
@@ -121,7 +141,7 @@ fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primar
 
 @Composable
 fun SentSmsInfo(mViewModel: MainViewModel) {
-    val sims by mViewModel.simsInfo().observeAsState(initial = null)
+    val sims by mViewModel.simInfoState.collectAsState(initial = null)
     val context = LocalContext.current
     for ((index, fullSimInfoModel) in sims?.withIndex() ?: emptyList()) {
         if (SimUtil.isFirstSimAllow(context) && index == 0) {
@@ -147,9 +167,15 @@ fun SentSmsInfo(mViewModel: MainViewModel) {
 fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
     val isExecutorRunning: Boolean by mViewMode.taskExecutorIsRunning.collectAsState(initial = false)
     val context = LocalContext.current
-    val isSimChanged by SmsBlockerDatabase
-        .onSimChanged
-        .observeAsState(initial = SmsBlockerDatabase.isSimChanged)
+    OnLifecycleEvent { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                mViewMode.simsInfo()
+            }
+            else -> {}
+        }
+    }
+    val sims by mViewMode.simInfoState.collectAsState(initial = null)
     LazyVerticalGrid(
         cells = GridCells.Adaptive(140.dp),
         contentPadding = PaddingValues(primaryDimens / 2)
@@ -159,10 +185,10 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
             MenuItem(
                 icon = when (i) {
                     1 -> if (isExecutorRunning) Icons.Filled.Close else Icons.Filled.PlayArrow
-                    2 -> Icons.Filled.List
+                    5 -> Icons.Filled.List
                     3 -> Icons.Filled.Lock
                     4 -> Icons.Filled.Settings
-                    5 -> Icons.Filled.Refresh
+                    2 -> Icons.Filled.Refresh
                     6 -> Icons.Filled.Info
                     else -> Icons.Filled.ExitToApp
                 },
@@ -170,12 +196,28 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     1 -> if (isExecutorRunning)
                         stringResource(id = R.string.main_menu_stop_job)
                     else stringResource(id = R.string.main_menu_start_job)
-                    2 -> stringResource(id = R.string.main_menu_task_list)
+                    2 -> stringResource(id = R.string.main_menu_refresh_full)
                     3 -> stringResource(id = R.string.main_menu_black_list)
                     4 -> stringResource(id = R.string.main_menu_set_sms_per_day)
-                    5 -> stringResource(id = R.string.main_menu_refresh_full)
+                    5 -> stringResource(id = R.string.main_menu_task_list)
                     6 -> stringResource(id = R.string.main_menu_sim_info)
                     else -> stringResource(id = R.string.main_menu_log_out)
+                },
+                backgroundColor = if (i == 2) {
+                    Log.e(
+                        "CheckSIM",
+                        "${sims}"
+                    )
+                    if (sims?.any { sim ->
+                            sim.simPerDay <= sim.simDelivered && SimUtil.isSimAllow(
+                                context,
+                                sim.simSlot
+                            )
+                        } == true)
+                        Color.Red
+                    else secondaryColor
+                } else {
+                    secondaryColor
                 },
                 isEnable = if (i == 1) !SmsBlockerDatabase.isSimChanged else true
             ) {
@@ -189,11 +231,11 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     }
                 } else if (i == 3)
                     navController.navigate("black_list")
-                else if (i == 2)
+                else if (i == 5)
                     navController.navigate("task_list")
                 else if (i == 4)
                     navController.navigate("settings")
-                else if (i == 5)
+                else if (i == 2)
                     navController.navigate("refresh")
                 else if (i == 6)
                     navController.navigate("sim_info")
@@ -210,6 +252,7 @@ fun MenuItem(
     icon: ImageVector,
     title: String,
     isEnable: Boolean,
+    backgroundColor: Color,
     onClick: () -> Unit
 ) {
     Card(
@@ -218,7 +261,7 @@ fun MenuItem(
             // .wrapContentSize()
             .padding(primaryDimens / 2),
         shape = RoundedCornerShape(15),
-        backgroundColor = secondaryColor,
+        backgroundColor = backgroundColor,
         elevation = 6.dp,
         onClick = onClick,
         enabled = isEnable

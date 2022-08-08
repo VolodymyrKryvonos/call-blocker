@@ -31,7 +31,7 @@ abstract class SettingsRepository {
 
     protected abstract suspend fun blackPhoneNumberList(): List<String>
 
-    abstract suspend fun refreshDataForSim(simSlot: Int)
+    abstract suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String = "")
 
     abstract suspend fun simInfo(): List<FullSimInfoModel>
 

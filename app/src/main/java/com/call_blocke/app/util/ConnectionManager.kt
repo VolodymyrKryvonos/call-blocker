@@ -8,6 +8,8 @@ import android.telephony.PhoneStateListener
 import android.telephony.SignalStrength
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresPermission
+import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 
 
 object ConnectionManager {
@@ -26,15 +28,21 @@ object ConnectionManager {
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
     fun getSignalStrength(): Int {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (getNetworkGeneration() == "WIFI") {
-                connectionManager?.getNetworkCapabilities(connectionManager?.activeNetwork)?.signalStrength
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (getNetworkGeneration() == "WIFI") {
+                    connectionManager?.getNetworkCapabilities(connectionManager?.activeNetwork)?.signalStrength
+                } else {
+                    telephonyManager?.allCellInfo?.firstOrNull()?.cellSignalStrength?.dbm
+                } ?: 0
             } else {
-                telephonyManager?.allCellInfo?.first()?.cellSignalStrength?.dbm
-            } ?: 0
-        } else {
+                mSignalStrength
+            }
+        } catch (e: Exception) {
+            SmartLog.e(getStackTrace(e))
             mSignalStrength
         }
+
     }
 
     fun getNetworkGeneration(): String {

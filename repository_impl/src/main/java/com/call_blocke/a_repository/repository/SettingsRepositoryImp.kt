@@ -43,13 +43,15 @@ class SettingsRepositoryImp : SettingsRepository() {
         }
     }
 
-    override suspend fun refreshDataForSim(simSlot: Int) {
+    override suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String) {
         settingsRest.resetSim(
             RefreshDataForSimRequest(
                 simName = if (simSlot == 0)
                     "msisdn_1"
                 else
-                    "msisdn_2"
+                    "msisdn_2",
+                simICCID = iccid,
+                simNumber = number
             )
         )
     }
@@ -65,6 +67,7 @@ class SettingsRepositoryImp : SettingsRepository() {
                         simDate = it.updatedAt,
                         simDelivered = it.delivered,
                         simPerDay = it.smsPerDay,
+                        simSlot = 0
                     )
                 )
             }
@@ -75,6 +78,7 @@ class SettingsRepositoryImp : SettingsRepository() {
                         simDate = it.updatedAt,
                         simDelivered = it.delivered,
                         simPerDay = it.smsPerDay,
+                        simSlot = 1
                     )
                 )
             }

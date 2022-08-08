@@ -8,5 +8,12 @@ data class RefreshDataForSimRequest(
     val uniqueId: String = SmsBlockerDatabase.deviceID,
 
     @SerializedName("sim_id")
-    val simName: String
+    val simName: String,
+
+    @SerializedName("sim_iccid")
+    val simICCID: String,
+
+    @SerializedName("msisdn")
+    val simNumber: String
+
 )

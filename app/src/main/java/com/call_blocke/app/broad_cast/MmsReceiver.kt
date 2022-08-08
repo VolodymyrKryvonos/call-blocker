@@ -6,6 +6,6 @@ import android.content.Intent
 
 class MmsReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
-        TODO("Not yet implemented")
+
     }
 }

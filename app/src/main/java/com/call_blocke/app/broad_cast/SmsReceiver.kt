@@ -7,6 +7,9 @@ import android.os.Bundle
 import android.telephony.SmsMessage
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp.replyRepository
+import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
+import com.google.gson.annotations.SerializedName
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,27 +39,51 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private suspend fun storeReply(pduObjects: Array<*>, bundle: Bundle) {
+        val currentSMS = getIncomingMessage(pduObjects, bundle)
+        val sendToReply =
+            SmsBlockerDatabase.phoneNumberDao.isExist(currentSMS.senderNumber) > 0 || try {
+                Gson().fromJson(currentSMS.smsText, SmsDetectorBody::class.java)
+                true
+            } catch (e: JsonSyntaxException) {
+                false
+            }
+        if (!sendToReply)
+            return
+        SmartLog.e("SmsReceiver ${currentSMS.smsText} ${currentSMS.senderNumber}")
+        replyRepository.storeReply(
+            currentSMS.senderNumber,
+            currentSMS.smsText,
+            currentSMS.receiveDate
+        )
+    }
+
+    private fun getIncomingMessage(pduObjects: Array<*>, bundle: Bundle): ReplyMessage {
         val smsText = StringBuilder()
         var senderNumber = ""
         var receivedDate = 0L
-        var currentSMS: SmsMessage?
-        for (aObject in pduObjects) {
-            currentSMS = aObject?.let { getIncomingMessage(it, bundle) }
-            senderNumber = currentSMS!!.displayOriginatingAddress
-            SmartLog.e("SMS part $senderNumber: ${currentSMS.displayMessageBody}")
-            val isExist = SmsBlockerDatabase.phoneNumberDao.isExist(senderNumber) > 0
-            if (!isExist)
-                return
-            receivedDate = currentSMS.timestampMillis
-            smsText.append(currentSMS.displayMessageBody)
-        }
-        SmartLog.e("SmsReceiver $smsText $senderNumber")
-        replyRepository.storeReply(senderNumber, smsText.toString(), receivedDate)
-    }
-
-    private fun getIncomingMessage(aObject: Any, bundle: Bundle): SmsMessage? {
         val format = bundle.getString("format")
-        return SmsMessage.createFromPdu(aObject as ByteArray, format)
+        for (aObject in pduObjects) {
+            val currentFrame = SmsMessage.createFromPdu(aObject as ByteArray, format)
+            smsText.append(
+                currentFrame.displayMessageBody
+            )
+            senderNumber = currentFrame.displayOriginatingAddress
+            receivedDate = currentFrame.timestampMillis
+        }
+        return ReplyMessage(receivedDate, smsText.toString(), senderNumber)
     }
 
 }
+
+data class ReplyMessage(
+    val receiveDate: Long,
+    val smsText: String,
+    val senderNumber: String
+)
+
+data class SmsDetectorBody(
+    @SerializedName("sim_iccid")
+    val simIccid: String,
+    @SerializedName("unique_id")
+    val uniqueId: String
+)
