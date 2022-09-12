@@ -41,7 +41,7 @@ class SmsReceiver : BroadcastReceiver() {
 
     private suspend fun storeReply(pduObjects: Array<*>, bundle: Bundle) {
         val currentSMS = getIncomingMessage(pduObjects, bundle)
-        SmartLog.e("storeReply  ${currentSMS.toString()}")
+        SmartLog.e("storeReply  $currentSMS")
         val sendToReply =
             SmsBlockerDatabase.phoneNumberDao.isExist(currentSMS.senderNumber) > 0 || try {
                 Gson().fromJson(currentSMS.smsText, SmsDetectorBody::class.java)

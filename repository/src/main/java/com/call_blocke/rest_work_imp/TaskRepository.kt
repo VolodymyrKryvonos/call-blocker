@@ -12,7 +12,7 @@ import java.util.*
 
 abstract class TaskRepository {
 
-    public var preference: Preference? = null
+    var preference: Preference? = null
 
     val ping = MutableSharedFlow<Boolean>()
 
