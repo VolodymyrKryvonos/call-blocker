@@ -50,7 +50,6 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
     val isLoading by mViewMode.isLoading.observeAsState(false)
 
     val isServerOnline by mViewMode.isServerOnline.collectAsState()
-    mViewMode.simsInfo()
     val ping by mViewMode.isPingOn.collectAsState(initial = false)
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
@@ -171,6 +170,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
                 mViewMode.simsInfo()
+                mViewMode.resetSimIfChanged(context)
             }
             else -> {}
         }

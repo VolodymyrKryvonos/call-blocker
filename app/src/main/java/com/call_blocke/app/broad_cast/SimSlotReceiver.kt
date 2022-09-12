@@ -31,18 +31,20 @@ class SimSlotReceiver : BroadcastReceiver() {
                 ServiceWorker.stop(context = context ?: return)
                 return
             }
+            SmartLog.d("firstSimId $firstSimId")
+            SmartLog.d("secondSimId $secondSimId")
+            SmartLog.d("SmsBlockerDatabase.firstSimId ${SmsBlockerDatabase.firstSimId}")
+            SmartLog.d("SmsBlockerDatabase.secondSimId ${SmsBlockerDatabase.secondSimId}")
 
             if (firstSimId != SmsBlockerDatabase.firstSimId) {
                 SmartLog.e("Sim1 was changed oldId = ${SmsBlockerDatabase.firstSimId} newId = $firstSimId")
                 SmsBlockerDatabase.firstSimId = firstSimId
                 SmsBlockerDatabase.firstSimChanged = true
-                SmsBlockerDatabase.isSimChanged = true
             }
             if (secondSimId != SmsBlockerDatabase.secondSimId) {
                 SmartLog.e("Sim2 was changed oldId = ${SmsBlockerDatabase.secondSimId} newId = $secondSimId")
                 SmsBlockerDatabase.secondSimId = secondSimId
                 SmsBlockerDatabase.secondSimChanged = true
-                SmsBlockerDatabase.isSimChanged = true
             }
 
             ServiceWorker.stop(context = context ?: return)

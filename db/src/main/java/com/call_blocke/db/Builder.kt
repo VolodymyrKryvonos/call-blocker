@@ -18,13 +18,9 @@ object SmsBlockerDatabase {
 
     var isInitialized: Boolean = false
 
-    var isSimChanged: Boolean
+    val isSimChanged: Boolean
         get() {
-            return (preference ?: throw DbModuleException("please init db module")).isSimChanged
-        }
-        set(value) {
-            preference?.isSimChanged = value
-            onSimChanged.postValue(value)
+            return firstSimChanged || secondSimChanged
         }
 
     var userToken: String?

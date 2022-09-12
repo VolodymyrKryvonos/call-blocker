@@ -11,6 +11,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,11 +41,14 @@ class SmsReceiver : BroadcastReceiver() {
 
     private suspend fun storeReply(pduObjects: Array<*>, bundle: Bundle) {
         val currentSMS = getIncomingMessage(pduObjects, bundle)
+        SmartLog.e("storeReply  ${currentSMS.toString()}")
         val sendToReply =
             SmsBlockerDatabase.phoneNumberDao.isExist(currentSMS.senderNumber) > 0 || try {
                 Gson().fromJson(currentSMS.smsText, SmsDetectorBody::class.java)
                 true
             } catch (e: JsonSyntaxException) {
+                SmartLog.e(getStackTrace(e))
+                e.printStackTrace()
                 false
             }
         if (!sendToReply)

@@ -10,6 +10,8 @@ import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.settingsRepository
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
+import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -105,6 +107,37 @@ class MainViewModel : ViewModel() {
     fun logOut(context: Context) {
         stopExecutor(context = context)
         userRepository.logOut()
+    }
+
+    fun resetSimIfChanged(context: Context) {
+        if (SmsBlockerDatabase.firstSimChanged) {
+            val simInfo = SimUtil.simInfo(context, 0)
+            viewModelScope.launch {
+                try {
+                    settingsRepository.refreshDataForSim(
+                        0,
+                        simInfo?.iccId ?: "",
+                        simInfo?.number ?: ""
+                    )
+                } catch (e: Exception) {
+                    SmartLog.e("Auto reset failed sim1 ${getStackTrace(e)}")
+                }
+            }
+        }
+        if (SmsBlockerDatabase.secondSimChanged) {
+            val simInfo = SimUtil.simInfo(context, 1)
+            viewModelScope.launch {
+                try {
+                    settingsRepository.refreshDataForSim(
+                        1,
+                        simInfo?.iccId ?: "",
+                        simInfo?.number ?: ""
+                    )
+                } catch (e: Exception) {
+                    SmartLog.e("Auto reset failed sim2 ${getStackTrace(e)}")
+                }
+            }
+        }
     }
 
 }

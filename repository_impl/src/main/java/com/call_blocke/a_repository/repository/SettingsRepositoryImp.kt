@@ -5,6 +5,7 @@ import com.call_blocke.a_repository.model.RefreshDataForSimRequest
 import com.call_blocke.a_repository.model.SmsPerDayRequest
 import com.call_blocke.a_repository.model.TasksRequest
 import com.call_blocke.a_repository.rest.SettingsRest
+import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocke.rest_work_imp.SimUtil
@@ -44,6 +45,11 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
     override suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String) {
+        if (simSlot == 0) {
+            SmsBlockerDatabase.firstSimChanged = false
+        } else {
+            SmsBlockerDatabase.secondSimChanged = false
+        }
         settingsRest.resetSim(
             RefreshDataForSimRequest(
                 simName = if (simSlot == 0)

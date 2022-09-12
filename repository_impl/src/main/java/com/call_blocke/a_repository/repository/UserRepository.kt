@@ -60,9 +60,7 @@ class UserRepositoryImp : UserRepository() {
     override suspend fun loadSystemDetail(): SystemDetailEntity {
         val data = try {
             userRest.userInfo(TasksRequest()).let {
-
                 SmsBlockerDatabase.userName = "${it.data.user.name} ${it.data.user.lastName}"
-
                 it
             }
         } catch (e: Exception) {

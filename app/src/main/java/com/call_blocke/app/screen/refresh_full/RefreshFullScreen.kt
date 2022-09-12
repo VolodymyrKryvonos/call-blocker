@@ -21,8 +21,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
+import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Title
@@ -39,7 +41,7 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
         .padding(primaryDimens)
 ) {
     val context = LocalContext.current
-    mViewModel.simsInfo()
+
     val sims by mViewModel.simInfoState.collectAsState(initial = null)
 
     val isLoading by mViewModel.onLoading.observeAsState(false)
@@ -67,7 +69,6 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
                             sim.simPerDay <= sim.simDelivered
                     }
                 ) {
-                    SmsBlockerDatabase.firstSimChanged = false
                     mViewModel.reset(0, context)
                 }
             }
@@ -85,10 +86,18 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
                             sim.simPerDay <= sim.simDelivered
                     }
                 ) {
-                    SmsBlockerDatabase.secondSimChanged = false
                     mViewModel.reset(1, context)
                 }
             }
+        }
+    }
+
+    OnLifecycleEvent { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                mViewModel.simsInfo()
+            }
+            else -> {}
         }
     }
 

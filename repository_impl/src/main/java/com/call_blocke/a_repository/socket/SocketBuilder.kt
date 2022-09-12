@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import okhttp3.*
-import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 class SocketBuilder private constructor(
@@ -50,7 +49,6 @@ class SocketBuilder private constructor(
             .build()
         if (!statusConnect.value) {
             connector = OkHttpClient.Builder()
-                .pingInterval(20, TimeUnit.SECONDS)
                 .build()
                 .newWebSocket(url, this@SocketBuilder)
         }

@@ -38,7 +38,6 @@ class ApiFactory {
             chain.proceed(request)
         }
 
-        builder?.addInterceptor(FixEncodingInterceptor())
 
         val logging = HttpLoggingInterceptor()
         logging.level = HttpLoggingInterceptor.Level.BODY
