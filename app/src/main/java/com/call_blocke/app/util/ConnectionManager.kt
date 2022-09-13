@@ -3,50 +3,65 @@ package com.call_blocke.app.util
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
-import android.os.Build
-import android.telephony.PhoneStateListener
-import android.telephony.SignalStrength
-import android.telephony.TelephonyManager
+import android.net.wifi.WifiManager
+import android.telephony.*
 import androidx.annotation.RequiresPermission
-import com.rokobit.adstvv_unit.loger.SmartLog
-import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 
 
 object ConnectionManager {
 
     private var connectionManager: ConnectivityManager? = null
     private var telephonyManager: TelephonyManager? = null
-    var mSignalStrength = Int.MAX_VALUE
+    private var wifiManager: WifiManager? = null
 
     fun innit(context: Context) {
         connectionManager =
             context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         telephonyManager = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        val mPhoneStateListener = MyPhoneStateListener()
-        telephonyManager?.listen(mPhoneStateListener, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS)
+        wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
     }
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
-    fun getSignalStrength(): Int {
-        return try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                if (getNetworkGeneration() == "WIFI") {
-                    connectionManager?.getNetworkCapabilities(connectionManager?.activeNetwork)?.signalStrength
-                } else {
-                    telephonyManager?.allCellInfo?.firstOrNull()?.cellSignalStrength?.dbm
-                } ?: 0
-            } else {
-                mSignalStrength
+    fun getSignalStrength(): String? {
+        var strength: String? = null
+        val cellInfos = telephonyManager?.allCellInfo
+        if (getNetworkGeneration() == "WIFI") {
+            strength = getWifiSignalStrength().toString()
+        } else
+            if (cellInfos != null) {
+                for (i in cellInfos.indices) {
+                    if (cellInfos[i].isRegistered) {
+                        if (cellInfos[i] is CellInfoWcdma) {
+                            val cellInfoWcdma = cellInfos[i] as CellInfoWcdma
+                            val cellSignalStrengthWcdma = cellInfoWcdma.cellSignalStrength
+                            strength = cellSignalStrengthWcdma.dbm.toString()
+                        } else if (cellInfos[i] is CellInfoGsm) {
+                            val cellInfoGsm = cellInfos[i] as CellInfoGsm
+                            val cellSignalStrengthGsm = cellInfoGsm.cellSignalStrength
+                            strength = cellSignalStrengthGsm.dbm.toString()
+                        } else if (cellInfos[i] is CellInfoLte) {
+                            val cellInfoLte = cellInfos[i] as CellInfoLte
+                            val cellSignalStrengthLte = cellInfoLte.cellSignalStrength
+                            strength = cellSignalStrengthLte.dbm.toString()
+                        } else if (cellInfos[i] is CellInfoCdma) {
+                            val cellInfoCdma = cellInfos[i] as CellInfoCdma
+                            val cellSignalStrengthCdma = cellInfoCdma.cellSignalStrength
+                            strength = cellSignalStrengthCdma.dbm.toString()
+                        }
+                    }
+                }
             }
-        } catch (e: Exception) {
-            SmartLog.e(getStackTrace(e))
-            mSignalStrength
-        }
+        return strength
+    }
 
+    private fun getWifiSignalStrength(): Int {
+        return wifiManager?.connectionInfo?.rssi ?: 0
     }
 
     fun getNetworkGeneration(): String {
-        val info: NetworkInfo? = connectionManager?.activeNetworkInfo
+        if (connectionManager == null)
+            return "?"
+        val info: NetworkInfo? = connectionManager!!.activeNetworkInfo
         if (info == null || !info.isConnected) return "-" // not connected
 
         if (info.type == ConnectivityManager.TYPE_WIFI) return "WIFI"
@@ -60,13 +75,5 @@ object ConnectionManager {
             }
         }
         return "?"
-    }
-
-    class MyPhoneStateListener : PhoneStateListener() {
-        override fun onSignalStrengthsChanged(signalStrength: SignalStrength) {
-            super.onSignalStrengthsChanged(signalStrength)
-            mSignalStrength = signalStrength.gsmSignalStrength
-            mSignalStrength = mSignalStrength * 2 - 113
-        }
     }
 }

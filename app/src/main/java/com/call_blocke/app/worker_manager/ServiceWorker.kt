@@ -67,15 +67,12 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                 ) == PackageManager.PERMISSION_GRANTED
             ) {
                 SmartLog.e("SignalStrength = ${ConnectionManager.getSignalStrength()}")
-
             }
             SmartLog.e("NetworkGeneration = ${ConnectionManager.getNetworkGeneration()}")
         }
 
         private fun getDeviceName(): String {
-            val manufacturer = Build.MANUFACTURER
-            val model = Build.MODEL
-            return "$manufacturer $model"
+            return "${Build.MANUFACTURER} ${Build.MODEL}"
         }
 
 
