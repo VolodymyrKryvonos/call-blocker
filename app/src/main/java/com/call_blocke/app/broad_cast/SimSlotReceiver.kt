@@ -66,13 +66,13 @@ class SimSlotReceiver : BroadcastReceiver() {
             Notification.Builder(context, channelId)
                 .setContentTitle(context.getString(R.string.sim_slot_change_title))
                 .setContentText(context.getString(R.string.sim_slot_change_desc))
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.app_logo)
                 .build()
         } else {
             Notification.Builder(context)
                 .setContentTitle(context.getString(R.string.sim_slot_change_title))
                 .setContentText(context.getString(R.string.sim_slot_change_desc))
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.app_logo)
                 .build()
         }
 

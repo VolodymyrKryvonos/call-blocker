@@ -147,7 +147,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                         if (it.message == "GET_LOGS") {
                             sendLogs()
                         } else {
-                            async { taskManager.doTask(it) }.start()
+                            taskManager.doTask(it)
                         }
                     }
                 }.launchIn(this)
@@ -195,7 +195,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             Notification.Builder(applicationContext, channelId)
                 .setContentTitle("Task executor")
                 .setContentText("On run")
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.app_logo)
                 .setContentIntent(pendingIntent)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build()
@@ -203,7 +203,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             Notification.Builder(applicationContext)
                 .setContentTitle("Task executor")
                 .setContentText("On run")
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.app_logo)
                 .setContentIntent(pendingIntent)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build()

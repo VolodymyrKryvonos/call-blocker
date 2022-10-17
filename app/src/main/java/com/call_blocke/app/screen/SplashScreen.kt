@@ -13,9 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -38,6 +41,7 @@ import kotlinx.coroutines.delay
 @ExperimentalAnimationApi
 @ExperimentalComposeUiApi
 @Composable
+@Preview
 fun SplashScreen(mViewModel: SplashViewModel) {
     val isPermissionsGranted by mViewModel.isPermissionGranted.observeAsState(initial = null)
     val isAppDefault by mViewModel.isAppDefault.observeAsState(initial = null)
@@ -57,7 +61,7 @@ fun Banner(mViewModel: SplashViewModel) = Column(
     verticalArrangement = Arrangement.Center
 ) {
     Image(
-        painter = painterResource(R.drawable.logo),
+        imageVector = ImageVector.vectorResource(R.drawable.app_logo),
         contentDescription = null,
         modifier = Modifier.requiredSize(
             size = primaryDimens * 5

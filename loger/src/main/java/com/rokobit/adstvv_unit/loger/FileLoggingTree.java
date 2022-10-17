@@ -9,6 +9,7 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -30,27 +31,23 @@ public class FileLoggingTree extends Timber.DebugTree {
         try {
             String path = "Log";
             String fileNameTimeStamp = new SimpleDateFormat("dd-MM-yyyy",
-                    Locale.getDefault()).format(new Date());
+                    Locale.UK).format(new Date());
             String logTimeStamp = new SimpleDateFormat("E MMM dd yyyy 'at' hh:mm:ss:SSS aaa",
-                    Locale.getDefault()).format(new Date());
+                    Locale.UK).format(new Date());
             String fileName = fileNameTimeStamp + ".html";
 
             // Create file
             File file  = generateFile(path, fileName);
-
-            Log.e("FileName Path",file.getName() + " " + file.getAbsolutePath());
             // If file created or exists save logs
-            if (file != null) {
-                FileWriter writer = new FileWriter(file, true);
-                writer.append("<p style=\"background:lightgray;\"><strong "
-                        + "style=\"background:lightblue;\">&nbsp&nbsp")
-                        .append(logTimeStamp)
-                        .append(" :&nbsp&nbsp</strong>")
-                        .append(message)
-                        .append("</p>");
-                writer.flush();
-                writer.close();
-            }
+            FileWriter writer = new FileWriter(file, true);
+            writer.append("<p style=\"background:lightgray;\"><strong "
+                    + "style=\"background:lightblue;\">&nbsp&nbsp")
+                    .append(logTimeStamp)
+                    .append(" :&nbsp&nbsp</strong>")
+                    .append(message)
+                    .append("</p>");
+            writer.flush();
+            writer.close();
         } catch (Exception e) {
             Log.e(LOG_TAG,"Error while logging into file : " + e);
         }
@@ -68,7 +65,6 @@ public class FileLoggingTree extends Timber.DebugTree {
         File file = null;
         if (isExternalStorageAvailable()) {
             File root = new File(context.getFilesDir(),File.separator + path);
-
             boolean dirExists = true;
 
             if (!root.exists()) {
@@ -77,6 +73,14 @@ public class FileLoggingTree extends Timber.DebugTree {
 
             if (dirExists) {
                 file = new File(root, fileName);
+                try {
+                    FileWriter writer = new FileWriter(file, true);
+                    writer.append("<meta charset=\"UTF-8\">");
+                    writer.flush();
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
         return file;

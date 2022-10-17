@@ -37,8 +37,6 @@ class SocketBuilder private constructor(
     private var isOn = false
 
     fun connect() {
-
-
         if (ip.isEmpty()) {
             ip = "195.201.13.172"
         }
