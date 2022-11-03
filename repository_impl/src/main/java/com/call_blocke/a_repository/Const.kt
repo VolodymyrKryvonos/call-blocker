@@ -2,12 +2,12 @@ package com.call_blocke.a_repository
 
 object Const {
 
-    const val url = "http://" + "sandbox.free-tokens.info/api/v1/"
+    const val socketUrl = "ws://" + "%s" + ":%s"
 
-    const val socketUrl = "ws://" + "%s" + ":8090"
+    const val domain = "free-tokens.info"
 
-    const val socketIp = "195.201.13.172"
+    const val url = "https://$domain/api/v1/"
 
-    const val testIp = "10.0.1.132"
+    const val protocolVersion = "1.0"
 
 }

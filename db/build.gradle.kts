@@ -30,6 +30,7 @@ dependencies {
     implementation (AppDependencies.base)
 
     implementation ("androidx.room:room-runtime:2.3.0")
+    implementation(project(":model"))
     kapt("androidx.room:room-compiler:2.3.0")
     implementation("androidx.room:room-ktx:2.3.0")
 

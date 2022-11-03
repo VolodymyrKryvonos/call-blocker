@@ -1,6 +1,5 @@
 package com.call_blocke.app.screen.main
 
-import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
@@ -34,12 +33,10 @@ import com.call_blocke.rest_work_imp.SimUtil
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.rokobit.adstv.ui.*
-import com.rokobit.adstv.ui.element.Circle
 import com.rokobit.adstv.ui.element.Text
 import com.rokobit.adstv.ui.element.TextNormal
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstvv_unit.loger.SmartLog
-import kotlinx.coroutines.delay
 
 
 @ExperimentalMaterialApi
@@ -50,7 +47,6 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
     val isLoading by mViewMode.isLoading.observeAsState(false)
 
     val isServerOnline by mViewMode.isServerOnline.collectAsState()
-    val ping by mViewMode.isPingOn.collectAsState(initial = false)
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
         onRefresh = { mViewMode.reloadSystemInfo() },
@@ -71,9 +67,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                     fontSize = 24.sp,
                     fontFamily = mainFont
                 )
-                if (ping) {
-                    Circle(color = Color.Green, modifier = Modifier.padding(end = 8.dp, top = 8.dp))
-                }
+
             }
 
             Header(mViewMode)
@@ -96,11 +90,6 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
             }
         }
     }
-    if (ping)
-        LaunchedEffect(key1 = Unit, block = {
-            delay(1000)
-            mViewMode.isPingOn.emit(false)
-        })
 }
 
 @Composable
@@ -170,6 +159,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
                 mViewMode.simsInfo()
+                mViewMode.getProfile()
                 mViewMode.resetSimIfChanged(context)
             }
             else -> {}
@@ -204,10 +194,6 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     else -> stringResource(id = R.string.main_menu_log_out)
                 },
                 backgroundColor = if (i == 2) {
-                    Log.e(
-                        "CheckSIM",
-                        "${sims}"
-                    )
                     if (sims?.any { sim ->
                             sim.simPerDay <= sim.simDelivered && SimUtil.isSimAllow(
                                 context,
@@ -223,6 +209,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
             ) {
                 if (i == 1) {
                     if (isExecutorRunning) {
+                        mViewMode.notifyServerUserStopService()
                         SmartLog.e("User stop service")
                         mViewMode.stopExecutor(context)
                     } else {

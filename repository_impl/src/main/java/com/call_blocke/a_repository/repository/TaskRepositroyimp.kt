@@ -1,7 +1,6 @@
 package com.call_blocke.a_repository.repository
 
-import com.call_blocke.a_repository.Const.socketIp
-import com.call_blocke.a_repository.Const.testIp
+import com.call_blocke.a_repository.Const.domain
 import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.model.TaskStatusRequest
 import com.call_blocke.a_repository.rest.TaskRest
@@ -38,8 +37,7 @@ class TaskRepositoryImp : TaskRepository() {
             .setUUid(SmsBlockerDatabase.deviceID)
             .setIP(
                 when (preference?.ipType) {
-                    "Test" -> testIp
-                    "Production" -> socketIp
+                    "Production" -> domain
                     else -> preference?.customIp ?: ""
                 }
             )
@@ -92,8 +90,7 @@ class TaskRepositoryImp : TaskRepository() {
     override suspend fun taskMessage(): Flow<TaskMessage> = channelFlow {
         socketBuilder.ip =
             when (preference?.ipType) {
-                "Test" -> testIp
-                "Production" -> socketIp
+                "Production" -> domain
                 else -> preference?.customIp ?: ""
             }
         socketBuilder.connect()
@@ -102,7 +99,7 @@ class TaskRepositoryImp : TaskRepository() {
                 async {
                     SmartLog.d("Receive Message $it")
                     toTaskMessage(it)?.let { taskMessage ->
-                        if (taskMessage.list.any { it.simSlot != null || it.simSlot != -1 }) {
+                        if (taskMessage.list.any { it.simSlot != null && it.simSlot != -1 }) {
                             send(taskMessage)
                         }
                     }
@@ -126,14 +123,7 @@ class TaskRepositoryImp : TaskRepository() {
                 msg,
                 (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
             )
-//            if (SmsBlockerDatabase.smsTodaySentFirstSim >= SmsBlockerDatabase.smsPerDaySimFirst && parsedMsg.data.sim == "msisdn_1") {
-//                SmartLog.e("Sms limit exhausted for first sim")
-//                return null
-//            }
-//            if (SmsBlockerDatabase.smsTodaySentSecondSim >= SmsBlockerDatabase.smsPerDaySimSecond && parsedMsg.data.sim == "msisdn_2") {
-//                SmartLog.e("Sms limit exhausted for second sim")
-//                return null
-//            }
+
             if (((parsedMsg != null) && (System.currentTimeMillis() - getDate(
                     parsedMsg.options.dateTime ?: ""
                 ).time <= 35 * 60 * 1000))
@@ -153,7 +143,7 @@ class TaskRepositoryImp : TaskRepository() {
                             simSlot = simSlot
                         )
                     }
-                ).also { save(it.list) }
+                ).also { save(it.list.filter { taskEntity ->  taskEntity.message != "GET_LOGS" }) }
             }
         } catch (e: Exception) {
             SmartLog.e(e)

@@ -34,4 +34,5 @@ dependencies {
     implementation(AppDependencies.paged)
 
     implementation (project(":loger"))
+    implementation (project(":model"))
 }

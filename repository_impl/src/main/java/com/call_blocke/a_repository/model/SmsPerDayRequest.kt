@@ -20,5 +20,8 @@ data class SmsPerDayRequest(
     val countryCode: String,
 
     @SerializedName("unique_id")
-    val uniqueId: String = SmsBlockerDatabase.deviceID
+    val uniqueId: String = SmsBlockerDatabase.deviceID,
+
+    @SerializedName("connection_type")
+    val connectionType: String = ""
 )

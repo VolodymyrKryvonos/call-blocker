@@ -10,6 +10,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
@@ -21,8 +23,10 @@ import com.call_blocke.app.TaskManager
 import com.call_blocke.app.scheduler.SmsLimitRefreshScheduler
 import com.call_blocke.app.util.ConnectionManager
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
+import com.call_blocke.rest_work_imp.model.Resource
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.rokobit.adstvv_unit.loger.SmartLog
@@ -31,6 +35,9 @@ import kotlinx.coroutines.flow.*
 import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.toDuration
 
 class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
@@ -114,6 +121,12 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                 RepositoryImp.taskRepository.resendReceived()
             }
         }
+
+        fun restart(context: Context) {
+            SmartLog.e("Restart on profile change")
+            stop(context)
+            Handler(Looper.getMainLooper()).postDelayed({ start(context)}, 5000L)
+        }
     }
 
     private val notificationManager =
@@ -140,20 +153,19 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                 }
             }.launchIn(this)
 
-            withContext(Dispatchers.IO) {
-                job = taskList!!.onEach { msg ->
-                    SmartLog.d("onEach ${msg.list.map { it.id }}")
-                    msg.list.forEach {
-                        if (it.message == "GET_LOGS") {
-                            sendLogs()
-                        } else {
-                            taskManager.doTask(it)
-                        }
-                    }
-                }.launchIn(this)
-            }
+            job = taskList!!.onEach { msg ->
+                SmartLog.d("onEach ${msg.list.map { it.id }}")
+                msg.list.forEach {
+                    processTask(it)
+                }
+            }.launchIn(this)
 
+            if (SmsBlockerDatabase.profile?.isConnected == true) {
+                checkConnection()
+            }
         }
+
+
 
         while (job?.isActive == true) {
             delay(1000 * 60 * 30)
@@ -165,6 +177,44 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             }
         }
         return Result.success()
+    }
+
+    private suspend fun processTask(task: TaskEntity) {
+        when (task.message) {
+            Task.GET_LOGS.name -> sendLogs()
+            Task.SENT_SMS.name -> taskManager.doTask(task)
+            Task.UPDATE_USER_PROFILE.name -> updateProfile()
+        }
+    }
+
+    private suspend fun updateProfile() {
+        RepositoryImp.settingsRepository.getProfile().collectLatest {
+            when (it) {
+                is Resource.Error -> Unit
+                is Resource.Loading -> Unit
+                is Resource.Success -> {
+                    SmsBlockerDatabase.profile = it.data
+                    restart(context)
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    private suspend fun checkConnection() {
+        while (isRunning.value) {
+            val delay =
+                SmsBlockerDatabase.profile?.delayIsConnected?.toDuration(DurationUnit.SECONDS)
+            if (delay != null) {
+                delay(delay)
+                val connectionStatus = RepositoryImp.settingsRepository.checkConnection()
+                if (connectionStatus is Resource.Success) {
+                    if (connectionStatus.data?.status == false) {
+                        RepositoryImp.taskRepository.reconnect()
+                    }
+                }
+            }
+        }
     }
 
     private suspend fun sendLogs() {

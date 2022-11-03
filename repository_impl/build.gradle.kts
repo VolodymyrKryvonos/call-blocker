@@ -13,6 +13,7 @@ android {
     defaultConfig {
         minSdkPreview = (Config.minSdkVersion)
         targetSdk =  (Config.targetVersion.toInt())
+        buildConfigField("String", "versionName", "\"${Config.versionName}\"")
     }
 
     compileOptions {
@@ -34,4 +35,5 @@ dependencies {
     implementation(project(":repository"))
 
     implementation (project(":loger"))
+    implementation(project(mapOf("path" to ":model")))
 }

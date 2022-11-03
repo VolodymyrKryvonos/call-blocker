@@ -41,7 +41,15 @@ class TaskManager(private val context: Context) {
     }
 
     private val smsLimitInterval by lazy {
-        Settings.Global.getLong(resolver, "sms_outgoing_check_interval_ms", 3000)
+        (SmsBlockerDatabase.profile?.delaySmsSend?:120)*1000L
+    }
+
+    init {
+        SmartLog.e("smsLimitInterval = $smsLimitInterval")
+        mHandler.postDelayed({
+            sentSmsNCountFirst = 0
+            sentSmsNCountSecond = 0
+        }, smsLimitInterval)
     }
 
     @Synchronized
@@ -68,17 +76,24 @@ class TaskManager(private val context: Context) {
             return false
         }
 //        test
-//        delay(2000)
 //        taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
-//        delay(2000)
+//        if (task.simSlot == 0) {
+//            while (sentSmsNCountFirst >= smsLimit) {
+//                delay(50L)
+//            }
+//        } else if (task.simSlot == 1) {
+//            while (sentSmsNCountSecond >= smsLimit) {
+//                delay(50L)
+//            }
+//        }
+//        if (task.simSlot == 0) {
+//            sentSmsNCountFirst++
+//        } else if (task.simSlot == 1) {
+//            sentSmsNCountSecond++
+//        }
 //        taskRepository.taskOnDelivered(taskEntity = task)
 //        return false
 
-//        val calendar = Calendar.getInstance()
-//        if(!task.highPriority && calendar.get(Calendar.HOUR_OF_DAY) in 21 downTo 8){
-//            taskRepository.taskOnViolatedTimeRange(task)
-//            return false
-//        }
 
         try {
             taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
@@ -94,12 +109,6 @@ class TaskManager(private val context: Context) {
                 delay(50L)
             }
         }
-
-        mHandler.removeCallbacksAndMessages(null)
-        mHandler.postDelayed({
-            sentSmsNCountFirst = 0
-            sentSmsNCountSecond = 0
-        }, smsLimitInterval)
 
         if (task.simSlot == 0) {
             sentSmsNCountFirst++

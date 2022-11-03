@@ -7,6 +7,9 @@ import android.net.Uri
 import android.os.Build
 import android.provider.BlockedNumberContract.BlockedNumbers
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocker.model.ConnectionStatus
+import kotlinx.coroutines.flow.Flow
 
 abstract class SettingsRepository {
 
@@ -61,5 +64,9 @@ abstract class SettingsRepository {
         val uri: Uri = context.contentResolver.insert(BlockedNumbers.CONTENT_URI, values)!!
         context.contentResolver.delete(uri, null, null)
     }
+
+    abstract suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>>
+    abstract suspend fun checkConnection(): Resource<ConnectionStatus>
+    abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
 
 }

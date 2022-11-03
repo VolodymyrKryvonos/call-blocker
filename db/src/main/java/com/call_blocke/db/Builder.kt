@@ -6,6 +6,7 @@ import android.provider.Settings
 import androidx.lifecycle.MutableLiveData
 import androidx.room.Room
 import com.call_blocke.db.entity.*
+import com.call_blocker.model.Profile
 
 object SmsBlockerDatabase {
     private var preference: Preference? = null
@@ -30,6 +31,14 @@ object SmsBlockerDatabase {
         set(value) {
             preference?.userToken = value
             userIsAuthLiveData.postValue(value != null)
+        }
+
+    var profile: Profile?
+        get() {
+            return (preference ?: throw DbModuleException("please init db module")).profile
+        }
+        set(value) {
+            preference?.profile = value
         }
 
     var userPassword: String
@@ -96,12 +105,6 @@ object SmsBlockerDatabase {
 
     val taskStatusDao: TaskStatusDao
         get() = (database ?: throw DbModuleException("please init db module")).taskStatusDao()
-
-    var lastSimSlotUsed: Int
-        get() = (preference ?: throw DbModuleException("please init db module")).lastSimSlotUsed
-        set(value) {
-            preference?.lastSimSlotUsed = value
-        }
 
     var systemDetail: SystemDetailEntity
         get() = (preference ?: throw DbModuleException("please init db module")).systemDetail

@@ -6,15 +6,12 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.*
 
 abstract class TaskRepository {
 
     var preference: Preference? = null
-
-    val ping = MutableSharedFlow<Boolean>()
 
     private val taskDao = SmsBlockerDatabase.taskDao
 

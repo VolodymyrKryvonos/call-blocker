@@ -2,17 +2,17 @@ package com.call_blocke.a_repository.socket
 
 import android.os.Handler
 import android.os.Looper
-import com.call_blocke.a_repository.Const.socketIp
+import com.call_blocke.a_repository.Const.domain
 import com.call_blocke.a_repository.Const.socketUrl
+import com.call_blocke.a_repository.Pinger
+import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
 import okhttp3.*
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 class SocketBuilder private constructor(
@@ -24,7 +24,7 @@ class SocketBuilder private constructor(
     override val coroutineContext: CoroutineContext
         get() = Dispatchers.IO + SupervisorJob()
 
-    val reconnectHandler: Handler = Handler(Looper.getMainLooper())
+    private val reconnectHandler = Handler(Looper.getMainLooper())
 
     val messageCollector = MutableSharedFlow<String?>(0)
 
@@ -34,21 +34,35 @@ class SocketBuilder private constructor(
 
     private var connector: WebSocket? = null
 
+    private var failureInRow = 0
+
     private var isOn = false
 
     fun connect() {
         if (ip.isEmpty()) {
-            ip = "195.201.13.172"
+            ip = domain
         }
+        val profile = SmsBlockerDatabase.profile
         SmartLog.d("onConnect $ip")
         isOn = true
         val url = Request.Builder()
-            .url("${String.format(socketUrl, ip)}?token=$userToken&unique_id=$uuid")
+            .url(
+                "${
+                    String.format(
+                        socketUrl,
+                        profile?.socketIp ?: ip,
+                        profile?.socketPort ?: 8090
+                    )
+                }?token=$userToken&unique_id=$uuid"
+            )
             .build()
         if (!statusConnect.value) {
-            connector = OkHttpClient.Builder()
-                .build()
-                .newWebSocket(url, this@SocketBuilder)
+            val connectorBuilder = OkHttpClient.Builder()
+            if (SmsBlockerDatabase.profile?.isKeepAlive == true)
+                connectorBuilder.pingInterval(
+                    SmsBlockerDatabase.profile?.keepAliveDelay?.toLong() ?: 600L, TimeUnit.SECONDS
+                )
+            connector = connectorBuilder.build().newWebSocket(url, this@SocketBuilder)
         }
     }
 
@@ -56,6 +70,7 @@ class SocketBuilder private constructor(
         SmartLog.d("onDisconnect Socket reason = $reason")
         if (reason == "disconnect") {
             reconnectHandler.removeCallbacksAndMessages(null)
+            failureInRow = 0
             isOn = false
         }
         if (connector?.close(1000, reason) == true) {
@@ -79,6 +94,7 @@ class SocketBuilder private constructor(
     override fun onOpen(webSocket: WebSocket, response: Response) {
         super.onOpen(webSocket, response)
         statusConnect.value = true
+        failureInRow = 0
         SmartLog.d("onOpen")
         launch(Dispatchers.IO) {
             SmartLog.d("emit onOpen")
@@ -112,13 +128,32 @@ class SocketBuilder private constructor(
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         super.onFailure(webSocket, t, response)
+        failureInRow++
         SmartLog.d("onFailure connection ${getStackTrace(t)}")
         statusConnect.value = false
         launch(Dispatchers.IO) { connectionStatusFlow.emit(false) }
-        Handler(Looper.getMainLooper()).postDelayed(
-            { reconnect() }, 10000
-        )
+        if (failureInRow >= 5) {
+            runPinger()
+            failureInRow = 0
+        } else {
+            Handler(Looper.getMainLooper()).postDelayed(
+                { reconnect() }, 10000
+            )
+        }
     }
+
+    private fun runPinger() {
+        launch(Dispatchers.IO) {
+            while (true) {
+                delay(60000)
+                if (Pinger.isHostReachable(ip, 40000)) {
+                    reconnect()
+                    return@launch
+                }
+            }
+        }
+    }
+
 
     fun sendMessage(data: String): Boolean {
 
@@ -161,7 +196,7 @@ class SocketBuilder private constructor(
             return SocketBuilder(
                 userToken = userToken!!,
                 uuid = uuid!!,
-                ip = ip ?: socketIp
+                ip = ip ?: domain
             )
         }
 

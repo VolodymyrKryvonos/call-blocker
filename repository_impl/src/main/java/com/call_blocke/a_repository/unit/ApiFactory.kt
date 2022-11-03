@@ -6,8 +6,10 @@
 
 package com.call_blocke.a_repository.unit
 
-import okhttp3.CacheControl
-import okhttp3.OkHttpClient
+import com.call_blocke.a_repository.Const
+import com.call_blocke.db.SmsBlockerDatabase
+import okhttp3.*
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -22,7 +24,7 @@ class ApiFactory {
         builder?.connectTimeout(CONNECT_TIMEOUT.toLong(), TimeUnit.SECONDS)
         builder?.writeTimeout(WRITE_TIMEOUT.toLong(), TimeUnit.SECONDS)
         builder?.readTimeout(READ_TIMEOUT.toLong(), TimeUnit.SECONDS)
-
+        builder?.addInterceptor(HostSelectionInterceptor())
         builder?.addInterceptor { chain ->
             val original = chain.request()
             val requestBuilder = original.newBuilder()
@@ -64,6 +66,20 @@ class ApiFactory {
             .client(builder!!.build())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+    }
+
+    class HostSelectionInterceptor : Interceptor {
+        private val host: String = SmsBlockerDatabase.profile?.url?:Const.url
+        override fun intercept(chain: Interceptor.Chain): Response {
+            var request: Request = chain.request()
+            val newUrl = ("$host${request.url.encodedPath}").toHttpUrlOrNull()
+            if (newUrl != null) {
+                request = request.newBuilder()
+                    .url(newUrl)
+                    .build()
+            }
+            return chain.proceed(request)
+        }
     }
 
     companion object {

@@ -10,12 +10,14 @@ import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.settingsRepository
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
+import com.call_blocke.rest_work_imp.model.Resource
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
@@ -46,14 +48,10 @@ class MainViewModel : ViewModel() {
         }
     }
 
-
-    val isPingOn = taskRepository.ping
-
     val isServerOnline = taskRepository.serverConnectStatus()
 
     fun userName() = userRepository.userName()
 
-    fun userPassword() = userRepository.userPassword()
 
     val deviceID = userRepository.deviceID
 
@@ -136,6 +134,30 @@ class MainViewModel : ViewModel() {
                 } catch (e: Exception) {
                     SmartLog.e("Auto reset failed sim2 ${getStackTrace(e)}")
                 }
+            }
+        }
+    }
+
+    fun getProfile(){
+        viewModelScope.launch {
+            settingsRepository.getProfile().collectLatest {
+                when(it){
+                    is Resource.Error -> isLoading.postValue(false)
+                    is Resource.Loading -> isLoading.postValue(true)
+                    is Resource.Success -> {
+                        isLoading.postValue(false)
+                        SmsBlockerDatabase.profile = it.data
+                    }
+                }
+            }
+        }
+    }
+
+    fun notifyServerUserStopService() {
+        viewModelScope.launch {
+            settingsRepository.notifyServerUserStopService().collectLatest {
+                if (it is Resource.Success)
+                    SmartLog.e("Server notified")
             }
         }
     }

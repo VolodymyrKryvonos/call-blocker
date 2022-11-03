@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.call_blocke.db.entity.SystemDetailEntity
+import com.call_blocker.model.Profile
 import com.google.gson.Gson
 
 class Preference(context: Context) {
@@ -18,6 +19,20 @@ class Preference(context: Context) {
         set(value) {
             with(sharedPreferences.edit()) {
                 putString("userPassword", value)
+                commit()
+            }
+        }
+
+
+    var profile: Profile?
+        get() = try {
+            Gson().fromJson(sharedPreferences.getString("Profile", ""), Profile::class.java)
+        } catch (e: Exception) {
+            null
+        }
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("Profile", Gson().toJson(value))
                 commit()
             }
         }

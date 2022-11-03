@@ -1,6 +1,9 @@
 package com.call_blocke.a_repository.rest
 
+import com.call_blocke.a_repository.dto.ConnectionStatusDto
+import com.call_blocke.a_repository.dto.ProfileDto
 import com.call_blocke.a_repository.model.*
+import com.call_blocke.a_repository.request.GetProfileRequest
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -17,4 +20,13 @@ interface SettingsRest {
 
     @POST("apps/get-sim-info")
     suspend fun simInfo(@Body model: SimInfoRequest = SimInfoRequest()): ApiResponse<SimInfoResponse>
+
+    @POST("apps/stop-service")
+    suspend fun stopService(@Body model: SimInfoRequest = SimInfoRequest())
+
+    @POST("apps/is-connected")
+    suspend fun checkConnection(@Body model: SimInfoRequest = SimInfoRequest()): ConnectionStatusDto
+
+    @POST("apps/get-profile")
+    suspend fun getProfile(@Body model: GetProfileRequest): ApiResponse<ProfileDto>
 }
