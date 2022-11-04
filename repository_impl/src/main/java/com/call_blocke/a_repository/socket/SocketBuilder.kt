@@ -43,7 +43,7 @@ class SocketBuilder private constructor(
             ip = domain
         }
         val profile = SmsBlockerDatabase.profile
-        SmartLog.d("onConnect $ip")
+        SmartLog.d("onConnect ${profile?.socketIp ?: ip}")
         isOn = true
         val url = Request.Builder()
             .url(

@@ -13,6 +13,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.net.URI
 import java.util.concurrent.TimeUnit
 
 class ApiFactory {
@@ -69,10 +70,11 @@ class ApiFactory {
     }
 
     class HostSelectionInterceptor : Interceptor {
-        private val host: String = SmsBlockerDatabase.profile?.url?:Const.url
         override fun intercept(chain: Interceptor.Chain): Response {
+            val host: String = SmsBlockerDatabase.profile?.url?:Const.url
             var request: Request = chain.request()
-            val newUrl = ("$host${request.url.encodedPath}").toHttpUrlOrNull()
+            val newHost = URI(host)
+            val newUrl = ("${newHost.scheme}://${newHost.host}${request.url.encodedPath}").toHttpUrlOrNull()
             if (newUrl != null) {
                 request = request.newBuilder()
                     .url(newUrl)

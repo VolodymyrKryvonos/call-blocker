@@ -6,7 +6,7 @@ object Const {
 
     const val domain = "free-tokens.info"
 
-    const val url = "https://$domain/api/v1/"
+    const val url = "https://$domain/api/v1"
 
     const val protocolVersion = "1.0"
 

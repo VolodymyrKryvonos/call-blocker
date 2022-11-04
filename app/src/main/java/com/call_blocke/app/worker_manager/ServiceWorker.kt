@@ -10,8 +10,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
@@ -54,18 +52,9 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
         const val WORK_NAME = "ServiceWorker"
 
         fun start(context: Context) {
-            val today = Calendar.getInstance(TimeZone.getTimeZone("CET"))
-            val lastRefresh =
-                Calendar.getInstance()
-                    .also { it.timeInMillis = SmsBlockerDatabase.lastRefreshTime }
-            if (today.get(Calendar.DATE) != lastRefresh.get(Calendar.DATE)) {
-                SmsBlockerDatabase.smsTodaySentFirstSim = 0
-                SmsBlockerDatabase.smsTodaySentSecondSim = 0
-            }
             SmartLog.e("${getDeviceName()} start service ${BuildConfig.VERSION_NAME}")
             SmartLog.e("Android ${Build.VERSION.SDK_INT}")
             startWorkers(context)
-            SmsLimitRefreshScheduler.startExecutionAt(0, 0, 0)
             SmartLog.e("Sms1 ${SmsBlockerDatabase.smsPerDaySimFirst}")
             SmartLog.e("Sms2 ${SmsBlockerDatabase.smsPerDaySimSecond}")
             if (ActivityCompat.checkSelfPermission(
@@ -121,12 +110,6 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                 RepositoryImp.taskRepository.resendReceived()
             }
         }
-
-        fun restart(context: Context) {
-            SmartLog.e("Restart on profile change")
-            stop(context)
-            Handler(Looper.getMainLooper()).postDelayed({ start(context)}, 5000L)
-        }
     }
 
     private val notificationManager =
@@ -161,12 +144,9 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             }.launchIn(this)
 
             if (SmsBlockerDatabase.profile?.isConnected == true) {
-                checkConnection()
+                launch { checkConnection() }
             }
         }
-
-
-
         while (job?.isActive == true) {
             delay(1000 * 60 * 30)
             wakeLock.release()
@@ -194,7 +174,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
                 is Resource.Loading -> Unit
                 is Resource.Success -> {
                     SmsBlockerDatabase.profile = it.data
-                    restart(context)
+                    RepositoryImp.taskRepository.reconnect()
                 }
             }
         }
