@@ -158,6 +158,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
+                mViewMode.reloadSystemInfo()
                 mViewMode.simsInfo()
                 mViewMode.getProfile()
                 mViewMode.resetSimIfChanged(context)

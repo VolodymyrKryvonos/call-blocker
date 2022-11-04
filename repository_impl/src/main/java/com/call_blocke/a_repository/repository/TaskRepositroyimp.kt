@@ -6,6 +6,7 @@ import com.call_blocke.a_repository.model.TaskStatusRequest
 import com.call_blocke.a_repository.rest.TaskRest
 import com.call_blocke.a_repository.socket.SocketBuilder
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.TaskMethod
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
 import com.call_blocke.db.entity.TaskStatusData
@@ -42,18 +43,6 @@ class TaskRepositoryImp : TaskRepository() {
                 }
             )
             .build()
-    }
-
-    override suspend fun loadTasks(): List<TaskEntity> {
-        return taskRest.tasks(TasksRequest()).data.flatMap {
-            it.smsList
-        }.map {
-            TaskEntity(
-                id = it.id,
-                sendTo = it.msisdn,
-                message = it.txt
-            )
-        }
     }
 
     override suspend fun confirmTask(data: List<TaskEntity>) {
@@ -119,16 +108,16 @@ class TaskRepositoryImp : TaskRepository() {
 
     private suspend fun toTaskMessage(msg: String?): TaskMessage? {
         try {
-            val parsedMsg = Gson().fromJson<ApiResponse<TaskResponse>>(
+            val parsedMsg = Gson().fromJson<SocketMessage<TaskResponse>>(
                 msg,
-                (object : TypeToken<ApiResponse<TaskResponse>>() {}).type
+                (object : TypeToken<SocketMessage<TaskResponse>>() {}).type
             )
 
             if (((parsedMsg != null) && (System.currentTimeMillis() - getDate(
                     parsedMsg.options.dateTime ?: ""
                 ).time <= 35 * 60 * 1000))
             ) {
-                val simSlot = when (parsedMsg.data.sim) {
+                val simSlot = when (parsedMsg.data?.sim) {
                     "msisdn_1" -> 0
                     "msisdn_2" -> 1
                     else -> return null
@@ -140,7 +129,8 @@ class TaskRepositoryImp : TaskRepository() {
                             sendTo = it.msisdn,
                             message = it.txt,
                             highPriority = false,//it.isHighPriority,
-                            simSlot = simSlot
+                            simSlot = simSlot,
+                            method = TaskMethod.valueOf(parsedMsg.method?: TaskMethod.UNDEFINED.name)
                         )
                     }
                 ).also { save(it.list.filter { taskEntity ->  taskEntity.message != "GET_LOGS" }) }

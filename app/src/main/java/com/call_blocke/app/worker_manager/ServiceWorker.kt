@@ -21,6 +21,7 @@ import com.call_blocke.app.TaskManager
 import com.call_blocke.app.scheduler.SmsLimitRefreshScheduler
 import com.call_blocke.app.util.ConnectionManager
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.TaskMethod
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
@@ -160,12 +161,14 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     }
 
     private suspend fun processTask(task: TaskEntity) {
-        when (task.message) {
-            Task.GET_LOGS.name -> sendLogs()
-            Task.SENT_SMS.name -> taskManager.doTask(task)
-            Task.UPDATE_USER_PROFILE.name -> updateProfile()
+        when (task.method) {
+            TaskMethod.GET_LOGS -> sendLogs()
+            TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
+            TaskMethod.SENT_SMS -> taskManager.doTask(task)
+            else -> Unit
         }
     }
+
 
     private suspend fun updateProfile() {
         RepositoryImp.settingsRepository.getProfile().collectLatest {

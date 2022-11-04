@@ -2,12 +2,15 @@ package com.call_blocke.db.entity
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.call_blocke.db.TaskMethod
 import java.util.*
 
 @Entity(tableName = "task")
 data class TaskEntity(
     @PrimaryKey
     val id: Int,
+
+    val method: TaskMethod,
 
     val sendTo: String,
 

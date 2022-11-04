@@ -3,6 +3,7 @@ package com.call_blocke.rest_work_imp
 import android.util.Log
 import com.call_blocke.db.Preference
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.TaskMethod
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
 import kotlinx.coroutines.flow.Flow
@@ -15,28 +16,9 @@ abstract class TaskRepository {
 
     private val taskDao = SmsBlockerDatabase.taskDao
 
-    private val replayTaskDao = SmsBlockerDatabase.replayDao
-
-    protected suspend fun task(id: Int) = taskDao.findByID(id) ?: TaskEntity(-1, "", "")
-
-    protected suspend fun taskAsNull(id: Int) = taskDao.findByID(id)
-
-    protected abstract suspend fun loadTasks(): List<TaskEntity>
+    protected suspend fun task(id: Int) = taskDao.findByID(id) ?: TaskEntity(-1, TaskMethod.UNDEFINED, "","")
 
     protected abstract suspend fun confirmTask(data: List<TaskEntity>)
-
-    suspend fun reloadTasks() {
-        //confirmTasksStatus()
-
-        val tasks = try {
-            loadTasks()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
-
-        taskDao.save(tasks)
-    }
 
     abstract fun reconnect()
 
@@ -83,13 +65,6 @@ abstract class TaskRepository {
         })
     }
 
-    suspend fun taskOnViolatedTimeRange(taskEntity: TaskEntity) {
-        updateTask(taskEntity.apply {
-            deliveredAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
-            taskEntity.status = TaskStatus.TIME_RANGE_VIOLATED
-        })
-    }
-
     suspend fun taskOnError(taskEntity: TaskEntity) {
         updateTask(taskEntity.apply {
             deliveredAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
@@ -97,39 +72,14 @@ abstract class TaskRepository {
         })
     }
 
-    suspend fun toProcessList() = taskDao.toProcessList()
-
     abstract suspend fun resendReceived()
 
     suspend fun getReceivedMessagesID() = taskDao.getReceivedMessagesID()
 
     suspend fun deleteReceivedMessages() = taskDao.deleteReceivedMessages()
 
-    suspend fun confirmTasksStatus(toConfirmList: List<TaskEntity>) {
-        if (toConfirmList.isEmpty())
-            return
-
-        try {
-            confirmTask(toConfirmList)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            return
-        }
-
-        toConfirmList.forEach { task ->
-            updateTask(task.apply {
-                confirmAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
-            })
-        }
-    }
-
     fun taskList() = taskDao.taskList().asPagingSourceFactory()
 
-    suspend fun findReplay(rInMsisdn: String, tText: String) = replayTaskDao.find(rInMsisdn, tText)
-
-    suspend fun clearReplay() = replayTaskDao.deleteAll()
-
-    suspend fun replayInPhoneList() = replayTaskDao.rInPhoneList()
 
     abstract val connectionStatusFlow: Flow<Boolean>
 
@@ -138,30 +88,6 @@ abstract class TaskRepository {
     abstract suspend fun sendTaskStatuses()
 
     abstract suspend fun taskMessage(): Flow<TaskMessage>
-
-    suspend fun deliveredCountToday(simIndex: Int): Int {
-        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-
-        val from = cal.apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-
-        val end = cal.apply {
-            set(Calendar.HOUR_OF_DAY, 23)
-            set(Calendar.MINUTE, 59)
-            set(Calendar.SECOND, 59)
-            set(Calendar.MILLISECOND, 900)
-        }.timeInMillis
-
-        return taskDao.deliveredCountBetweenFoeSim(
-            simIndex = simIndex,
-            from = from,
-            end = end
-        )
-    }
 
     suspend fun clearFor(simIndex: Int) = taskDao.clearFor(simIndex)
 
