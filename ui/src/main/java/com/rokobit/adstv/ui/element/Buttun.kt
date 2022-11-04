@@ -17,7 +17,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.rokobit.adstv.ui.*
 
 @Composable
@@ -28,6 +30,7 @@ fun Button(
     isProgress: State<Boolean> = remember {
         mutableStateOf(false)
     },
+    fontSize: TextUnit = 14.sp,
     onClick: () -> Unit
 ) {
     Crossfade(targetState = isProgress.value) {
@@ -51,7 +54,8 @@ fun Button(
                 TextNormal(
                     text = title,
                     color = secondaryColor.copy(alpha = if (isEnable) 1f else 0.5f),
-                    contentAlignment = TextAlign.Center
+                    contentAlignment = TextAlign.Center,
+                    fontSize = fontSize
                 )
             }
         }

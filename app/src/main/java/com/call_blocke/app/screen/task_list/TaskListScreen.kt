@@ -23,6 +23,7 @@ import com.call_blocke.app.R
 import com.call_blocke.db.entity.TaskEntity
 import com.rokobit.adstv.ui.element.Text
 import com.rokobit.adstv.ui.element.TextNormal
+import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor
 import com.rokobit.adstv.ui.secondaryDimens
@@ -32,7 +33,7 @@ import java.util.*
 private fun TaskItemView(item: TaskEntity) = Card(
     modifier = Modifier
         .fillMaxWidth()
-        .padding(primaryDimens),
+        .padding(secondaryDimens),
     shape = RoundedCornerShape(5),
     backgroundColor = secondaryColor,
     elevation = 6.dp,
@@ -40,19 +41,21 @@ private fun TaskItemView(item: TaskEntity) = Card(
 
     Column(modifier = Modifier.padding(primaryDimens)) {
         Text(text = "Sms id: ${item.id}")
-       // Text(text = "Send to: ${item.sendTo}")
+        // Text(text = "Send to: ${item.sendTo}")
         Text(text = "Status: ${item.status.name}")
-        Text(text = "Sim num: ${item.simSlot}")
+        Text(text = "Sim number: ${item.simSlot?.plus(1)}")
 
-        Divider(Modifier.height(primaryDimens), color = Color.Transparent)
+        Divider(Modifier.height(10.dp), color = Color.Transparent)
 
-        TextNormal(text = "Buffered in app at\n${Date(item.bufferedAt)}")
-        Divider(Modifier.height(secondaryDimens), color = Color.Transparent)
-        TextNormal(text = "Proceed at\n${if (item.processAt == 0L) null else Date(item.processAt)}")
-        Divider(Modifier.height(secondaryDimens), color = Color.Transparent)
-        TextNormal(text = "Delivered at\n${if (item.deliveredAt == 0L) null else Date(item.deliveredAt)}")
-        Divider(Modifier.height(secondaryDimens), color = Color.Transparent)
-        TextNormal(text = "Confirm at\n${if (item.confirmAt == 0L) null else Date(item.confirmAt)}")
+        TextNormal(text = "Buffered in app at: ${Date(item.bufferedAt)}")
+        Divider(Modifier.height(5.dp), color = Color.Transparent)
+        if (item.processAt != 0L) {
+            TextNormal(text = "Proceed at: ${Date(item.processAt)}")
+        }
+        Divider(Modifier.height(5.dp), color = Color.Transparent)
+        if (item.deliveredAt != 0L) {
+            TextNormal(text = "Delivered at: ${Date(item.deliveredAt)}")
+        }
     }
 }
 
@@ -69,29 +72,35 @@ fun TaskListScreen(mViewModel: TaskListViewModel = viewModel()) {
     }
 
     val lazyPagingItems = pager.flow.collectAsLazyPagingItems()
-
-    LazyColumn {
-        if (lazyPagingItems.loadState.refresh == LoadState.Loading) {
-            item {
-                Text(text = stringResource(id = R.string.task_list_loading_text))
+    Column {
+        Title(
+            modifier = Modifier.padding(10.dp),
+            text = stringResource(id = R.string.main_menu_task_list)
+        )
+        LazyColumn {
+            if (lazyPagingItems.loadState.refresh == LoadState.Loading) {
+                item {
+                    Text(text = stringResource(id = R.string.task_list_loading_text))
+                }
             }
-        }
 
-        itemsIndexed(lazyPagingItems) { _, item ->
-            if (item != null)
-                TaskItemView(item)
-            else
-                TextNormal(text = stringResource(id = R.string.task_list_loading_text))
-        }
+            itemsIndexed(lazyPagingItems) { _, item ->
+                if (item != null)
+                    TaskItemView(item)
+                else
+                    TextNormal(text = stringResource(id = R.string.task_list_loading_text))
+            }
 
-        if (lazyPagingItems.loadState.append == LoadState.Loading) {
-            item {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(Alignment.CenterHorizontally)
-                )
+            if (lazyPagingItems.loadState.append == LoadState.Loading) {
+                item {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentWidth(Alignment.CenterHorizontally)
+                    )
+                }
             }
         }
     }
+
 }

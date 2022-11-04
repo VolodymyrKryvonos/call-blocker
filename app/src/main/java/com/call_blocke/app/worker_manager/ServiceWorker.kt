@@ -161,10 +161,10 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     }
 
     private suspend fun processTask(task: TaskEntity) {
-        when (task.method) {
-            TaskMethod.GET_LOGS -> sendLogs()
-            TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
-            TaskMethod.SENT_SMS -> taskManager.doTask(task)
+        when (task.message) {
+            TaskMethod.GET_LOGS.name -> sendLogs()
+            TaskMethod.UPDATE_USER_PROFILE.name -> updateProfile()
+            TaskMethod.SENT_SMS.name -> taskManager.doTask(task)
             else -> Unit
         }
     }

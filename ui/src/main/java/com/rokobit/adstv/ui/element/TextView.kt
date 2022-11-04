@@ -30,17 +30,19 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.rokobit.adstv.ui.mainFont
 import com.rokobit.adstv.ui.primaryColor
 
 @Composable
-fun Title(text: String, contentAlignment: TextAlign = TextAlign.Start) = Text(
+fun Title(text: String, contentAlignment: TextAlign = TextAlign.Start, modifier: Modifier = Modifier) = Text(
     text = text,
     fontSize = 32.sp,
     fontFamily = mainFont,
     color = primaryColor,
-    textAlign = contentAlignment
+    textAlign = contentAlignment,
+    modifier = modifier
     //modifier = Modifier.animateContentSize()
 )
 
@@ -75,10 +77,11 @@ fun Text(
 fun TextNormal(
     text: String,
     color: Color = primaryColor,
-    contentAlignment: TextAlign = TextAlign.Start
+    contentAlignment: TextAlign = TextAlign.Start,
+    fontSize: TextUnit = 14.sp
 ) = Text(
     text = text,
-    fontSize = 14.sp,
+    fontSize = fontSize,
     fontFamily = mainFont,
     color = color,
     textAlign = contentAlignment

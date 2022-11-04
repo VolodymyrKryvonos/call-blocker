@@ -15,6 +15,7 @@ import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocke.rest_work_imp.SimUtil
 import com.call_blocke.rest_work_imp.model.Resource
 import com.call_blocker.model.ConnectionStatus
+import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -107,15 +108,17 @@ class SettingsRepositoryImp : SettingsRepository() {
     override suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>> = flow {
         emit(Resource.Loading<com.call_blocker.model.Profile>())
         try {
+            val profile = settingsRest.getProfile(
+                GetProfileRequest(
+                    uniqueId = SmsBlockerDatabase.deviceID,
+                    protocolVersion = Const.protocolVersion,
+                    appVersion = BuildConfig.versionName
+                )
+            ).data.toProfile()
+            SmartLog.e("Profile: $profile")
             emit(
                 Resource.Success<com.call_blocker.model.Profile>(
-                    settingsRest.getProfile(
-                        GetProfileRequest(
-                            uniqueId = SmsBlockerDatabase.deviceID,
-                            protocolVersion = Const.protocolVersion,
-                            appVersion = BuildConfig.versionName
-                        )
-                    ).data.toProfile()
+                    profile
                 )
             )
         } catch (e: Exception) {

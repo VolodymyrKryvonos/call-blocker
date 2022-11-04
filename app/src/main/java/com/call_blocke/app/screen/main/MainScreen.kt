@@ -2,11 +2,13 @@ package com.call_blocke.app.screen.main
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement.Absolute.SpaceBetween
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -32,10 +34,13 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.SimUtil
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.rokobit.adstv.ui.*
 import com.rokobit.adstv.ui.element.Text
 import com.rokobit.adstv.ui.element.TextNormal
 import com.rokobit.adstv.ui.element.Title
+import com.rokobit.adstv.ui.mainFont
+import com.rokobit.adstv.ui.primaryColor
+import com.rokobit.adstv.ui.primaryDimens
+import com.rokobit.adstv.ui.secondaryColor
 import com.rokobit.adstvv_unit.loger.SmartLog
 
 
@@ -46,7 +51,6 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
 
     val isLoading by mViewMode.isLoading.observeAsState(false)
 
-    val isServerOnline by mViewMode.isServerOnline.collectAsState()
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
         onRefresh = { mViewMode.reloadSystemInfo() },
@@ -55,21 +59,6 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
             modifier = Modifier
                 .fillMaxSize()
         ) {
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = SpaceBetween
-            ) {
-                Text(
-                    modifier = Modifier.padding(start = primaryDimens),
-                    text = if (isServerOnline) "Server connected" else "Server disconnected",
-                    color = if (isServerOnline) Color.Green else Color.Red,
-                    fontSize = 24.sp,
-                    fontFamily = mainFont
-                )
-
-            }
-
             Header(mViewMode)
 
             Box(
@@ -83,7 +72,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(primaryDimens),
+                    .padding(5.dp),
                 contentAlignment = Alignment.Center
             ) {
                 TextNormal(text = "Version ${BuildConfig.VERSION_NAME}")
@@ -111,21 +100,33 @@ fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) ->
 }
 
 @Composable
-fun Header(mViewMode: MainViewModel) = Column(modifier = Modifier.padding(primaryDimens)) {
-    val systemInfo by mViewMode.systemInfoLiveData.observeAsState(initial = SmsBlockerDatabase.systemDetail)
+fun Header(mViewMode: MainViewModel) =
+    Column(modifier = Modifier.padding(start = primaryDimens, end = primaryDimens)) {
+        val systemInfo by mViewMode.systemInfoLiveData.observeAsState(initial = SmsBlockerDatabase.systemDetail)
+        val isServerOnline by mViewMode.isServerOnline.collectAsState()
+        Title(text = mViewMode.userName())
+        //Label(text = mViewMode.userPassword())
 
-    Title(text = mViewMode.userName())
-    //Label(text = mViewMode.userPassword())
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Absolute.SpaceBetween
+        ) {
+            androidx.compose.material.Text(
+                text = if (isServerOnline) "Status: connected" else "Status: disconnected",
+                color = if (isServerOnline) Color.Green else Color.Red,
+                fontSize = 18.sp,
+                fontFamily = mainFont
+            )
 
-    Text(text = stringResource(id = R.string.main_header_amount) + " " + systemInfo.amount + " €")
-    Text(text = stringResource(id = R.string.main_header_left_count) + " " + systemInfo.leftCount)
-    Text(text = stringResource(id = R.string.main_header_delivered_count) + " " + systemInfo.deliveredCount)
-    Text(text = stringResource(id = R.string.main_header_undelivered_count) + " " + systemInfo.undeliveredCount)
-    SentSmsInfo(mViewMode)
+        }
 
-    Spacer(modifier = Modifier.height(primaryDimens))
-    Text(text = stringResource(id = R.string.device_id) + mViewMode.deviceID)
-}
+        Text(text = stringResource(id = R.string.main_header_amount) + " " + systemInfo.amount + " €")
+        Text(text = stringResource(id = R.string.main_header_left_count) + " " + systemInfo.leftCount)
+        Text(text = stringResource(id = R.string.main_header_delivered_count) + " " + systemInfo.deliveredCount)
+        Text(text = stringResource(id = R.string.main_header_undelivered_count) + " " + systemInfo.undeliveredCount)
+        SentSmsInfo(mViewMode)
+        Text(text = stringResource(id = R.string.device_id) + mViewMode.deviceID)
+    }
 
 @Composable
 fun SentSmsInfo(mViewModel: MainViewModel) {
@@ -134,7 +135,7 @@ fun SentSmsInfo(mViewModel: MainViewModel) {
     for ((index, fullSimInfoModel) in sims?.withIndex() ?: emptyList()) {
         if (SimUtil.isFirstSimAllow(context) && index == 0) {
             Row {
-                Text(text = "Sim 1 ")
+                Text(text = "Sim 1: ")
                 Text(text = "${fullSimInfoModel.simDelivered} SMS of ${SmsBlockerDatabase.smsPerDaySimFirst} today")
 
             }
@@ -142,7 +143,7 @@ fun SentSmsInfo(mViewModel: MainViewModel) {
 
         if (SimUtil.isSecondSimAllow(context) && index == 1) {
             Row {
-                Text(text = "Sim 2 ")
+                Text(text = "Sim 2: ")
                 Text(text = "${fullSimInfoModel.simDelivered} SMS of ${SmsBlockerDatabase.smsPerDaySimSecond} today")
             }
         }
@@ -171,16 +172,15 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
         cells = GridCells.Adaptive(140.dp),
         contentPadding = PaddingValues(primaryDimens / 2)
     ) {
-        items(7) {
+        items(6) {
             val i = it + 1
             MenuItem(
                 icon = when (i) {
                     1 -> if (isExecutorRunning) Icons.Filled.Close else Icons.Filled.PlayArrow
-                    5 -> Icons.Filled.List
-                    3 -> Icons.Filled.Lock
-                    4 -> Icons.Filled.Settings
+                    4 -> Icons.Filled.List
+                    3 -> Icons.Filled.Settings
                     2 -> Icons.Filled.Refresh
-                    6 -> Icons.Filled.Info
+                    5 -> Icons.Filled.Info
                     else -> Icons.Filled.ExitToApp
                 },
                 title = when (i) {
@@ -188,10 +188,9 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                         stringResource(id = R.string.main_menu_stop_job)
                     else stringResource(id = R.string.main_menu_start_job)
                     2 -> stringResource(id = R.string.main_menu_refresh_full)
-                    3 -> stringResource(id = R.string.main_menu_black_list)
-                    4 -> stringResource(id = R.string.main_menu_set_sms_per_day)
-                    5 -> stringResource(id = R.string.main_menu_task_list)
-                    6 -> stringResource(id = R.string.main_menu_sim_info)
+                    3 -> stringResource(id = R.string.main_menu_set_sms_per_day)
+                    4 -> stringResource(id = R.string.main_menu_task_list)
+                    5 -> stringResource(id = R.string.main_menu_sim_info)
                     else -> stringResource(id = R.string.main_menu_log_out)
                 },
                 backgroundColor = if (i == 2) {
@@ -217,17 +216,16 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                         SmartLog.e("User start service")
                         mViewMode.runExecutor(context)
                     }
-                } else if (i == 3)
-                    navController.navigate("black_list")
-                else if (i == 5)
-                    navController.navigate("task_list")
+                }
                 else if (i == 4)
+                    navController.navigate("task_list")
+                else if (i == 3)
                     navController.navigate("settings")
                 else if (i == 2)
                     navController.navigate("refresh")
-                else if (i == 6)
+                else if (i == 5)
                     navController.navigate("sim_info")
-                else if (i == 7)
+                else if (i == 6)
                     mViewMode.logOut(context = context)
             }
         }
@@ -247,7 +245,7 @@ fun MenuItem(
         modifier = Modifier
             // .size(100.dp)
             // .wrapContentSize()
-            .padding(primaryDimens / 2),
+            .padding(5.dp),
         shape = RoundedCornerShape(15),
         backgroundColor = backgroundColor,
         elevation = 6.dp,
@@ -259,7 +257,7 @@ fun MenuItem(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(secondaryDimens)
+                .padding(10.dp)
         ) {
             Icon(
                 imageVector = icon,
@@ -268,7 +266,7 @@ fun MenuItem(
                 tint = primaryColor
             )
             Divider(
-                modifier = Modifier.height(secondaryDimens / 2),
+                modifier = Modifier.height(5.dp),
                 color = Color.Transparent
             )
             TextNormal(text = title, contentAlignment = TextAlign.Center)
