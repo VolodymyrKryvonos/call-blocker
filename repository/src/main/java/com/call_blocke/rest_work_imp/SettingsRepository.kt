@@ -4,12 +4,13 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
-import android.os.Build
 import android.provider.BlockedNumberContract.BlockedNumbers
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocke.rest_work_imp.model.SimValidationInfo
 import com.call_blocker.model.ConnectionStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 
 abstract class SettingsRepository {
 
@@ -20,41 +21,36 @@ abstract class SettingsRepository {
         get() = SmsBlockerDatabase.smsPerDaySimSecond
 
     suspend fun setSmsPerDay(forFirstSim: Int, forSecondSim: Int) {
-        SmsBlockerDatabase.smsPerDaySimFirst  = forFirstSim
-        SmsBlockerDatabase.smsPerDaySimSecond = forSecondSim
-
         try {
-            updateSmsPerDay(RepositoryBuilder.mContext)
+            updateSmsPerDay(RepositoryBuilder.mContext,forFirstSim, forSecondSim)
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    protected abstract suspend fun updateSmsPerDay(context: Context)
+    protected abstract suspend fun updateSmsPerDay(context: Context, sim1Limit: Int, sim2Limit: Int)
 
     protected abstract suspend fun blackPhoneNumberList(): List<String>
 
     abstract suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String = "")
+    abstract suspend fun validateSimCard(phoneNumber: String, simID: String, monthlyLimit: Int): Flow<Resource<Unit>>
 
     abstract suspend fun simInfo(): List<FullSimInfoModel>
 
     fun blackList(context: Context): List<String> {
-        val c: Cursor = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        val c: Cursor =
             context.contentResolver.query(
                 BlockedNumbers.CONTENT_URI, arrayOf(
                     BlockedNumbers.COLUMN_ORIGINAL_NUMBER
                 ), null, null, null
             ) ?: return emptyList()
-        } else {
-            return emptyList()
-        }
 
         val data = arrayListOf<String>()
 
         while (c.moveToNext()) {
             data.add(c.getString(0))
         }
-
+        c.close()
         return data
     }
 
@@ -68,5 +64,5 @@ abstract class SettingsRepository {
     abstract suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>>
     abstract suspend fun checkConnection(): Resource<ConnectionStatus>
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
-
+    abstract suspend fun checkSimCard(iccId: String, stateHolder: MutableStateFlow<SimValidationInfo>)
 }

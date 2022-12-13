@@ -21,22 +21,15 @@ import com.call_blocke.app.TaskManager
 import com.call_blocke.app.scheduler.SmsLimitRefreshScheduler
 import com.call_blocke.app.util.ConnectionManager
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.TaskMethod
-import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
-import com.call_blocke.rest_work_imp.model.Resource
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
-import kotlin.time.toDuration
 
 class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
@@ -45,6 +38,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::MyWakelockTag")
         }
     }
+
 
     companion object {
         val isRunning = MutableStateFlow(false)
@@ -140,76 +134,13 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
             job = taskList!!.onEach { msg ->
                 SmartLog.d("onEach ${msg.list.map { it.id }}")
                 msg.list.forEach {
-                    processTask(it)
+                    taskManager.processTask(it)
                 }
             }.launchIn(this)
-
-            if (SmsBlockerDatabase.profile?.isConnected == true) {
-                launch { checkConnection() }
-            }
-        }
-        while (job?.isActive == true) {
-            delay(1000 * 60 * 30)
-            wakeLock.release()
-            wakeLock.acquire(1000 * 60 * 35)
-            if (!RepositoryImp.taskRepository.connectionStatusFlow.last()) {
-                SmartLog.e("Timeout reconnect")
-                RepositoryImp.taskRepository.reconnect()
-            }
+            taskManager.checkConnection()
         }
         return Result.success()
     }
-
-    private suspend fun processTask(task: TaskEntity) {
-        when (task.message) {
-            TaskMethod.GET_LOGS.name -> sendLogs()
-            TaskMethod.UPDATE_USER_PROFILE.name -> updateProfile()
-            TaskMethod.SENT_SMS.name -> taskManager.doTask(task)
-            else -> Unit
-        }
-    }
-
-
-    private suspend fun updateProfile() {
-        RepositoryImp.settingsRepository.getProfile().collectLatest {
-            when (it) {
-                is Resource.Error -> Unit
-                is Resource.Loading -> Unit
-                is Resource.Success -> {
-                    SmsBlockerDatabase.profile = it.data
-                    RepositoryImp.taskRepository.reconnect()
-                }
-            }
-        }
-    }
-
-    @OptIn(ExperimentalTime::class)
-    private suspend fun checkConnection() {
-        while (isRunning.value) {
-            val delay =
-                SmsBlockerDatabase.profile?.delayIsConnected?.toDuration(DurationUnit.SECONDS)
-            if (delay != null) {
-                delay(delay)
-                val connectionStatus = RepositoryImp.settingsRepository.checkConnection()
-                if (connectionStatus is Resource.Success) {
-                    if (connectionStatus.data?.status == false) {
-                        RepositoryImp.taskRepository.reconnect()
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun sendLogs() {
-        val directory = File(context.filesDir.absolutePath + "/Log")
-        val filesList = directory.listFiles()
-        if (filesList != null) {
-            for (file in filesList) {
-                file?.let { RepositoryImp.logRepository.sendLogs(it, SmsBlockerDatabase.deviceID) }
-            }
-        }
-    }
-
 
     private fun createForegroundInfo(): ForegroundInfo {
         val pendingIntent: PendingIntent =

@@ -11,17 +11,17 @@ import com.call_blocke.repository.RepositoryImp.settingsRepository
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
 import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocke.rest_work_imp.model.SimValidationInfo
+import com.call_blocke.rest_work_imp.model.SimValidationStatus
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
 
+    val openValidateSimCardDialog: MutableSharedFlow<Boolean> = MutableSharedFlow()
     val taskExecutorIsRunning: StateFlow<Boolean> = ServiceWorker.isRunning
 
     val systemInfoLiveData = MutableLiveData(SmsBlockerDatabase.systemDetail)
@@ -39,6 +39,12 @@ class MainViewModel : ViewModel() {
     private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
         MutableStateFlow(emptyList())
     val simInfoState = _simInfoState.asStateFlow()
+
+    val firstSimValidationInfo =
+        MutableStateFlow(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
+    val secondSimValidationInfo =
+        MutableStateFlow(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
+
 
     fun simsInfo() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -138,10 +144,10 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun getProfile(){
+    fun getProfile() {
         viewModelScope.launch {
             settingsRepository.getProfile().collectLatest {
-                when(it){
+                when (it) {
                     is Resource.Error -> isLoading.postValue(false)
                     is Resource.Loading -> isLoading.postValue(true)
                     is Resource.Success -> {
@@ -149,6 +155,36 @@ class MainViewModel : ViewModel() {
                         SmsBlockerDatabase.profile = it.data
                     }
                 }
+            }
+        }
+    }
+
+    private fun firstSim(context: Context) = SimUtil.firstSim(context)
+
+    private fun secondSim(context: Context) = SimUtil.secondSim(context)
+
+    fun checkIsSimCardsShouldBeValidated(): Boolean {
+        val isInvalid = firstSimValidationInfo.value.status == SimValidationStatus.INVALID ||
+                secondSimValidationInfo.value.status == SimValidationStatus.INVALID
+        viewModelScope.launch(Dispatchers.IO) {
+            openValidateSimCardDialog.emit(
+                isInvalid
+            )
+        }
+        return isInvalid
+    }
+
+    fun checkSimCards(context: Context) {
+        val firstSim = firstSim(context)
+        val secondSim = secondSim(context)
+        viewModelScope.launch(Dispatchers.IO) {
+            if (firstSim != null) {
+                settingsRepository.checkSimCard(firstSim.iccId ?: "", firstSimValidationInfo)
+            }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            if (secondSim != null) {
+                settingsRepository.checkSimCard(secondSim.iccId ?: "", secondSimValidationInfo)
             }
         }
     }

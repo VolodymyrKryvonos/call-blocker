@@ -67,10 +67,14 @@ class TaskRepositoryImp : TaskRepository() {
     }
 
     override suspend fun resendReceived() {
-        val unprocessedIdList = getReceivedMessagesID()
-        if (unprocessedIdList.isNotEmpty()) {
-            deleteReceivedMessages()
-            taskRest.getReceivedMessagesID(ResendUnprocessedRequest(ids = unprocessedIdList))
+        try {
+            val unprocessedIdList = getReceivedMessagesID()
+            if (unprocessedIdList.isNotEmpty()) {
+                deleteReceivedMessages()
+                taskRest.getReceivedMessagesID(ResendUnprocessedRequest(ids = unprocessedIdList))
+            }
+        } catch (e: Exception) {
+            SmartLog.e("Failed resend ${getStackTrace(e)}")
         }
     }
 
@@ -130,10 +134,12 @@ class TaskRepositoryImp : TaskRepository() {
                             message = it.txt,
                             highPriority = false,//it.isHighPriority,
                             simSlot = simSlot,
-                            method = TaskMethod.valueOf(parsedMsg.method?: TaskMethod.UNDEFINED.name)
+                            method = TaskMethod.valueOf(
+                                parsedMsg.method ?: TaskMethod.UNDEFINED.name
+                            )
                         )
                     }
-                ).also { save(it.list.filter { taskEntity ->  taskEntity.message != "GET_LOGS" }) }
+                ).also { save(it.list.filter { taskEntity -> taskEntity.message != "GET_LOGS" }) }
             }
         } catch (e: Exception) {
             SmartLog.e(e)
@@ -151,52 +157,54 @@ class TaskRepositoryImp : TaskRepository() {
     }
 
     override suspend fun sendTaskStatus(taskID: Int) {
-        val task = task(taskID)
-        if (task.id == -1) {
-            return
-        }
-
-        val req = TaskStatusRequest(
-            data = TaskStatusDataRequest(
-                status = when (task.status) {
-                    TaskStatus.PROCESS -> "processed"
-                    TaskStatus.DELIVERED -> "delivered"
-                    TaskStatus.BUFFERED -> "received"
-                    TaskStatus.TIME_RANGE_VIOLATED -> "time_range_violated"
-                    else -> "undelivered"
-                },
-                id = task.id,
-                simId = when (task.simSlot) {
-                    1 -> "msisdn_2"
-                    0 -> "msisdn_1"
-                    else -> "msisdn_1"
-                },
-                date = when (task.status) {
-                    TaskStatus.PROCESS -> task.processAt
-                    TaskStatus.DELIVERED -> task.deliveredAt
-                    TaskStatus.BUFFERED -> task.bufferedAt
-                    else -> Date().time
-                }
-            )
-        )
-
-        if (!socketBuilder.sendMessage(
-                Gson().toJson(
-                    req
+        try {
+            val task = task(taskID)
+            if (task.id == -1) {
+                return
+            }
+            val req = TaskStatusRequest(
+                data = TaskStatusDataRequest(
+                    status = when (task.status) {
+                        TaskStatus.PROCESS -> "processed"
+                        TaskStatus.DELIVERED -> "delivered"
+                        TaskStatus.BUFFERED -> "received"
+                        TaskStatus.TIME_RANGE_VIOLATED -> "time_range_violated"
+                        else -> "undelivered"
+                    },
+                    id = task.id,
+                    simId = when (task.simSlot) {
+                        1 -> "msisdn_2"
+                        0 -> "msisdn_1"
+                        else -> "msisdn_1"
+                    },
+                    date = when (task.status) {
+                        TaskStatus.PROCESS -> task.processAt
+                        TaskStatus.DELIVERED -> task.deliveredAt
+                        TaskStatus.BUFFERED -> task.bufferedAt
+                        else -> Date().time
+                    }
                 )
             )
-        ) {
-            SmartLog.e("Failed send status $req")
-            SmsBlockerDatabase.taskStatusDao.insertTaskStatus(
-                TaskStatusData(
-                    id = req.data.id,
-                    status = req.data.status,
-                    simId = req.data.simId,
-                    time = req.data.date
-                )
-            )
-        }
 
+            if (!socketBuilder.sendMessage(
+                    Gson().toJson(
+                        req
+                    )
+                )
+            ) {
+                SmartLog.e("Failed send status $req")
+                SmsBlockerDatabase.taskStatusDao.insertTaskStatus(
+                    TaskStatusData(
+                        id = req.data.id,
+                        status = req.data.status,
+                        simId = req.data.simId,
+                        time = req.data.date
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            SmartLog.e(getStackTrace(e))
+        }
     }
 
     override suspend fun sendTaskStatuses() {

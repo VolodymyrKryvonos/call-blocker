@@ -1,6 +1,5 @@
 package com.rokobit.adstv.ui.element
 
-import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,6 +20,7 @@ import androidx.compose.ui.autofill.AutofillType
 import androidx.compose.ui.composed
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalAutofill
@@ -102,7 +102,8 @@ fun Field(
         value.value = it
         //isError.value = false
     },
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    icon: ImageVector = Icons.Filled.Email
 ) {
     val shape = RoundedCornerShape(20)
 
@@ -113,9 +114,7 @@ fun Field(
             keyboardType = keyboardType
         ),
         value = value.value,
-        onValueChange = onValueChange.also {
-            Log.e("onValueChange", value.value)
-        },
+        onValueChange = onValueChange,
         label = {
             Text(
                 text = hint,
@@ -139,7 +138,7 @@ fun Field(
         colors = TextFieldDefaults.outlinedTextFieldColors(),
         leadingIcon = {
             Icon(
-                imageVector = Icons.Filled.Email,
+                imageVector = icon,
                 contentDescription = null
             )
         },

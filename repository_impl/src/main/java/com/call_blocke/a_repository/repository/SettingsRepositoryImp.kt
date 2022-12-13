@@ -1,23 +1,28 @@
 package com.call_blocke.a_repository.repository
 
 import android.content.Context
+import android.telephony.TelephonyManager
 import com.call_blocke.a_repository.BuildConfig
 import com.call_blocke.a_repository.Const
-import com.call_blocke.a_repository.model.RefreshDataForSimRequest
-import com.call_blocke.a_repository.model.SmsPerDayRequest
-import com.call_blocke.a_repository.model.TasksRequest
+import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.request.GetProfileRequest
 import com.call_blocke.a_repository.rest.SettingsRest
+import com.call_blocke.a_repository.unit.CountryCodeExtractor
 import com.call_blocke.a_repository.unit.NetworkInfo
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocke.rest_work_imp.SimUtil
 import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocke.rest_work_imp.model.SimValidationInfo
+import com.call_blocke.rest_work_imp.model.SimValidationStatus
 import com.call_blocker.model.ConnectionStatus
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+
 
 class SettingsRepositoryImp : SettingsRepository() {
 
@@ -26,24 +31,43 @@ class SettingsRepositoryImp : SettingsRepository() {
             SettingsRest::class.java
         )
 
-    override suspend fun updateSmsPerDay(context: Context) {
-        val simInfo =
-            SimUtil.getSIMInfo(context)
-        val firstSimName =
+    override suspend fun updateSmsPerDay(context: Context, sim1Limit: Int, sim2Limit: Int) {
+        try {
+            val simInfo =
+                SimUtil.getSIMInfo(context)
+            val firstSim = simInfo?.firstOrNull { it.simSlotIndex == 0 }
+            val secondSim = simInfo?.firstOrNull { it.simSlotIndex == 1 }
+            val firstSimName = if (firstSim == null) {
+                "none"
+            } else {
+                firstSim.carrierName.ifEmpty { "unknown" }
+            }
             (simInfo?.firstOrNull { it.simSlotIndex == 0 }?.carrierName ?: "none").toString()
-        val secondSimName =
-            (simInfo?.firstOrNull { it.simSlotIndex == 1 }?.carrierName ?: "none").toString()
-        val countryCode = simInfo?.firstOrNull()?.countryIso ?: "default"
-        settingsRest.setSmsPerDay(
-            SmsPerDayRequest(
-                forSimFirst = currentSmsContFirstSimSlot,
-                forSimSecond = currentSmsContSecondSimSlot,
-                firstSimName = firstSimName,
-                secondSimName = secondSimName,
-                countryCode = countryCode,
-                connectionType = NetworkInfo.connectionType()
+            val secondSimName = if (secondSim == null) {
+                "none"
+            } else {
+                secondSim.carrierName.ifEmpty { "unknown" }
+            }
+
+            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            val countryCode = CountryCodeExtractor.getCountryCode(simInfo,tm)
+            SmartLog.e("CountryCode = $countryCode")
+            settingsRest.setSmsPerDay(
+                SmsPerDayRequest(
+                    forSimFirst = sim1Limit,
+                    forSimSecond = sim2Limit,
+                    firstSimName = firstSimName.toString(),
+                    secondSimName = secondSimName.toString(),
+                    countryCode = countryCode,
+                    connectionType = NetworkInfo.connectionType()
+                )
             )
-        )
+
+            SmsBlockerDatabase.smsPerDaySimFirst  = sim1Limit
+            SmsBlockerDatabase.smsPerDaySimSecond = sim2Limit
+        } catch (e: Exception) {
+            SmartLog.e("Failed update sms per day ${getStackTrace(e)}")
+        }
     }
 
     override suspend fun blackPhoneNumberList(): List<String> {
@@ -55,21 +79,46 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
     override suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String) {
-        if (simSlot == 0) {
-            SmsBlockerDatabase.firstSimChanged = false
-        } else {
-            SmsBlockerDatabase.secondSimChanged = false
-        }
-        settingsRest.resetSim(
-            RefreshDataForSimRequest(
-                simName = if (simSlot == 0)
-                    "msisdn_1"
-                else
-                    "msisdn_2",
-                simICCID = iccid,
-                simNumber = number
+        try {
+            if (simSlot == 0) {
+                SmsBlockerDatabase.firstSimChanged = false
+            } else {
+                SmsBlockerDatabase.secondSimChanged = false
+            }
+            settingsRest.resetSim(
+                RefreshDataForSimRequest(
+                    simName = if (simSlot == 0)
+                        "msisdn_1"
+                    else
+                        "msisdn_2",
+                    simICCID = iccid,
+                    simNumber = number
+                )
             )
-        )
+        } catch (e: Exception) {
+            SmartLog.e("Failed reset sim ${getStackTrace(e)}")
+        }
+    }
+
+    override suspend fun validateSimCard(
+        phoneNumber: String,
+        simID: String,
+        monthlyLimit: Int
+    ): Flow<Resource<Unit>> = flow {
+        try {
+            emit(Resource.Loading())
+            settingsRest.validateSimCard(
+                ValidateSimCardRequest(
+                    simICCID = simID,
+                    simNumber = phoneNumber,
+                    monthlyLimit = monthlyLimit
+                )
+            )
+            emit(Resource.Success(Unit))
+        } catch (e: Exception) {
+            emit(Resource.Error(""))
+            SmartLog.e("Failed validate phone number ${getStackTrace(e)}")
+        }
     }
 
     override suspend fun simInfo(): List<FullSimInfoModel> {
@@ -100,7 +149,8 @@ class SettingsRepositoryImp : SettingsRepository() {
             }
 
             return sims
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            SmartLog.e("Failed get sim info ${getStackTrace(e)}")
         }
         return emptyList()
     }
@@ -122,6 +172,7 @@ class SettingsRepositoryImp : SettingsRepository() {
                 )
             )
         } catch (e: Exception) {
+            SmartLog.e("Failed get profile ${getStackTrace(e)}")
             emit(Resource.Error<com.call_blocker.model.Profile>(e.message ?: ""))
         }
     }
@@ -130,6 +181,7 @@ class SettingsRepositoryImp : SettingsRepository() {
         return try {
             Resource.Success<ConnectionStatus>(settingsRest.checkConnection().toConnectionStatus())
         } catch (e: Exception) {
+            SmartLog.e("Failed check connection ${getStackTrace(e)}")
             Resource.Error<ConnectionStatus>("")
         }
     }
@@ -139,7 +191,17 @@ class SettingsRepositoryImp : SettingsRepository() {
         try {
             emit(Resource.Success<Unit>(settingsRest.stopService()))
         } catch (e: Exception) {
+            SmartLog.e("Failed notify server ${getStackTrace(e)}")
             emit(Resource.Error<Unit>(e.message ?: ""))
+        }
+    }
+
+    override suspend fun checkSimCard(iccId: String, stateHolder: MutableStateFlow<SimValidationInfo>) {
+        try {
+            stateHolder.emit(settingsRest.checkSimCard(CheckSimCardRequest(iccId)).toSimValidationInfo())
+        }catch (e: Exception){
+            stateHolder.emit(SimValidationInfo(SimValidationStatus.INVALID, ""))
+            SmartLog.e("Failed check Sim Card ${getStackTrace(e)}")
         }
     }
 }

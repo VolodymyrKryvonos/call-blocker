@@ -11,6 +11,8 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocke.rest_work_imp.UserRepository
 import com.call_blocke.rest_work_imp.model.Resource
+import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.flow
 
 class UserRepositoryImp : UserRepository() {
@@ -64,7 +66,7 @@ class UserRepositoryImp : UserRepository() {
                 it
             }
         } catch (e: Exception) {
-
+            SmartLog.e("Failed load system details ${getStackTrace(e)}")
            // SmsBlockerDatabase.userToken = null
             null
         }?.data?.user ?: return SmsBlockerDatabase.systemDetail

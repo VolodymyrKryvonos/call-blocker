@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">BottegaSms</string>
+    <string name="app_name">Bottega SMS</string>
 
     <string name="login_title">Welcome</string>
 
@@ -19,27 +19,27 @@
     <string name="register_login_button">Login</string>
 
     <string name="main_header_amount">Amount:</string>
-    <string name="main_header_left_count">Left:</string>
+    <string name="main_header_left_count">Left to send:</string>
     <string name="main_header_delivered_count">Delivered:</string>
     <string name="main_header_undelivered_count">Undelivered:</string>
     <string name="main_menu_set_sms_per_day">Settings</string>
-    <string name="main_menu_log_out">log out</string>
+    <string name="main_menu_log_out">Log out</string>
     <string name="main_menu_start_job">Start work</string>
     <string name="main_menu_stop_job">Stop work</string>
     <string name="main_menu_task_list">Task list</string>
     <string name="main_menu_black_list">Black list</string>
-    <string name="main_menu_refresh_full">Reset sim</string>
+    <string name="main_menu_refresh_full">Reset SIM</string>
     <string name="main_menu_sim_info">Sims info</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_set_sms_per_day">Set SMS count per day</string>
-    <string name="settings_first_sim_slot_sms_count_hint">First sim slot</string>
-    <string name="settings_secound_sim_slot_sms_count_hint">Second sim slot</string>
+    <string name="settings_first_sim_slot_sms_count_hint">First SIM slot</string>
+    <string name="settings_secound_sim_slot_sms_count_hint">Second SIM slot</string>
     <string name="settings_set_sms_per_day_button">Apply</string>
     <string name="settings_on_success_updated">Success</string>
 
-    <string name="refresh_full_title">Reset sim</string>
-    <string name="refresh_full_label">Choose sim card to reset</string>
+    <string name="refresh_full_title">Reset SIM</string>
+    <string name="refresh_full_label">Choose SIM card to reset</string>
 
     <string name="intro_welcome_title">Great!</string>
     <string name="intro_welcome_label">You had just opened the account</string>
@@ -75,5 +75,9 @@
     <string name="ping_interval">"Ping interval: "</string>
     <string name="check_connection_interval">"Check connection interval: "</string>
     <string name="base_url">"Base url: "</string>
+    <string name="phone_number">Phone number</string>
+    <string name="verifyPhoneNumber">Please enter your phone number</string>
+    <string name="monthly_sms_limit">Monthly SMS limit</string>
+    <string name="something_went_wrong">Something went wrong</string>
 
 </resources>

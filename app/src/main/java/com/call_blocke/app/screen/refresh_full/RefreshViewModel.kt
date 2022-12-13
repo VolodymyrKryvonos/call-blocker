@@ -8,10 +8,14 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
+import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocke.rest_work_imp.model.SimValidationInfo
+import com.call_blocke.rest_work_imp.model.SimValidationStatus
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.launch
 
 class RefreshViewModel : ViewModel() {
@@ -21,10 +25,16 @@ class RefreshViewModel : ViewModel() {
     private val taskRepository = RepositoryImp.taskRepository
 
     val onLoading = MutableLiveData(false)
+    val validationState = MutableStateFlow<Resource<Unit>>(Resource.None)
 
     private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
         MutableStateFlow(emptyList())
     val simInfoState = _simInfoState.asStateFlow()
+
+    val firstSimValidationInfo =
+        MutableStateFlow(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
+    val secondSimValidationInfo =
+        MutableStateFlow(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
 
     fun simsInfo() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -37,6 +47,21 @@ class RefreshViewModel : ViewModel() {
     fun firstSim(context: Context) = SimUtil.firstSim(context)
 
     fun secondSim(context: Context) = SimUtil.secondSim(context)
+
+    fun checkSimCards(context: Context) {
+        val firstSim = firstSim(context)
+        val secondSim = secondSim(context)
+        viewModelScope.launch(Dispatchers.IO) {
+            if (firstSim != null) {
+                settingsRepository.checkSimCard(firstSim.iccId ?: "", firstSimValidationInfo)
+            }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            if (secondSim != null) {
+                settingsRepository.checkSimCard(secondSim.iccId ?: "", secondSimValidationInfo)
+            }
+        }
+    }
 
     fun reset(simSlotID: Int, context: Context?) = viewModelScope.launch(Dispatchers.IO) {
         onLoading.postValue(true)
@@ -60,4 +85,15 @@ class RefreshViewModel : ViewModel() {
         onLoading.postValue(false)
         simsInfo()
     }
+
+    fun validatePhoneNumber(phoneNumber: String, simID: String, monthlyLimit: String) =
+        viewModelScope.launch(Dispatchers.IO) {
+            validationState.emitAll(
+                settingsRepository.validateSimCard(
+                    phoneNumber = phoneNumber,
+                    simID = simID,
+                    monthlyLimit = monthlyLimit.toInt()
+                )
+            )
+        }
 }
