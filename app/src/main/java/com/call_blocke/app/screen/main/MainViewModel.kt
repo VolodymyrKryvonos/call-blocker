@@ -21,7 +21,9 @@ import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
 
-    val openValidateSimCardDialog: MutableSharedFlow<Boolean> = MutableSharedFlow()
+    private val _openValidateSimCardDialog: MutableSharedFlow<Boolean> = MutableSharedFlow()
+    val openValidateSimCardDialog = _openValidateSimCardDialog.asSharedFlow()
+
     val taskExecutorIsRunning: StateFlow<Boolean> = ServiceWorker.isRunning
 
     val systemInfoLiveData = MutableLiveData(SmsBlockerDatabase.systemDetail)
@@ -167,7 +169,7 @@ class MainViewModel : ViewModel() {
         val isInvalid = firstSimValidationInfo.value.status == SimValidationStatus.INVALID ||
                 secondSimValidationInfo.value.status == SimValidationStatus.INVALID
         viewModelScope.launch(Dispatchers.IO) {
-            openValidateSimCardDialog.emit(
+            _openValidateSimCardDialog.emit(
                 isInvalid
             )
         }
@@ -195,6 +197,12 @@ class MainViewModel : ViewModel() {
                 if (it is Resource.Success)
                     SmartLog.e("Server notified")
             }
+        }
+    }
+
+    fun closeDialog() {
+        viewModelScope.launch {
+            _openValidateSimCardDialog.emit(false)
         }
     }
 

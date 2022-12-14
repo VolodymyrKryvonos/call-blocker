@@ -89,7 +89,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                     title = stringResource(id = R.string.verifyPhoneNumber),
                     modifier = Modifier.fillMaxSize(),
                     onClose = {
-                        mViewMode.openValidateSimCardDialog.tryEmit(false)
+                        mViewMode.closeDialog()
                     },
                     content = {
                         Button(
@@ -97,7 +97,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                             modifier = Modifier.fillMaxWidth(),
                             isEnable = true
                         ) {
-                            mViewMode.openValidateSimCardDialog.tryEmit(false)
+                            mViewMode.closeDialog()
                             navController.navigate("sim_info")
                         }
                     }
@@ -230,8 +230,8 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 ),
                 isEnable = isMenuButtonEnabled(i)
             ) {
-                when {
-                    i == 1 -> {
+                when (i) {
+                    1 -> {
                         if (!mViewMode.checkIsSimCardsShouldBeValidated()) {
                             if (isExecutorRunning) {
                                 mViewMode.notifyServerUserStopService()
@@ -243,10 +243,10 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                             }
                         }
                     }
-                    i == 2 -> navController.navigate("refresh")
-                    i == 3 -> navController.navigate("settings")
-                    i == 4 -> navController.navigate("task_list")
-                    i == 5 -> navController.navigate("sim_info")
+                    2 -> navController.navigate("refresh")
+                    3 -> navController.navigate("settings")
+                    4 -> navController.navigate("task_list")
+                    5 -> navController.navigate("sim_info")
                     else -> mViewMode.logOut(context = context)
                 }
             }
