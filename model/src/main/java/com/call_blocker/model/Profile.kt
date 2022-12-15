@@ -9,5 +9,8 @@ data class Profile(
     val protocolMin: String = "1.0",
     val socketIp: String = "",
     val socketPort: String = "",
-    val url: String = ""
+    val url: String = "",
+    val latestMajorVersion: Int = 0,
+    val latestMinorVersion: Int = 0,
+    val latestPatchVersion: Int = 0,
 )

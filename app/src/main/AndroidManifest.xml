@@ -36,6 +36,10 @@
         android:name="android.permission.INTERACT_ACROSS_USERS"
         android:protectionLevel="signature|system|privileged" />
 
+    <permission
+        android:name="android.permission.SEND_RESPOND_VIA_MESSAGE"
+        android:protectionLevel="signature|system|privileged"/>
+
     <!-- @hide Fuller form of {@link android.Manifest.permission#INTERACT_ACROSS_USERS}
          that removes restrictions on where broadcasts can be sent and allows other
          types of interactions. -->
@@ -43,8 +47,6 @@
         android:protectionLevel="signature" />
 
     <uses-feature android:name="android.hardware.telephony" />
-
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:name=".SmsApp"
@@ -71,8 +73,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:directBootAware="true"
-            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
-            android:label="@string/app_name">
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE">
             <intent-filter>
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SENDTO" />

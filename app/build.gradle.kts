@@ -33,6 +33,10 @@ android {
         versionCode = Config.versionCode
         versionName = Config.versionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("int", "major", "${Config.major}")
+        buildConfigField("int", "minor", "${Config.minor}")
+        buildConfigField("int", "patch", "${Config.patch}")
     }
 
 

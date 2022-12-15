@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.worker_manager.ServiceWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
@@ -23,6 +24,9 @@ class MainViewModel : ViewModel() {
 
     private val _openValidateSimCardDialog: MutableSharedFlow<Boolean> = MutableSharedFlow()
     val openValidateSimCardDialog = _openValidateSimCardDialog.asSharedFlow()
+
+    private val _openOutdatedVersionDialog: MutableSharedFlow<Boolean> = MutableSharedFlow()
+    val openOutdatedVersionDialog = _openOutdatedVersionDialog.asSharedFlow()
 
     val taskExecutorIsRunning: StateFlow<Boolean> = ServiceWorker.isRunning
 
@@ -155,10 +159,36 @@ class MainViewModel : ViewModel() {
                     is Resource.Success -> {
                         isLoading.postValue(false)
                         SmsBlockerDatabase.profile = it.data
+                        checkIsLatestVersion()
                     }
+                    else -> Unit
                 }
             }
         }
+    }
+
+    private fun checkIsLatestVersion() {
+        viewModelScope.launch {
+            _openOutdatedVersionDialog.emit(!isVersionUpToDate())
+        }
+    }
+
+    private fun isVersionUpToDate(): Boolean {
+        val profile = SmsBlockerDatabase.profile
+
+        val isMajorHigherThenLatest = (profile?.latestMajorVersion ?: 0) < BuildConfig.major
+        if (isMajorHigherThenLatest)
+            return true
+
+        val isMinorHigherThenLatest =  (profile?.latestMinorVersion ?: 0) < BuildConfig.minor
+        val isMajorUpToDate = profile?.latestMajorVersion == BuildConfig.major
+        if (isMajorUpToDate && isMinorHigherThenLatest)
+            return true
+
+        val isMinorUpToDate = (profile?.latestMinorVersion ?: 0) <= BuildConfig.minor
+        val isPatchUpToDate = (profile?.latestPatchVersion ?: 0) <= BuildConfig.patch
+
+        return isMajorUpToDate && isMinorUpToDate && isPatchUpToDate
     }
 
     private fun firstSim(context: Context) = SimUtil.firstSim(context)
@@ -200,7 +230,12 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun closeDialog() {
+    fun closeOutdatedVersionDialog() {
+        viewModelScope.launch {
+            _openOutdatedVersionDialog.emit(false)
+        }
+    }
+    fun closeValidateSimCardDialog() {
         viewModelScope.launch {
             _openValidateSimCardDialog.emit(false)
         }

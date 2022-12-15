@@ -228,7 +228,7 @@ class TaskManager(
             }
 
             val sentPI =
-                PendingIntent.getBroadcast(context, address.hashCode(), sentStatusIntent, 0)
+                PendingIntent.getBroadcast(context, address.hashCode(), sentStatusIntent, PendingIntent.FLAG_IMMUTABLE)
             val msgText = toGSM7BitText(text)
             SmartLog.e("msgText = $msgText")
             try {

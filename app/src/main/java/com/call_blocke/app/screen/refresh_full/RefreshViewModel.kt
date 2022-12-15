@@ -13,6 +13,7 @@ import com.call_blocke.rest_work_imp.model.SimValidationInfo
 import com.call_blocke.rest_work_imp.model.SimValidationStatus
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -25,7 +26,7 @@ class RefreshViewModel : ViewModel() {
     private val taskRepository = RepositoryImp.taskRepository
 
     val onLoading = MutableLiveData(false)
-    val validationState = MutableStateFlow<Resource<Unit>>(Resource.None)
+    val validationState = MutableSharedFlow<Resource<Unit>>()
 
     private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
         MutableStateFlow(emptyList())
@@ -60,6 +61,9 @@ class RefreshViewModel : ViewModel() {
             if (secondSim != null) {
                 settingsRepository.checkSimCard(secondSim.iccId ?: "", secondSimValidationInfo)
             }
+        }
+        viewModelScope.launch {
+            validationState.emit(Resource.None)
         }
     }
 

@@ -1,6 +1,8 @@
 package com.call_blocke.app.screen.main
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
@@ -52,7 +54,9 @@ import com.rokobit.adstvv_unit.loger.SmartLog
 fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = viewModel()) {
 
     val isLoading by mViewMode.isLoading.observeAsState(false)
-    val openDialog = mViewMode.openValidateSimCardDialog.collectAsState(false)
+    val openValidateSimCardDialog = mViewMode.openValidateSimCardDialog.collectAsState(false)
+    val openOutdatedVersionDialog = mViewMode.openOutdatedVersionDialog.collectAsState(false)
+    val context = LocalContext.current
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
         onRefresh = { mViewMode.reloadSystemInfo() },
@@ -84,12 +88,12 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                     TextNormal(text = "Version ${BuildConfig.VERSION_NAME}")
                 }
             }
-            if (openDialog.value) {
+            if (openValidateSimCardDialog.value) {
                 AlertDialog(
                     title = stringResource(id = R.string.verifyPhoneNumber),
                     modifier = Modifier.fillMaxSize(),
                     onClose = {
-                        mViewMode.closeDialog()
+                        mViewMode.closeValidateSimCardDialog()
                     },
                     content = {
                         Button(
@@ -97,16 +101,46 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                             modifier = Modifier.fillMaxWidth(),
                             isEnable = true
                         ) {
-                            mViewMode.closeDialog()
+                            mViewMode.closeValidateSimCardDialog()
                             navController.navigate("sim_info")
                         }
                     }
                 )
             }
-        }
 
+            if (openOutdatedVersionDialog.value) {
+                val profile = SmsBlockerDatabase.profile
+                AlertDialog(
+                    title = stringResource(id = R.string.update_application),
+                    message = stringResource(
+                        id = R.string.update_application_to_continue,
+                        profile?.latestMajorVersion ?: 0,
+                        profile?.latestMinorVersion ?: 0,
+                        profile?.latestPatchVersion ?: 0
+                    ),
+                    modifier = Modifier.fillMaxSize(),
+                    onClose = {
+                        mViewMode.closeOutdatedVersionDialog()
+                    },
+                    content = {
+                        Button(
+                            title = stringResource(R.string.ok),
+                            modifier = Modifier.fillMaxWidth(),
+                            isEnable = true
+                        ) {
+                            mViewMode.closeValidateSimCardDialog()
+                            val url = "https://free-tokens.info/download_the_latest_app"
+                            val i = Intent(Intent.ACTION_VIEW)
+                            i.data = Uri.parse(url)
+                            context.startActivity(i)
+                        }
+                    }
+                )
+            }
+        }
     }
 }
+
 
 @Composable
 fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) -> Unit) {

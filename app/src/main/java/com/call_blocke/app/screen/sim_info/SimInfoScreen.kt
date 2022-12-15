@@ -56,7 +56,7 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
     }
     val firstSimValidationInfo = mViewModel.firstSimValidationInfo.collectAsState()
     val secondSimValidationInfo = mViewModel.secondSimValidationInfo.collectAsState()
-    val validationState = mViewModel.validationState.collectAsState()
+    val validationState = mViewModel.validationState.collectAsState(Resource.None)
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {

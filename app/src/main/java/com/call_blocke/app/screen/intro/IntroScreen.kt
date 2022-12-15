@@ -114,7 +114,9 @@ private fun Permissions(mViewModel: SplashViewModel) {
             ActivityResultContracts.RequestMultiplePermissions()
         ) { pers ->
             //requestPermission(context = context)
-            val all = pers.all { it.value }
+            val all = pers.all {
+                it.value
+            }
 
             mViewModel.isPermissionGranted.postValue(all)
         }
@@ -159,6 +161,7 @@ private fun AppAsDefault(mViewModel: SplashViewModel) {
 
             val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
             requestAppAsDefaultLauncher.launch(intent)
+            context.startActivity(Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT).putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, context.packageName))
         } else {
             requestAppAsDefaultLauncher.launch(
                 Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)

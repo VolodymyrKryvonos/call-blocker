@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class ServiceWorker(var context: Context, parameters: WorkerParameters) :
+class ServiceWorker(private val context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     private val wakeLock: PowerManager.WakeLock by lazy {
         (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
@@ -145,7 +145,7 @@ class ServiceWorker(var context: Context, parameters: WorkerParameters) :
     private fun createForegroundInfo(): ForegroundInfo {
         val pendingIntent: PendingIntent =
             Intent(context, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(context, 0, notificationIntent, 0)
+                PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
             }
 
         val channelId =

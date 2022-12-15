@@ -79,5 +79,7 @@
     <string name="verifyPhoneNumber">Please enter your phone number</string>
     <string name="monthly_sms_limit">Monthly SMS limit</string>
     <string name="something_went_wrong">Something went wrong</string>
+    <string name="update_application">Please update app</string>
+    <string name="update_application_to_continue">We updated version of the application. Your version of the application is out of date. Please update it to the latest version.</string>
 
 </resources>
