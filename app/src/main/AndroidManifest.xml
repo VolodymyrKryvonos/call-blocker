@@ -28,6 +28,9 @@
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+
     <!-- @SystemApi @hide Allows an application to call APIs that allow it to do interactions
      across the users on the device, using singleton services and
      user-targeted broadcasts.  This permission is not available to
@@ -36,9 +39,6 @@
         android:name="android.permission.INTERACT_ACROSS_USERS"
         android:protectionLevel="signature|system|privileged" />
 
-    <permission
-        android:name="android.permission.SEND_RESPOND_VIA_MESSAGE"
-        android:protectionLevel="signature|system|privileged"/>
 
     <!-- @hide Fuller form of {@link android.Manifest.permission#INTERACT_ACROSS_USERS}
          that removes restrictions on where broadcasts can be sent and allows other

@@ -1,5 +1,5 @@
 object Version {
-    const val compileSdk = 30
+    const val compileSdk = 33
     const val buildTool = "30.0.3"
     const val ktx = "1.6.0-alpha03"
     const val room = "2.3.0"

@@ -106,5 +106,5 @@ dependencies {
 
     implementation(project(":loger"))
 
-    implementation("androidx.work:work-runtime-ktx:2.6.0")
+    implementation("androidx.work:work-runtime-ktx:2.7.1")
 }

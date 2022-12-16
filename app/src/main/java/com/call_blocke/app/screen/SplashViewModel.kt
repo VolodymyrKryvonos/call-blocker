@@ -9,33 +9,25 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-val PERMISSIONS_REQUIRED = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-    arrayOf(
-        Manifest.permission.READ_SMS,
-        Manifest.permission.RECEIVE_MMS,
-        Manifest.permission.RECEIVE_SMS,
-        Manifest.permission.RECEIVE_WAP_PUSH,
-        Manifest.permission.SEND_SMS,
-        Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.ACCESS_NETWORK_STATE,
-        Manifest.permission.READ_PHONE_NUMBERS,
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.CALL_PHONE,
-        Manifest.permission.ANSWER_PHONE_CALLS
-    )
-} else {
-    arrayOf(
-        Manifest.permission.READ_SMS,
-        Manifest.permission.RECEIVE_MMS,
-        Manifest.permission.RECEIVE_SMS,
-        Manifest.permission.RECEIVE_WAP_PUSH,
-        Manifest.permission.SEND_SMS,
-        Manifest.permission.READ_PHONE_STATE,
-        Manifest.permission.ACCESS_NETWORK_STATE,
-        Manifest.permission.ACCESS_FINE_LOCATION,
-        Manifest.permission.CALL_PHONE
-    )
-}
+val PERMISSIONS_REQUIRED = arrayListOf(
+    Manifest.permission.READ_SMS,
+    Manifest.permission.RECEIVE_MMS,
+    Manifest.permission.RECEIVE_SMS,
+    Manifest.permission.RECEIVE_WAP_PUSH,
+    Manifest.permission.SEND_SMS,
+    Manifest.permission.READ_PHONE_STATE,
+    Manifest.permission.ACCESS_NETWORK_STATE,
+    Manifest.permission.ACCESS_FINE_LOCATION,
+    Manifest.permission.CALL_PHONE
+).apply {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        add(Manifest.permission.READ_PHONE_NUMBERS)
+        add(Manifest.permission.ANSWER_PHONE_CALLS)
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        add(Manifest.permission.POST_NOTIFICATIONS)
+    }
+}.toTypedArray()
 
 class SplashViewModel : ViewModel() {
 
