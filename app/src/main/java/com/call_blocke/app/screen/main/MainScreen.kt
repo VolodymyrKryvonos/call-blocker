@@ -196,14 +196,14 @@ fun SentSmsInfo(mViewModel: MainViewModel) {
         if (SimUtil.isFirstSimAllow(context) && index == 0) {
             Row {
                 Text(text = "Sim 1: ")
-                Text(text = "${fullSimInfoModel.simDelivered} SMS of ${SmsBlockerDatabase.smsPerDaySimFirst} today")
+                Text(text = "${fullSimInfoModel.simDelivered} SMS of ${fullSimInfoModel.simPerDay} today")
             }
         }
 
         if (SimUtil.isSecondSimAllow(context) && index == 1) {
             Row {
                 Text(text = "Sim 2: ")
-                Text(text = "${fullSimInfoModel.simDelivered} SMS of ${SmsBlockerDatabase.smsPerDaySimSecond} today")
+                Text(text = "${fullSimInfoModel.simDelivered} SMS of ${fullSimInfoModel.simPerDay} today")
             }
         }
     }

@@ -7,14 +7,20 @@ data class SmsPerDayRequest(
     @SerializedName("sms_per_day_1")
     val forSimFirst: Int,
 
-    @SerializedName("sms_per_day_2")
-    val forSimSecond: Int,
-
     @SerializedName("msisdn_1")
     val firstSimName: String,
 
+    @SerializedName("first_sim_iccid")
+    val firstSimICCID: String,
+
+    @SerializedName("sms_per_day_2")
+    val forSimSecond: Int,
+
     @SerializedName("msisdn_2")
     val secondSimName: String,
+
+    @SerializedName("second_sim_iccid")
+    val secondSimICCID: String,
 
     @SerializedName("country_code")
     val countryCode: String,

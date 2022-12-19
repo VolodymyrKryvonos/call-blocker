@@ -58,6 +58,8 @@ class SettingsRepositoryImp : SettingsRepository() {
                     forSimSecond = sim2Limit,
                     firstSimName = firstSimName.toString(),
                     secondSimName = secondSimName.toString(),
+                    firstSimICCID = firstSim?.iccId ?: "",
+                    secondSimICCID = secondSim?.iccId ?: "",
                     countryCode = countryCode,
                     connectionType = NetworkInfo.connectionType()
                 )

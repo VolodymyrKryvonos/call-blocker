@@ -8,7 +8,6 @@ package com.call_blocke.a_repository.unit
 
 import com.call_blocke.a_repository.Const
 import com.call_blocke.db.SmsBlockerDatabase
-import com.rokobit.adstvv_unit.loger.SmartLog
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.logging.HttpLoggingInterceptor
@@ -43,7 +42,7 @@ class ApiFactory {
         }
 
 
-        val logging = HttpLoggingInterceptor{ SmartLog.e(it)}
+        val logging = HttpLoggingInterceptor { }
         logging.level = HttpLoggingInterceptor.Level.BASIC
         builder?.addInterceptor(logging)
     }
