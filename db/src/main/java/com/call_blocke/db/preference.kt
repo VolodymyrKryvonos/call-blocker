@@ -206,4 +206,23 @@ class Preference(context: Context) {
             }
         }
 
+
+    var firstSimSlotValidationNumber: String
+        get() = sharedPreferences.getString("firstSimSlotValidationNumber", "") ?: ""
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("firstSimSlotValidationNumber", value)
+                commit()
+            }
+        }
+
+    var secondSimSlotValidationNumber: String
+        get() = sharedPreferences.getString("secondSimSlotValidationNumber", "") ?: ""
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("secondSimSlotValidationNumber", value)
+                commit()
+            }
+        }
+
 }

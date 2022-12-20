@@ -22,7 +22,7 @@ abstract class SettingsRepository {
 
     suspend fun setSmsPerDay(forFirstSim: Int, forSecondSim: Int) {
         try {
-            updateSmsPerDay(RepositoryBuilder.mContext,forFirstSim, forSecondSim)
+            updateSmsPerDay(RepositoryBuilder.mContext, forFirstSim, forSecondSim)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -33,7 +33,12 @@ abstract class SettingsRepository {
     protected abstract suspend fun blackPhoneNumberList(): List<String>
 
     abstract suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String = "")
-    abstract suspend fun validateSimCard(phoneNumber: String, simID: String, monthlyLimit: Int): Flow<Resource<Unit>>
+    abstract suspend fun validateSimCard(
+        phoneNumber: String,
+        simID: String,
+        monthlyLimit: Int,
+        simSlot: Int
+    ): Flow<Resource<Unit>>
 
     abstract suspend fun simInfo(): List<FullSimInfoModel>
 
@@ -64,5 +69,14 @@ abstract class SettingsRepository {
     abstract suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>>
     abstract suspend fun checkConnection(): Resource<ConnectionStatus>
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
-    abstract suspend fun checkSimCard(iccId: String, stateHolder: MutableStateFlow<SimValidationInfo>)
+    abstract suspend fun checkSimCard(
+        iccId: String,
+        stateHolder: MutableStateFlow<SimValidationInfo>
+    )
+
+    abstract suspend fun confirmValidation(
+        iccid: String,
+        simSlot: String,
+        verificationCode: String
+    ): Flow<Resource<Unit>>
 }

@@ -6,7 +6,9 @@ data class TaskResponse(
     val delay: Int = 1,
     @SerializedName("sms")
     val smsList: List<TaskElement>,
-    val sim: String
+    val sim: String,
+    @SerializedName("sim_iccid")
+    val simIccId: String
 )
 
 data class SimDetail(

@@ -32,6 +32,10 @@ interface SettingsRest {
 
     @POST("apps/validate-sim-card")
     suspend fun validateSimCard(@Body validateSimCardRequest: ValidateSimCardRequest)
+
     @POST("apps/get-number-info")
     suspend fun checkSimCard(@Body checkSimCardRequest: CheckSimCardRequest): CheckSimCardResponse
+
+    @POST("apps/confirm-validation")
+    suspend fun confirmSimCardValidation(@Body confirmSimCardValidationRequest: ConfirmSimCardValidationRequest)
 }

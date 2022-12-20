@@ -7,14 +7,16 @@ import android.os.Bundle
 import android.telephony.SmsMessage
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp.replyRepository
+import com.call_blocke.repository.RepositoryImp.settingsRepository
+import com.call_blocke.rest_work_imp.model.Resource
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
 import com.google.gson.annotations.SerializedName
 import com.rokobit.adstvv_unit.loger.SmartLog
-import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 
@@ -23,41 +25,57 @@ class SmsReceiver : BroadcastReceiver() {
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onReceive(context: Context, intent: Intent) {
-        val bundle: Bundle?
         SmsBlockerDatabase.init(context)
+        val bundle: Bundle?
         if (intent.action == "android.provider.Telephony.SMS_RECEIVED") {
             bundle = intent.extras
             if (bundle != null) {
                 val pduObjects = bundle["pdus"] as Array<*>?
                 if (pduObjects != null) {
                     coroutineScope.launch {
-                        storeReply(pduObjects, bundle)
+                        processSms(pduObjects, bundle)
                     }
-                    abortBroadcast()
                 }
             }
         }
     }
 
-    private suspend fun storeReply(pduObjects: Array<*>, bundle: Bundle) {
+    private suspend fun processSms(pduObjects: Array<*>, bundle: Bundle) {
         val currentSMS = getIncomingMessage(pduObjects, bundle)
-        SmartLog.e("storeReply  $currentSMS")
-        val sendToReply =
-            SmsBlockerDatabase.phoneNumberDao.isExist(currentSMS.senderNumber) > 0 || try {
-                Gson().fromJson(currentSMS.smsText, SmsDetectorBody::class.java)
-                true
-            } catch (e: JsonSyntaxException) {
-                SmartLog.e(getStackTrace(e))
-                e.printStackTrace()
-                false
+        if (!checkIsVerificationSms(currentSMS)) {
+            storeReply(currentSMS)
+        }
+    }
+
+    private suspend fun checkIsVerificationSms(sms: ReplyMessage): Boolean {
+        return try {
+            val verificationSms = Gson().fromJson(sms.smsText, VerificationSms::class.java)
+            settingsRepository.confirmValidation(
+                simSlot = verificationSms.simSlot,
+                iccid = verificationSms.simIccid,
+                verificationCode = verificationSms.verificationCode
+            ).collectLatest {
+                if (it is Resource.Success || it is Resource.Error) {
+                    SmsBlockerDatabase.isValidationCompleted.emit(true)
+                }
             }
+            true
+        } catch (_: JsonSyntaxException) {
+            false
+        }
+    }
+
+    private suspend fun storeReply(sms: ReplyMessage) {
+        SmartLog.e("storeReply $sms")
+        val sendToReply =
+            SmsBlockerDatabase.phoneNumberDao.isExist(sms.senderNumber) > 0
         if (!sendToReply)
             return
-        SmartLog.e("SmsReceiver ${currentSMS.smsText} ${currentSMS.senderNumber}")
+        SmartLog.e("SmsReceiver ${sms.smsText} ${sms.senderNumber}")
         replyRepository.storeReply(
-            currentSMS.senderNumber,
-            currentSMS.smsText,
-            currentSMS.receiveDate
+            sms.senderNumber,
+            sms.smsText,
+            sms.receiveDate
         )
     }
 
@@ -66,8 +84,11 @@ class SmsReceiver : BroadcastReceiver() {
         var senderNumber = ""
         var receivedDate = 0L
         val format = bundle.getString("format")
+
         for (aObject in pduObjects) {
             val currentFrame = SmsMessage.createFromPdu(aObject as ByteArray, format)
+            SmartLog.e("SimReceiverID: ${currentFrame.indexOnIcc}")
+            SmartLog.e("OriginatingAddress: ${currentFrame.displayOriginatingAddress}")
             smsText.append(
                 currentFrame.displayMessageBody
             )
@@ -85,9 +106,11 @@ data class ReplyMessage(
     val senderNumber: String
 )
 
-data class SmsDetectorBody(
+data class VerificationSms(
+    @SerializedName("sim")
+    val simSlot: String,
     @SerializedName("sim_iccid")
     val simIccid: String,
-    @SerializedName("unique_id")
-    val uniqueId: String
+    @SerializedName("verification_code")
+    val verificationCode: String
 )

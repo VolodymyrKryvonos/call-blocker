@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.RequiresApi
@@ -18,7 +19,6 @@ import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
 import com.call_blocke.app.TaskManager
-import com.call_blocke.app.scheduler.SmsLimitRefreshScheduler
 import com.call_blocke.app.util.ConnectionManager
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
@@ -96,8 +96,6 @@ class ServiceWorker(private val context: Context, parameters: WorkerParameters) 
         fun stop(context: Context) {
             Firebase.crashlytics.log("stop service")
             SmartLog.d("stop service")
-            SmsLimitRefreshScheduler.stop()
-
             job?.cancel()
             WorkManager.getInstance(context).cancelAllWork()
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
@@ -160,6 +158,7 @@ class ServiceWorker(private val context: Context, parameters: WorkerParameters) 
                 .setContentTitle("Task executor")
                 .setContentText("On run")
                 .setSmallIcon(R.drawable.app_logo)
+                .setLargeIcon(Icon.createWithResource(context, R.drawable.app_logo))
                 .setContentIntent(pendingIntent)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build()
@@ -168,6 +167,7 @@ class ServiceWorker(private val context: Context, parameters: WorkerParameters) 
                 .setContentTitle("Task executor")
                 .setContentText("On run")
                 .setSmallIcon(R.drawable.app_logo)
+                .setLargeIcon(Icon.createWithResource(context, R.drawable.app_logo))
                 .setContentIntent(pendingIntent)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build()

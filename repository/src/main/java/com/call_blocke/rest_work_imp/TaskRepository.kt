@@ -15,7 +15,8 @@ abstract class TaskRepository {
 
     private val taskDao = SmsBlockerDatabase.taskDao
 
-    protected suspend fun task(id: Int) = taskDao.findByID(id) ?: TaskEntity(-1, TaskMethod.UNDEFINED, "","")
+    protected suspend fun task(id: Int) =
+        taskDao.findByID(id) ?: TaskEntity(-1, TaskMethod.UNDEFINED, "", "", simIccId = "")
 
     protected abstract suspend fun confirmTask(data: List<TaskEntity>)
 

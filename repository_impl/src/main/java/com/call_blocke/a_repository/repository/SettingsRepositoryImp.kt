@@ -50,7 +50,7 @@ class SettingsRepositoryImp : SettingsRepository() {
             }
 
             val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-            val countryCode = CountryCodeExtractor.getCountryCode(simInfo,tm)
+            val countryCode = CountryCodeExtractor.getCountryCode(simInfo, tm)
             SmartLog.e("CountryCode = $countryCode")
             settingsRest.setSmsPerDay(
                 SmsPerDayRequest(
@@ -65,7 +65,7 @@ class SettingsRepositoryImp : SettingsRepository() {
                 )
             )
 
-            SmsBlockerDatabase.smsPerDaySimFirst  = sim1Limit
+            SmsBlockerDatabase.smsPerDaySimFirst = sim1Limit
             SmsBlockerDatabase.smsPerDaySimSecond = sim2Limit
         } catch (e: Exception) {
             SmartLog.e("Failed update sms per day ${getStackTrace(e)}")
@@ -105,15 +105,19 @@ class SettingsRepositoryImp : SettingsRepository() {
     override suspend fun validateSimCard(
         phoneNumber: String,
         simID: String,
-        monthlyLimit: Int
+        monthlyLimit: Int,
+        simSlot: Int
     ): Flow<Resource<Unit>> = flow {
         try {
+            val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(simID)
             emit(Resource.Loading())
             settingsRest.validateSimCard(
                 ValidateSimCardRequest(
                     simICCID = simID,
                     simNumber = phoneNumber,
-                    monthlyLimit = monthlyLimit
+                    monthlyLimit = monthlyLimit,
+                    simSlot = "msisdn_${simSlot + 1}",
+                    countryCode = countryCode
                 )
             )
             emit(Resource.Success(Unit))
@@ -198,12 +202,44 @@ class SettingsRepositoryImp : SettingsRepository() {
         }
     }
 
-    override suspend fun checkSimCard(iccId: String, stateHolder: MutableStateFlow<SimValidationInfo>) {
+    override suspend fun checkSimCard(
+        iccId: String,
+        stateHolder: MutableStateFlow<SimValidationInfo>
+    ) {
         try {
-            stateHolder.emit(settingsRest.checkSimCard(CheckSimCardRequest(iccId)).toSimValidationInfo())
-        }catch (e: Exception){
+            stateHolder.emit(
+                settingsRest.checkSimCard(CheckSimCardRequest(iccId)).toSimValidationInfo()
+            )
+        } catch (e: Exception) {
             stateHolder.emit(SimValidationInfo(SimValidationStatus.INVALID, ""))
             SmartLog.e("Failed check Sim Card ${getStackTrace(e)}")
         }
+    }
+
+    override suspend fun confirmValidation(
+        iccid: String,
+        simSlot: String,
+        verificationCode: String
+    ) = flow {
+        emit(Resource.Loading<Unit>())
+        try {
+            settingsRest.confirmSimCardValidation(
+                ConfirmSimCardValidationRequest(
+                    iccId = iccid,
+                    simSlot = simSlot,
+                    verificationCode = verificationCode,
+                    phoneNumber = if (simSlot == "msisdn_1") {
+                        SmsBlockerDatabase.firstSimSlotValidationNumber
+                    } else {
+                        SmsBlockerDatabase.secondSimSlotValidationNumber
+                    }
+                )
+            )
+            emit(Resource.Success<Unit>(Unit))
+        } catch (e: Exception) {
+            emit(Resource.Error<Unit>(""))
+            SmartLog.e("Failed confirm validation ${getStackTrace(e)}")
+        }
+
     }
 }

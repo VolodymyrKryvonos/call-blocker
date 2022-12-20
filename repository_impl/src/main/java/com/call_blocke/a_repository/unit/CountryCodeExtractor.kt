@@ -248,7 +248,7 @@ object CountryCodeExtractor {
         } ?: getCountryCodeFromIccId(simInfo?.firstOrNull()?.iccId)
     }
 
-    private fun getCountryCodeFromIccId(iccId: String?): String {
+    fun getCountryCodeFromIccId(iccId: String?): String {
         if (iccId == null)
             return "default"
         val iccIdWithoutDefaultDigit = iccId.substring(2)

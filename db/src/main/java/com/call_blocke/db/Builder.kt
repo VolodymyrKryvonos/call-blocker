@@ -7,8 +7,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.room.Room
 import com.call_blocke.db.entity.*
 import com.call_blocker.model.Profile
+import kotlinx.coroutines.flow.MutableSharedFlow
 
 object SmsBlockerDatabase {
+    val isValidationCompleted = MutableSharedFlow<Boolean>()
     private var preference: Preference? = null
 
     private var database: AppDatabase? = null
@@ -134,6 +136,21 @@ object SmsBlockerDatabase {
         get() = (preference ?: throw DbModuleException("please init db module")).secondSimChanged
         set(value) {
             preference?.secondSimChanged = value
+        }
+
+    var firstSimSlotValidationNumber: String
+        get() = (preference
+            ?: throw DbModuleException("please init db module")).firstSimSlotValidationNumber
+        set(value) {
+            preference?.firstSimSlotValidationNumber = value
+        }
+
+
+    var secondSimSlotValidationNumber: String
+        get() = (preference
+            ?: throw DbModuleException("please init db module")).secondSimSlotValidationNumber
+        set(value) {
+            preference?.secondSimSlotValidationNumber = value
         }
 
 

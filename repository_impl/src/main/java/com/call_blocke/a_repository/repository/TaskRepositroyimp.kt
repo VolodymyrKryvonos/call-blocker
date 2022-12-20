@@ -136,7 +136,8 @@ class TaskRepositoryImp : TaskRepository() {
                             simSlot = simSlot,
                             method = TaskMethod.valueOf(
                                 parsedMsg.method ?: TaskMethod.UNDEFINED.name
-                            )
+                            ),
+                            simIccId = parsedMsg.data.simIccId
                         )
                     }
                 ).also { save(it.list.filter { taskEntity -> taskEntity.message != "GET_LOGS" }) }

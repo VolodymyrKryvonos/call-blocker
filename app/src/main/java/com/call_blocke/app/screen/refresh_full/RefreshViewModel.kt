@@ -16,7 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class RefreshViewModel : ViewModel() {
@@ -90,14 +90,28 @@ class RefreshViewModel : ViewModel() {
         simsInfo()
     }
 
-    fun validatePhoneNumber(phoneNumber: String, simID: String, monthlyLimit: String) =
+    fun validatePhoneNumber(
+        phoneNumber: String,
+        simID: String,
+        monthlyLimit: String,
+        simSlot: Int
+    ) =
         viewModelScope.launch(Dispatchers.IO) {
-            validationState.emitAll(
-                settingsRepository.validateSimCard(
-                    phoneNumber = phoneNumber,
-                    simID = simID,
-                    monthlyLimit = monthlyLimit.toInt()
-                )
-            )
+            settingsRepository.validateSimCard(
+                phoneNumber = phoneNumber,
+                simID = simID,
+                monthlyLimit = monthlyLimit.toInt(),
+                simSlot = simSlot
+
+            ).collectLatest {
+                if (it is Resource.Success) {
+                    if (simSlot == 0) {
+                        firstSimValidationInfo.emit(firstSimValidationInfo.value.copy(status = SimValidationStatus.PROCESSING))
+                    } else {
+                        secondSimValidationInfo.emit(secondSimValidationInfo.value.copy(status = SimValidationStatus.PROCESSING))
+                    }
+                }
+                validationState.emit(it)
+            }
         }
 }

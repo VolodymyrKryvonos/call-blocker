@@ -51,11 +51,15 @@ object SimUtil {
     }
 
     fun simInfo(context: Context?, simSlot: Int): SubscriptionInfo? {
-        val simInfo = getSIMInfo(context)
         return if (simSlot == 0) {
             firstSim(context)
         } else {
             secondSim(context)
         }
+    }
+
+    fun simSlotById(context: Context?, simId: String): Int? {
+        val simInfo = getSIMInfo(context)
+        return simInfo?.firstOrNull { it.iccId == simId }?.simSlotIndex
     }
 }

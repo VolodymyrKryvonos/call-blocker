@@ -9,5 +9,6 @@ data class SimValidationInfo(
 enum class SimValidationStatus{
     VALID,
     INVALID,
+    PROCESSING,
     UNKNOWN
 }

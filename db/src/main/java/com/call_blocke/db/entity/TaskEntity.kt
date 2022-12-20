@@ -28,7 +28,9 @@ data class TaskEntity(
 
     var confirmAt: Long = 0,
 
-    var simSlot: Int? = 0
+    var simSlot: Int? = 0,
+
+    val simIccId: String
 )
 
 enum class TaskStatus {

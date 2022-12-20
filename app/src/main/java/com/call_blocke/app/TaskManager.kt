@@ -116,6 +116,7 @@ class TaskManager(
 
     private suspend fun doTask(task: TaskEntity): Boolean {
         SmartLog.d("doTask ${task.id}")
+        task.simSlot = SimUtil.simSlotById(context, task.simIccId)
 
         if (ActivityCompat.checkSelfPermission(
                 context,
