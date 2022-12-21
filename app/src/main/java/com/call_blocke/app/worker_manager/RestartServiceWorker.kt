@@ -15,7 +15,7 @@ class RestartServiceWorker(
         Log.e("RestartServiceWorker", "RestartServiceWorker")
         val workManager = WorkManager.getInstance(context)
         val workInfos = workManager
-            .getWorkInfosForUniqueWork(ServiceWorker.WORK_NAME).get()
+            .getWorkInfosForUniqueWork(SendingSMSWorker.WORK_NAME).get()
         if (workInfos.size > 1) {
             SmartLog.e("More then one service started")
             return Result.retry()
@@ -23,7 +23,7 @@ class RestartServiceWorker(
         SmartLog.e("Worker state ${workInfos.firstOrNull()?.state?.name}")
         if (workInfos.firstOrNull()?.state?.isFinished == true) {
             SmartLog.e("Restart worker")
-            ServiceWorker.start(context)
+            SendingSMSWorker.start(context)
         }
         return Result.success()
     }

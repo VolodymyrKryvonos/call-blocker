@@ -15,10 +15,8 @@ import android.os.PowerManager
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.work.*
-import com.call_blocke.app.BuildConfig
-import com.call_blocke.app.MainActivity
+import com.call_blocke.app.*
 import com.call_blocke.app.R
-import com.call_blocke.app.TaskManager
 import com.call_blocke.app.util.ConnectionManager
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
@@ -31,7 +29,7 @@ import kotlinx.coroutines.flow.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class ServiceWorker(private val context: Context, parameters: WorkerParameters) :
+class SendingSMSWorker(private val context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     private val wakeLock: PowerManager.WakeLock by lazy {
         (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
@@ -71,7 +69,7 @@ class ServiceWorker(private val context: Context, parameters: WorkerParameters) 
             val workManager = WorkManager.getInstance(context)
             workManager.beginUniqueWork(
                 WORK_NAME, ExistingWorkPolicy.REPLACE,
-                OneTimeWorkRequestBuilder<ServiceWorker>().build()
+                OneTimeWorkRequestBuilder<SendingSMSWorker>().build()
             ).enqueue()
 
             val work = PeriodicWorkRequestBuilder<RestartServiceWorker>(5, TimeUnit.MINUTES)
@@ -143,36 +141,29 @@ class ServiceWorker(private val context: Context, parameters: WorkerParameters) 
     private fun createForegroundInfo(): ForegroundInfo {
         val pendingIntent: PendingIntent =
             Intent(context, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+                PendingIntent.getActivity(
+                    context,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
             }
 
-        val channelId =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                createNotificationChannel("my_worker", "My Background Worker")
-            } else {
-                ""
-            }
-
-        val notification: Notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(applicationContext, channelId)
-                .setContentTitle("Task executor")
-                .setContentText("On run")
-                .setSmallIcon(R.drawable.app_logo)
-                .setLargeIcon(Icon.createWithResource(context, R.drawable.app_logo))
-                .setContentIntent(pendingIntent)
-                .setCategory(Notification.CATEGORY_SERVICE)
-                .build()
+        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(applicationContext, SERVICE_NOTIFICATION_CHANNEL_ID)
         } else {
             Notification.Builder(applicationContext)
-                .setContentTitle("Task executor")
+        }
+        return ForegroundInfo(
+            1001,
+            notificationBuilder.setContentTitle("Task executor")
                 .setContentText("On run")
                 .setSmallIcon(R.drawable.app_logo)
                 .setLargeIcon(Icon.createWithResource(context, R.drawable.app_logo))
                 .setContentIntent(pendingIntent)
                 .setCategory(Notification.CATEGORY_SERVICE)
                 .build()
-        }
-        return ForegroundInfo(1001, notification)
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.O)

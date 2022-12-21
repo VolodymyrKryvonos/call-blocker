@@ -3,7 +3,7 @@ package com.call_blocke.app.broad_cast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.call_blocke.app.worker_manager.ServiceWorker
+import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.SimUtil
 import com.google.firebase.crashlytics.ktx.crashlytics
@@ -40,7 +40,7 @@ class SimSlotReceiver : BroadcastReceiver() {
     }
 
     private fun trackSimCardWasIdentified(context: Context?) {
-        ServiceWorker.stop(context = context ?: return)
+        SendingSMSWorker.stop(context = context ?: return)
         val firstSimId = SimUtil.firstSimId(context)
         val secondSimId = SimUtil.secondSimId(context)
         if (firstSimId != SmsBlockerDatabase.firstSimId) {
@@ -56,6 +56,6 @@ class SimSlotReceiver : BroadcastReceiver() {
     }
 
     private fun trackSimCardWasEjected(context: Context?) {
-        ServiceWorker.stop(context = context ?: return)
+        SendingSMSWorker.stop(context = context ?: return)
     }
 }

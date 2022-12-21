@@ -100,7 +100,7 @@ class RefreshViewModel : ViewModel() {
             settingsRepository.validateSimCard(
                 phoneNumber = phoneNumber,
                 simID = simID,
-                monthlyLimit = monthlyLimit.toInt(),
+                monthlyLimit = monthlyLimit.toIntOrNull() ?: 5000,
                 simSlot = simSlot
 
             ).collectLatest {

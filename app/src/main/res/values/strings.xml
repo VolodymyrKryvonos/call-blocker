@@ -82,5 +82,9 @@
     <string name="update_application">Please update app</string>
     <string name="update_application_to_continue">We updated version of the application. Your version of the application is out of date. Please update it to the latest version.</string>
     <string name="process_verification">Please wait for the sim card verification</string>
+    <string name="verification_completed">Verification completed</string>
+    <string name="your_verification_completed">Your number %s has been verified</string>
+    <string name="your_verification_failed">Sorry, could not verify your number %s, please try again</string>
+    <string name="verification_failed">Verification failed</string>
 
 </resources>

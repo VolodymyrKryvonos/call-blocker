@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.app.BuildConfig
-import com.call_blocke.app.worker_manager.ServiceWorker
+import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.settingsRepository
@@ -28,7 +28,7 @@ class MainViewModel : ViewModel() {
     private val _openOutdatedVersionDialog: MutableSharedFlow<Boolean> = MutableSharedFlow()
     val openOutdatedVersionDialog = _openOutdatedVersionDialog.asSharedFlow()
 
-    val taskExecutorIsRunning: StateFlow<Boolean> = ServiceWorker.isRunning
+    val taskExecutorIsRunning: StateFlow<Boolean> = SendingSMSWorker.isRunning
 
     val systemInfoLiveData = MutableLiveData(SmsBlockerDatabase.systemDetail)
 
@@ -68,8 +68,7 @@ class MainViewModel : ViewModel() {
     val deviceID = userRepository.deviceID
 
     fun runExecutor(context: Context) {
-        ServiceWorker.start(context = context)
-
+        SendingSMSWorker.start(context = context)
         viewModelScope.launch {
             val forSimFirst =
                 if (SimUtil.isFirstSimAllow(context)) SmsBlockerDatabase.smsPerDaySimFirst else 0
@@ -79,27 +78,11 @@ class MainViewModel : ViewModel() {
                 forFirstSim = forSimFirst,
                 forSecondSim = forSimSecond
             )
-            if (forSimFirst == 0) {
-                val simInfo = SimUtil.simInfo(context, 0)
-                settingsRepository.refreshDataForSim(
-                    simSlot = 0,
-                    simInfo?.iccId ?: "",
-                    simInfo?.number ?: ""
-                )
-            }
-            if (forSimSecond == 0) {
-                val simInfo = SimUtil.simInfo(context, 1)
-                settingsRepository.refreshDataForSim(
-                    simSlot = 1,
-                    simInfo?.iccId ?: "",
-                    simInfo?.number ?: ""
-                )
-            }
         }
     }
 
     fun stopExecutor(context: Context) {
-        ServiceWorker.stop(context = context)
+        SendingSMSWorker.stop(context = context)
     }
 
     fun reloadSystemInfo() {

@@ -10,7 +10,7 @@ import android.telephony.TelephonyManager
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.android.internal.telephony.ITelephony
-import com.call_blocke.app.worker_manager.ServiceWorker
+import com.call_blocke.app.worker_manager.SendingSMSWorker
 import java.lang.reflect.Method
 
 
@@ -18,7 +18,7 @@ class CallReceiver : BroadcastReceiver() {
 
     @SuppressLint("DiscouragedPrivateApi")
     override fun onReceive(context: Context, intent: Intent) {
-        if (!ServiceWorker.isRunning.value) {
+        if (!SendingSMSWorker.isRunning.value) {
             return
         }
         try {

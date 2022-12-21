@@ -64,6 +64,9 @@ abstract class TaskRepository {
     }
 
     suspend fun taskOnError(taskEntity: TaskEntity) {
+        if (taskEntity.method == TaskMethod.VERIFY_PHONE_NUMBER) {
+
+        }
         updateTask(taskEntity.apply {
             deliveredAt = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
             taskEntity.status = TaskStatus.ERROR

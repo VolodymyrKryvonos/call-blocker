@@ -2,16 +2,20 @@ package com.call_blocke.app
 
 import android.Manifest
 import android.app.Activity
+import android.app.Notification
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.*
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
 import com.call_blocke.app.util.ConnectionManager
-import com.call_blocke.app.worker_manager.ServiceWorker
+import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.TaskMethod
 import com.call_blocke.db.entity.PhoneNumber
@@ -58,9 +62,9 @@ class TaskManager(
     }
 
     suspend fun processTask(task: TaskEntity) {
-        when (task.message) {
-            TaskMethod.GET_LOGS.name -> sendLogs()
-            TaskMethod.UPDATE_USER_PROFILE.name -> updateProfile()
+        when (task.method) {
+            TaskMethod.GET_LOGS -> sendLogs()
+            TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
             else -> doTask(task)
         }
     }
@@ -87,7 +91,7 @@ class TaskManager(
     @OptIn(ExperimentalTime::class)
     fun checkConnection() {
         checkConnectionJob = launch {
-            while (ServiceWorker.isRunning.value) {
+            while (SendingSMSWorker.isRunning.value) {
                 val delay =
                     SmsBlockerDatabase.profile?.delayIsConnected?.toDuration(DurationUnit.SECONDS)
                 SmartLog.e("Check connection delay ${delay?.inWholeSeconds} seconds")
@@ -127,14 +131,14 @@ class TaskManager(
         }
         SmartLog.e("NetworkGeneration = ${ConnectionManager.getNetworkGeneration()}")
         if (task.simSlot == null || task.simSlot == -1) {
-            taskRepository.taskOnError(task)
+            processSendError(task)
             return false
         }
 
         val sim = sim(task.simSlot!!)
         if (sim == null) {
             SmartLog.e("Sim card is null")
-            taskRepository.taskOnError(task)
+            processSendError(task)
             return false
         }
         try {
@@ -173,13 +177,51 @@ class TaskManager(
             }
         } else {
             try {
-                taskRepository.taskOnError(task)
+                processSendError(task)
             } catch (e: Exception) {
                 SmartLog.e("Failed send status ${task.id} ${TaskStatus.ERROR}")
             }
         }
 
         return status
+    }
+
+    private suspend fun processSendError(task: TaskEntity) {
+        if (task.method == TaskMethod.VERIFY_PHONE_NUMBER) {
+            showVerificationFailedNotification(task)
+            SmsBlockerDatabase.isValidationCompleted.emit(true)
+        }
+        taskRepository.taskOnError(task)
+    }
+
+    private fun showVerificationFailedNotification(task: TaskEntity) {
+        val pendingIntent: PendingIntent =
+            Intent(context, MainActivity::class.java).let { notificationIntent ->
+                PendingIntent.getActivity(
+                    context,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            }
+        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationCompat.Builder(context, EVENT_NOTIFICATION_CHANNEL_ID)
+        } else {
+            NotificationCompat.Builder(context)
+        }
+        notificationBuilder.setContentTitle(context.getString(R.string.verification_failed))
+            .setSmallIcon(R.drawable.app_logo)
+            .setContentIntent(pendingIntent)
+            .setCategory(Notification.CATEGORY_EVENT)
+            .setAutoCancel(true)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(context.getString(R.string.your_verification_failed, task.sendTo))
+            )
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as
+                    NotificationManager
+        notificationManager.notify(786 + (task.simSlot ?: 0), notificationBuilder.build())
     }
 
     private fun sim(id: Int): SubscriptionInfo? = if (id == 0) {

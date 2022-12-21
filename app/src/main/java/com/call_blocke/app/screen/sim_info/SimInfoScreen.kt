@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.app.screen.refresh_full.RefreshViewModel
+import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.model.Resource
@@ -40,6 +41,7 @@ import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalAnimationApi::class)
 @ExperimentalMaterialApi
@@ -66,8 +68,12 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
             else -> {}
         }
     }
+    val coroutineScope = rememberCoroutineScope()
     if (isValidationCompleted.value) {
         mViewModel.checkSimCards(context)
+        coroutineScope.launch {
+            SmsBlockerDatabase.isValidationCompleted.emit(false)
+        }
     }
     Column(
         modifier = Modifier
@@ -174,7 +180,7 @@ private fun VerifyNumberDialog(
         mutableStateOf("")
     }
     val monthlyLimit = remember {
-        mutableStateOf("5000")
+        mutableStateOf("")
     }
     var isCorrectNumber by remember {
         mutableStateOf(false)
@@ -182,6 +188,7 @@ private fun VerifyNumberDialog(
     if (validationState.value is Resource.Success) {
         onClose()
     }
+    val context = LocalContext.current
     AlertDialog(
         modifier = modifier,
         title = stringResource(id = R.string.verifyPhoneNumber),
@@ -220,6 +227,9 @@ private fun VerifyNumberDialog(
                 fontSize = 16.sp
             ) {
                 if (isCorrectNumber) {
+                    if (!SendingSMSWorker.isRunning.value) {
+                        SendingSMSWorker.start(context = context)
+                    }
                     viewModel.validatePhoneNumber(
                         phoneNumber.value,
                         simID,
