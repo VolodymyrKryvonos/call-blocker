@@ -1,5 +1,6 @@
 package com.call_blocke.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -28,6 +29,12 @@ class MainActivity : ComponentActivity() {
 
     private val splashViewModel: SplashViewModel by viewModels()
 
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+
+    }
+
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @ExperimentalAnimationApi
@@ -48,7 +55,7 @@ class MainActivity : ComponentActivity() {
                         .observeAsState(initial = SmsBlockerDatabase.userToken != null)
 
                     if (isUserAuth)
-                        MainView()
+                        MainView(intent?.data?.toString())
                     else
                         AuthView()
                 }
@@ -70,7 +77,7 @@ class MainActivity : ComponentActivity() {
     @ExperimentalFoundationApi
     @ExperimentalMaterialApi
     @Composable
-    fun MainView() {
-        SplashScreen(splashViewModel)
+    fun MainView(deapLink: String? = null) {
+        SplashScreen(splashViewModel, deapLink)
     }
 }

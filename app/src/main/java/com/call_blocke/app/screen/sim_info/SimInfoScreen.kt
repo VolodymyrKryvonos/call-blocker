@@ -28,10 +28,9 @@ import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.app.screen.refresh_full.RefreshViewModel
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.ValidationState
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.model.Resource
-import com.call_blocke.rest_work_imp.model.SimValidationInfo
-import com.call_blocke.rest_work_imp.model.SimValidationStatus
 import com.rokobit.adstv.ui.element.AlertDialog
 import com.rokobit.adstv.ui.element.Button
 import com.rokobit.adstv.ui.element.Field
@@ -41,7 +40,6 @@ import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalAnimationApi::class)
 @ExperimentalMaterialApi
@@ -50,7 +48,10 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
     modifier = Modifier
         .fillMaxSize()
 ) {
-    val isValidationCompleted = SmsBlockerDatabase.isValidationCompleted.collectAsState(false)
+    val firstSimValidationState = SmsBlockerDatabase.firstSimValidationState
+        .collectAsState()
+    val secondSimValidationState = SmsBlockerDatabase.secondSimValidationState
+        .collectAsState()
     val context = LocalContext.current
     val openDialog = remember { mutableStateOf(false) }
     val verifyingSim: MutableState<SubscriptionInfo?> = remember {
@@ -66,13 +67,6 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
                 mViewModel.checkSimCards(context)
             }
             else -> {}
-        }
-    }
-    val coroutineScope = rememberCoroutineScope()
-    if (isValidationCompleted.value) {
-        mViewModel.checkSimCards(context)
-        coroutineScope.launch {
-            SmsBlockerDatabase.isValidationCompleted.emit(false)
         }
     }
     Column(
@@ -95,7 +89,8 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
                         SimInfoCard(
                             info = it,
                             data = fullSimInfoModel,
-                            validationInfo = firstSimValidationInfo.value
+                            phoneNumber = firstSimValidationInfo.value.number,
+                            validationState = firstSimValidationState.value
                         ) {
                             openDialog.value = true
                             verifyingSim.value = it
@@ -110,7 +105,8 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
                         SimInfoCard(
                             info = it,
                             data = fullSimInfoModel,
-                            validationInfo = secondSimValidationInfo.value
+                            phoneNumber = secondSimValidationInfo.value.number,
+                            validationState = secondSimValidationState.value
                         ) {
                             openDialog.value = true
                             verifyingSim.value = it
@@ -189,6 +185,7 @@ private fun VerifyNumberDialog(
         onClose()
     }
     val context = LocalContext.current
+
     AlertDialog(
         modifier = modifier,
         title = stringResource(id = R.string.verifyPhoneNumber),
@@ -252,18 +249,19 @@ private fun VerifyNumberDialog(
 private fun SimInfoCard(
     info: SubscriptionInfo,
     data: FullSimInfoModel,
-    validationInfo: SimValidationInfo,
+    phoneNumber: String,
+    validationState: ValidationState,
     onClick: () -> Unit
 ) = Card(
     modifier = Modifier
         .fillMaxWidth(),
     shape = RoundedCornerShape(15),
-    backgroundColor = when (validationInfo.status) {
-        SimValidationStatus.INVALID -> Color.Red
-        SimValidationStatus.PROCESSING -> Color.Gray
+    backgroundColor = when (validationState) {
+        ValidationState.INVALID -> Color.Red
+        ValidationState.PROCESSING, ValidationState.FAILED -> Color.Gray
         else -> secondaryColor
     },
-    enabled = validationInfo.status == SimValidationStatus.INVALID,
+    enabled = validationState == ValidationState.INVALID || validationState == ValidationState.FAILED,
     elevation = 6.dp,
     onClick = onClick,
 ) {
@@ -281,7 +279,7 @@ private fun SimInfoCard(
 
         Row {
             Text(text = "IMSI:", modifier = Modifier.weight(1f))
-            Text(text = validationInfo.number)
+            Text(text = phoneNumber)
         }
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -305,5 +303,12 @@ private fun SimInfoCard(
             Text(text = info.iccId)
         }
         Spacer(modifier = Modifier.height(4.dp))
+
+        if (validationState == ValidationState.FAILED) {
+            Text(
+                text = stringResource(id = R.string.verification_failed_check_entered_number),
+                color = Color.Red
+            )
+        }
     }
 }

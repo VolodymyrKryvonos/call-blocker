@@ -10,7 +10,6 @@ import com.call_blocke.rest_work_imp.model.Resource
 import com.call_blocke.rest_work_imp.model.SimValidationInfo
 import com.call_blocker.model.ConnectionStatus
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 
 abstract class SettingsRepository {
 
@@ -70,9 +69,8 @@ abstract class SettingsRepository {
     abstract suspend fun checkConnection(): Resource<ConnectionStatus>
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
     abstract suspend fun checkSimCard(
-        iccId: String,
-        stateHolder: MutableStateFlow<SimValidationInfo>
-    )
+        iccId: String
+    ): Flow<SimValidationInfo>
 
     abstract suspend fun confirmValidation(
         iccid: String,

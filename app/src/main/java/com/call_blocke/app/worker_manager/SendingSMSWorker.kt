@@ -1,23 +1,16 @@
 package com.call_blocke.app.worker_manager
 
 import android.Manifest
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.PowerManager
-import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.work.*
-import com.call_blocke.app.*
-import com.call_blocke.app.R
+import com.call_blocke.app.BuildConfig
+import com.call_blocke.app.TaskManager
 import com.call_blocke.app.util.ConnectionManager
+import com.call_blocke.app.util.NotificationService
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
@@ -25,8 +18,10 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
-import java.util.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.util.concurrent.TimeUnit
 
 class SendingSMSWorker(private val context: Context, parameters: WorkerParameters) :
@@ -103,9 +98,6 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
         }
     }
 
-    private val notificationManager =
-        context.getSystemService(Context.NOTIFICATION_SERVICE) as
-                NotificationManager
 
     private var taskList: Flow<TaskMessage>? = null
 
@@ -118,7 +110,7 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
         taskList = RepositoryImp.taskRepository.taskMessage()
         wakeLock.acquire(1000 * 60 * 35)
         isRunning.emit(true)
-        setForeground(createForegroundInfo())
+        setForeground(NotificationService.createForegroundInfo(context))
         withContext(Dispatchers.IO) {
             RepositoryImp.taskRepository.connectionStatusFlow.onEach {
                 SmartLog.e("Connect status $it")
@@ -138,43 +130,4 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
         return Result.success()
     }
 
-    private fun createForegroundInfo(): ForegroundInfo {
-        val pendingIntent: PendingIntent =
-            Intent(context, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(
-                    context,
-                    0,
-                    notificationIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-            }
-
-        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(applicationContext, SERVICE_NOTIFICATION_CHANNEL_ID)
-        } else {
-            Notification.Builder(applicationContext)
-        }
-        return ForegroundInfo(
-            1001,
-            notificationBuilder.setContentTitle("Task executor")
-                .setContentText("On run")
-                .setSmallIcon(R.drawable.app_logo)
-                .setLargeIcon(Icon.createWithResource(context, R.drawable.app_logo))
-                .setContentIntent(pendingIntent)
-                .setCategory(Notification.CATEGORY_SERVICE)
-                .build()
-        )
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(channelId: String, channelName: String): String {
-        val chan = NotificationChannel(
-            channelId,
-            channelName, NotificationManager.IMPORTANCE_HIGH
-        )
-        chan.lightColor = Color.BLUE
-        chan.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-        notificationManager.createNotificationChannel(chan)
-        return channelId
-    }
 }

@@ -1,10 +1,12 @@
 package com.call_blocke.app.screen.refresh_full
 
 import android.content.Context
+import android.telephony.SubscriptionInfo
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.ValidationState
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
@@ -52,18 +54,27 @@ class RefreshViewModel : ViewModel() {
     fun checkSimCards(context: Context) {
         val firstSim = firstSim(context)
         val secondSim = secondSim(context)
-        viewModelScope.launch(Dispatchers.IO) {
-            if (firstSim != null) {
-                settingsRepository.checkSimCard(firstSim.iccId ?: "", firstSimValidationInfo)
-            }
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            if (secondSim != null) {
-                settingsRepository.checkSimCard(secondSim.iccId ?: "", secondSimValidationInfo)
-            }
-        }
+        checkSim(firstSim, firstSimValidationInfo, SmsBlockerDatabase.firstSimValidationState)
+        checkSim(secondSim, secondSimValidationInfo, SmsBlockerDatabase.secondSimValidationState)
         viewModelScope.launch {
             validationState.emit(Resource.None)
+        }
+    }
+
+    private fun checkSim(
+        simInfo: SubscriptionInfo?,
+        simValidationInfo: MutableStateFlow<SimValidationInfo>,
+        simValidationState: MutableStateFlow<ValidationState>
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (simInfo != null) {
+                settingsRepository.checkSimCard(simInfo.iccId ?: "").collectLatest {
+                    simValidationInfo.emit(it)
+                    if (it.status == SimValidationStatus.INVALID && simValidationState.value != ValidationState.FAILED) {
+                        simValidationState.emit(ValidationState.INVALID)
+                    }
+                }
+            }
         }
     }
 
@@ -106,9 +117,9 @@ class RefreshViewModel : ViewModel() {
             ).collectLatest {
                 if (it is Resource.Success) {
                     if (simSlot == 0) {
-                        firstSimValidationInfo.emit(firstSimValidationInfo.value.copy(status = SimValidationStatus.PROCESSING))
+                        SmsBlockerDatabase.firstSimValidationState.emit(ValidationState.PROCESSING)
                     } else {
-                        secondSimValidationInfo.emit(secondSimValidationInfo.value.copy(status = SimValidationStatus.PROCESSING))
+                        SmsBlockerDatabase.secondSimValidationState.emit(ValidationState.PROCESSING)
                     }
                 }
                 validationState.emit(it)

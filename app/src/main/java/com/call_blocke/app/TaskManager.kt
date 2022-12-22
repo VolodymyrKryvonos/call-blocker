@@ -2,22 +2,20 @@ package com.call_blocke.app
 
 import android.Manifest
 import android.app.Activity
-import android.app.Notification
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.*
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationCompat
 import com.call_blocke.app.util.ConnectionManager
+import com.call_blocke.app.util.NotificationService
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.TaskMethod
+import com.call_blocke.db.ValidationState
 import com.call_blocke.db.entity.PhoneNumber
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
@@ -188,40 +186,18 @@ class TaskManager(
 
     private suspend fun processSendError(task: TaskEntity) {
         if (task.method == TaskMethod.VERIFY_PHONE_NUMBER) {
-            showVerificationFailedNotification(task)
-            SmsBlockerDatabase.isValidationCompleted.emit(true)
+            NotificationService.showVerificationFailedNotification(context, task)
+            emitValidationCompletion(task.simSlot)
         }
         taskRepository.taskOnError(task)
     }
 
-    private fun showVerificationFailedNotification(task: TaskEntity) {
-        val pendingIntent: PendingIntent =
-            Intent(context, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(
-                    context,
-                    0,
-                    notificationIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-            }
-        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationCompat.Builder(context, EVENT_NOTIFICATION_CHANNEL_ID)
+    private suspend fun emitValidationCompletion(simSlot: Int?) {
+        if (simSlot == 0) {
+            SmsBlockerDatabase.firstSimValidationState.emit(ValidationState.FAILED)
         } else {
-            NotificationCompat.Builder(context)
+            SmsBlockerDatabase.secondSimValidationState.emit(ValidationState.FAILED)
         }
-        notificationBuilder.setContentTitle(context.getString(R.string.verification_failed))
-            .setSmallIcon(R.drawable.app_logo)
-            .setContentIntent(pendingIntent)
-            .setCategory(Notification.CATEGORY_EVENT)
-            .setAutoCancel(true)
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(context.getString(R.string.your_verification_failed, task.sendTo))
-            )
-        val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as
-                    NotificationManager
-        notificationManager.notify(786 + (task.simSlot ?: 0), notificationBuilder.build())
     }
 
     private fun sim(id: Int): SubscriptionInfo? = if (id == 0) {
@@ -271,7 +247,12 @@ class TaskManager(
             }
 
             val sentPI =
-                PendingIntent.getBroadcast(context, address.hashCode(), sentStatusIntent, PendingIntent.FLAG_IMMUTABLE)
+                PendingIntent.getBroadcast(
+                    context,
+                    address.hashCode(),
+                    sentStatusIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
             val msgText = toGSM7BitText(text)
             SmartLog.e("msgText = $msgText")
             try {

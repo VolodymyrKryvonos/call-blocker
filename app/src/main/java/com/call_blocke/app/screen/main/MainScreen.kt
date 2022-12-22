@@ -273,9 +273,9 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                             mViewMode.stopExecutor(context)
                         } else {
                             SmartLog.e("User start service")
+                            mViewMode.checkIsSimCardsShouldBeValidated()
                             mViewMode.runExecutor(context)
                         }
-                        mViewMode.checkIsSimCardsShouldBeValidated()
                     }
                     2 -> navController.navigate("refresh")
                     3 -> navController.navigate("settings")

@@ -194,12 +194,20 @@ class MainViewModel : ViewModel() {
         val secondSim = secondSim(context)
         viewModelScope.launch(Dispatchers.IO) {
             if (firstSim != null) {
-                settingsRepository.checkSimCard(firstSim.iccId ?: "", firstSimValidationInfo)
+                firstSimValidationInfo.emitAll(
+                    settingsRepository.checkSimCard(
+                        firstSim.iccId ?: ""
+                    )
+                )
             }
         }
         viewModelScope.launch(Dispatchers.IO) {
             if (secondSim != null) {
-                settingsRepository.checkSimCard(secondSim.iccId ?: "", secondSimValidationInfo)
+                secondSimValidationInfo.emitAll(
+                    settingsRepository.checkSimCard(
+                        secondSim.iccId ?: ""
+                    )
+                )
             }
         }
     }

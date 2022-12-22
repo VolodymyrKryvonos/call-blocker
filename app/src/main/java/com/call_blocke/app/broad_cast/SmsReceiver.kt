@@ -1,20 +1,16 @@
 package com.call_blocke.app.broad_cast
 
-import android.app.Notification
-import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.telephony.SmsMessage
-import com.call_blocke.app.EVENT_NOTIFICATION_CHANNEL_ID
-import com.call_blocke.app.MainActivity
-import com.call_blocke.app.R
+import com.call_blocke.app.util.Const
+import com.call_blocke.app.util.NotificationService
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.ValidationState
+import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.replyRepository
-import com.call_blocke.repository.RepositoryImp.settingsRepository
 import com.call_blocke.rest_work_imp.model.Resource
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
@@ -55,65 +51,46 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private suspend fun checkIsVerificationSms(sms: ReplyMessage, context: Context): Boolean {
-        return try {
-            val verificationSms = Gson().fromJson(sms.smsText, VerificationSms::class.java)
-            settingsRepository.confirmValidation(
-                simSlot = verificationSms.simSlot,
-                iccid = verificationSms.simIccid,
-                verificationCode = verificationSms.verificationCode
-            ).collectLatest {
-                if (it is Resource.Success) {
-                    showPhoneNumberVerifiedNotification(sms.senderNumber, context)
-                    SmsBlockerDatabase.isValidationCompleted.emit(true)
-                    return@collectLatest
-                }
-                if (it is Resource.Error) {
-                    SmsBlockerDatabase.isValidationCompleted.emit(true)
-                }
-            }
-            true
+        val verificationSms = try {
+            Gson().fromJson(sms.smsText, VerificationSms::class.java)
         } catch (_: JsonSyntaxException) {
-            false
+            return false
         }
+        RepositoryImp.settingsRepository.confirmValidation(
+            simSlot = verificationSms.simSlot,
+            iccid = verificationSms.simIccid,
+            verificationCode = verificationSms.verificationCode
+        ).collectLatest {
+            if (it is Resource.Success) {
+                emitValidationCompletion(verificationSms.simSlot, ValidationState.SUCCESS)
+                NotificationService.showPhoneNumberVerifiedNotification(
+                    sms.senderNumber,
+                    context,
+                    verificationSms.simSlot.last().digitToIntOrNull() ?: -1
+                )
+                return@collectLatest
+            }
+            if (it is Resource.Error) {
+                emitValidationCompletion(verificationSms.simSlot, ValidationState.FAILED)
+            }
+        }
+        return true
     }
 
-    private fun showPhoneNumberVerifiedNotification(
-        phoneNumber: String,
-        context: Context
-    ) {
-        val pendingIntent: PendingIntent =
-            Intent(context, MainActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(
-                    context,
-                    0,
-                    notificationIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-            }
-        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(context, EVENT_NOTIFICATION_CHANNEL_ID)
+    private suspend fun emitValidationCompletion(simSlot: String, status: ValidationState) {
+        if (simSlot == Const.firstSim) {
+            SmsBlockerDatabase.firstSimValidationState.emit(status)
         } else {
-            Notification.Builder(context)
+            SmsBlockerDatabase.secondSimValidationState.emit(status)
         }
-        notificationBuilder.setContentTitle(context.getString(R.string.verification_completed))
-            .setContentText(context.getString(R.string.your_verification_completed, phoneNumber))
-            .setSmallIcon(R.drawable.app_logo)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setCategory(Notification.CATEGORY_EVENT)
-        val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as
-                    NotificationManager
-        notificationManager.notify(785, notificationBuilder.build())
     }
 
     private suspend fun storeReply(sms: ReplyMessage) {
-        SmartLog.e("storeReply $sms")
         val sendToReply =
             SmsBlockerDatabase.phoneNumberDao.isExist(sms.senderNumber) > 0
         if (!sendToReply)
             return
-        SmartLog.e("SmsReceiver ${sms.smsText} ${sms.senderNumber}")
+        SmartLog.e("storeReply ${sms.smsText} ${sms.senderNumber}")
         replyRepository.storeReply(
             sms.senderNumber,
             sms.smsText,

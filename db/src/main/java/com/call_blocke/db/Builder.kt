@@ -7,10 +7,22 @@ import androidx.lifecycle.MutableLiveData
 import androidx.room.Room
 import com.call_blocke.db.entity.*
 import com.call_blocker.model.Profile
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+
+enum class ValidationState {
+    FAILED,
+    PROCESSING,
+    SUCCESS,
+    INVALID,
+    NONE
+}
 
 object SmsBlockerDatabase {
-    val isValidationCompleted = MutableSharedFlow<Boolean>()
+
+    val firstSimValidationState = MutableStateFlow(ValidationState.NONE)
+
+    val secondSimValidationState = MutableStateFlow(ValidationState.NONE)
+
     private var preference: Preference? = null
 
     private var database: AppDatabase? = null

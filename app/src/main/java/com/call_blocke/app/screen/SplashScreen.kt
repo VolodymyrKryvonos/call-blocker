@@ -15,7 +15,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,12 +41,12 @@ import kotlinx.coroutines.delay
 @ExperimentalComposeUiApi
 @Composable
 @Preview
-fun SplashScreen(mViewModel: SplashViewModel) {
+fun SplashScreen(mViewModel: SplashViewModel, deapLink: String? = null) {
     val isPermissionsGranted by mViewModel.isPermissionGranted.observeAsState(initial = null)
     val isAppDefault by mViewModel.isAppDefault.observeAsState(initial = null)
 
     if (isPermissionsGranted == true && isAppDefault == true)
-        Main()
+        Main(deapLink)
     else if (isPermissionsGranted == false || isAppDefault == false)
         IntroScreen(mViewModel = mViewModel)
     else
@@ -85,7 +84,7 @@ fun Banner(mViewModel: SplashViewModel) = Column(
 @ExperimentalFoundationApi
 @ExperimentalMaterialApi
 @Composable
-fun Main() {
+fun Main(deapLink: String?) {
     val navController: NavHostController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "main") {
@@ -109,6 +108,9 @@ fun Main() {
         }
     }
 
+    if (deapLink != null) {
+        navController.navigate(deapLink)
+    }
     val isSimChanged by SmsBlockerDatabase
         .onSimChanged
         .observeAsState(initial = SmsBlockerDatabase.isSimChanged)

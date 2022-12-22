@@ -20,7 +20,6 @@ import com.call_blocker.model.ConnectionStatus
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 
 
@@ -203,15 +202,14 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
     override suspend fun checkSimCard(
-        iccId: String,
-        stateHolder: MutableStateFlow<SimValidationInfo>
-    ) {
+        iccId: String
+    ) = flow {
         try {
-            stateHolder.emit(
+            emit(
                 settingsRest.checkSimCard(CheckSimCardRequest(iccId)).toSimValidationInfo()
             )
         } catch (e: Exception) {
-            stateHolder.emit(SimValidationInfo(SimValidationStatus.INVALID, ""))
+            emit(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
             SmartLog.e("Failed check Sim Card ${getStackTrace(e)}")
         }
     }
