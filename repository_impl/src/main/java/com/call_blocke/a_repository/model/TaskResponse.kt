@@ -8,7 +8,7 @@ data class TaskResponse(
     val smsList: List<TaskElement>,
     val sim: String,
     @SerializedName("sim_iccid")
-    val simIccId: String
+    val simIccId: String?
 )
 
 data class SimDetail(

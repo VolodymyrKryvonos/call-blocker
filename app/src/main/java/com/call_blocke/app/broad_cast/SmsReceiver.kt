@@ -106,7 +106,6 @@ class SmsReceiver : BroadcastReceiver() {
 
         for (aObject in pduObjects) {
             val currentFrame = SmsMessage.createFromPdu(aObject as ByteArray, format)
-            SmartLog.e("SimReceiverID: ${currentFrame.indexOnIcc}")
             SmartLog.e("OriginatingAddress: ${currentFrame.displayOriginatingAddress}")
             smsText.append(
                 currentFrame.displayMessageBody

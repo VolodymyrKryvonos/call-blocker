@@ -51,25 +51,6 @@ private fun IntroItem(mViewModel: SplashViewModel,
 
     Divider(Modifier.height(primaryDimens * 2), color = Color.Transparent)
 
-    val requestPermissionLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestMultiplePermissions()
-        ) { pers ->
-            //requestPermission(context = context)
-            val all = pers.all { it.value }
-
-            mViewModel.isPermissionGranted.postValue(all)
-        }
-
-    val requestAppAsDefaultLauncher =
-        rememberLauncherForActivityResult(
-            ActivityResultContracts.StartActivityForResult()
-        ) {
-            mViewModel.isAppDefault.postValue(it.resultCode == Activity.RESULT_OK)
-        }
-
-    val context = LocalContext.current
-
     Button(title = btnTitle, onClick = onClick)
 }
 

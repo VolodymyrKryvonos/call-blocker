@@ -5,5 +5,6 @@ enum class TaskMethod {
     UPDATE_USER_PROFILE,
     SENT_SMS,
     VERIFY_PHONE_NUMBER,
+    TEST_SMS,
     UNDEFINED
 }

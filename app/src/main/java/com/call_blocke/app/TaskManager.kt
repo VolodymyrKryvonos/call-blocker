@@ -60,6 +60,7 @@ class TaskManager(
     }
 
     suspend fun processTask(task: TaskEntity) {
+        SmartLog.e(task.toString())
         when (task.method) {
             TaskMethod.GET_LOGS -> sendLogs()
             TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
