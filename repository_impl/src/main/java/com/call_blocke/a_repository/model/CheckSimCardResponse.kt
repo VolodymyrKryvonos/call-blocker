@@ -7,14 +7,19 @@ import com.google.gson.annotations.SerializedName
 data class CheckSimCardResponse(
     val status: Boolean,
     @SerializedName("msisdn")
-    val number: String? = null
+    val number: String? = null,
+    @SerializedName("auto_verification")
+    val autoVerification: Boolean? = false
 ) {
     fun toSimValidationInfo() = SimValidationInfo(
         status = if (status) {
             SimValidationStatus.VALID
         } else {
-            SimValidationStatus.INVALID
+            if (autoVerification == true) {
+                SimValidationStatus.AUTO_VALIDATION
+            } else
+                SimValidationStatus.INVALID
         },
-        number = number?:""
+        number = number ?: ""
     )
 }

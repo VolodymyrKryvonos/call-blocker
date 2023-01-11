@@ -10,7 +10,6 @@ import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import androidx.core.app.ActivityCompat
-import com.call_blocke.app.util.ConnectionManager
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
@@ -22,6 +21,7 @@ import com.call_blocke.db.entity.TaskStatus
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SimUtil
 import com.call_blocke.rest_work_imp.model.Resource
+import com.example.common.ConnectionManager
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.*
@@ -42,6 +42,7 @@ class TaskManager(
 ) : CoroutineScope {
 
     private var checkConnectionJob: Job? = null
+    private var sendSignalStrengthJob: Job? = null
     private val taskRepository = RepositoryImp.taskRepository
 
     private val mHandler = android.os.Handler(Looper.getMainLooper())
@@ -76,12 +77,29 @@ class TaskManager(
                     is Resource.Loading -> Unit
                     is Resource.Success -> {
                         SmsBlockerDatabase.profile = it.data
+                        sendSignalStrengthJob?.cancel()
+                        sendSignalStrength()
                         RepositoryImp.taskRepository.reconnect()
                         if (SmsBlockerDatabase.profile?.isConnected == true) {
                             checkConnectionJob?.cancel()
                             checkConnection()
                         }
                     }
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+    @OptIn(ExperimentalTime::class)
+    fun sendSignalStrength() {
+        sendSignalStrengthJob = launch {
+            while (SendingSMSWorker.isRunning.value) {
+                val delay =
+                    SmsBlockerDatabase.profile?.delaySignalStrength?.toDuration(DurationUnit.SECONDS)
+                if (delay != null) {
+                    delay(delay)
+                    RepositoryImp.settingsRepository.sendSignalStrengthInfo()
                 }
             }
         }
@@ -121,19 +139,11 @@ class TaskManager(
         SmartLog.d("doTask ${task.id}")
         task.simSlot = SimUtil.simSlotById(context, task.simIccId)
 
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            SmartLog.e("SignalStrength = ${ConnectionManager.getSignalStrength()}")
-        }
-        SmartLog.e("NetworkGeneration = ${ConnectionManager.getNetworkGeneration()}")
+        logSignalStrength()
         if (task.simSlot == null || task.simSlot == -1) {
             processSendError(task)
             return false
         }
-
         val sim = sim(task.simSlot!!)
         if (sim == null) {
             SmartLog.e("Sim card is null")
@@ -144,7 +154,18 @@ class TaskManager(
             taskRepository.taskOnProcess(taskEntity = task, simSlot = task.simSlot ?: return false)
         } catch (_: Exception) {
         }
+        delaySmsSending(task)
+        if (task.simSlot == 0) {
+            sentSmsNCountFirst++
+        } else if (task.simSlot == 1) {
+            sentSmsNCountSecond++
+        }
+        val status = sendSms(sim, task)
+        sendStatus(status, task)
+        return status
+    }
 
+    private suspend fun delaySmsSending(task: TaskEntity) {
         if (task.simSlot == 0) {
             while (sentSmsNCountFirst >= smsLimit) {
                 delay(50L)
@@ -160,14 +181,9 @@ class TaskManager(
             sentSmsNCountFirst = 0
             sentSmsNCountSecond = 0
         }, smsLimitInterval)
+    }
 
-        if (task.simSlot == 0) {
-            sentSmsNCountFirst++
-        } else if (task.simSlot == 1) {
-            sentSmsNCountSecond++
-        }
-        val status = sendSms(sim, task)
-
+    private suspend fun sendStatus(status: Boolean, task: TaskEntity) {
         if (status) {
             try {
                 taskRepository.taskOnDelivered(task)
@@ -181,14 +197,26 @@ class TaskManager(
                 SmartLog.e("Failed send status ${task.id} ${TaskStatus.ERROR}")
             }
         }
+    }
 
-        return status
+    private fun logSignalStrength() {
+        if (ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            SmartLog.e("SignalStrength = ${ConnectionManager.getSignalStrength()}")
+        }
+        SmartLog.e("NetworkGeneration = ${ConnectionManager.getNetworkGeneration()}")
     }
 
     private suspend fun processSendError(task: TaskEntity) {
         if (task.method == TaskMethod.VERIFY_PHONE_NUMBER) {
             NotificationService.showVerificationFailedNotification(context, task)
             emitValidationCompletion(task.simSlot)
+        }
+        if (task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
+            NotificationService.showAutoVerificationFailedNotification(context)
         }
         taskRepository.taskOnError(task)
     }

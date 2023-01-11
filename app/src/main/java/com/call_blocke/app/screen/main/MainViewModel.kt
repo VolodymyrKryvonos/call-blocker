@@ -196,7 +196,8 @@ class MainViewModel : ViewModel() {
             if (firstSim != null) {
                 firstSimValidationInfo.emitAll(
                     settingsRepository.checkSimCard(
-                        firstSim.iccId ?: ""
+                        firstSim.iccId ?: "",
+                        firstSim.simSlotIndex
                     )
                 )
             }
@@ -205,7 +206,8 @@ class MainViewModel : ViewModel() {
             if (secondSim != null) {
                 secondSimValidationInfo.emitAll(
                     settingsRepository.checkSimCard(
-                        secondSim.iccId ?: ""
+                        secondSim.iccId ?: "",
+                        secondSim.simSlotIndex
                     )
                 )
             }

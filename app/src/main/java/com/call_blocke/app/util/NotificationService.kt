@@ -140,4 +140,31 @@ object NotificationService {
         )
     }
 
+    fun showAutoVerificationFailedNotification(context: Context) {
+        val pendingIntent: PendingIntent =
+            Intent(context, MainActivity::class.java).let { notificationIntent ->
+                PendingIntent.getActivity(
+                    context,
+                    0,
+                    notificationIntent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            }
+        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationCompat.Builder(context, EVENT_NOTIFICATION_CHANNEL_ID)
+        } else {
+            NotificationCompat.Builder(context)
+        }
+        notificationBuilder.setContentTitle(context.getString(R.string.auto_verification_failed))
+            .setSmallIcon(R.drawable.app_logo)
+            .setContentIntent(pendingIntent)
+            .setCategory(Notification.CATEGORY_EVENT)
+            .setAutoCancel(true)
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as
+                    NotificationManager
+        notificationManager.notify(799, notificationBuilder.build())
+
+    }
+
 }

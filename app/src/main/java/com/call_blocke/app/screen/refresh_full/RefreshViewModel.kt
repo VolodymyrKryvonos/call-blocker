@@ -68,12 +68,17 @@ class RefreshViewModel : ViewModel() {
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             if (simInfo != null) {
-                settingsRepository.checkSimCard(simInfo.iccId ?: "").collectLatest {
-                    simValidationInfo.emit(it)
-                    if (it.status == SimValidationStatus.INVALID && simValidationState.value != ValidationState.FAILED) {
-                        simValidationState.emit(ValidationState.INVALID)
+                settingsRepository.checkSimCard(simInfo.iccId ?: "", simInfo.simSlotIndex)
+                    .collectLatest {
+                        simValidationInfo.emit(it)
+                        if (it.status == SimValidationStatus.INVALID && simValidationState.value != ValidationState.FAILED) {
+                            simValidationState.emit(ValidationState.INVALID)
+                            return@collectLatest
+                        }
+                        if (it.status == SimValidationStatus.AUTO_VALIDATION) {
+                            simValidationState.emit(ValidationState.AUTO_VALIDATION)
+                        }
                     }
-                }
             }
         }
     }

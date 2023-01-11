@@ -36,4 +36,5 @@ dependencies {
 
     implementation (project(":loger"))
     implementation(project(mapOf("path" to ":model")))
+    implementation(project(mapOf("path" to ":common")))
 }

@@ -7,7 +7,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.call_blocke.app.broad_cast.SimSlotReceiver
-import com.call_blocke.app.util.ConnectionManager
+import com.example.common.ConnectionManager
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.app.worker_manager.ClearPhoneNumbersTableScheduler
 import com.call_blocke.db.SmsBlockerDatabase

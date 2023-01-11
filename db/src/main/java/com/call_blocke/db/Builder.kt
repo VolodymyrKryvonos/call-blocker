@@ -14,6 +14,7 @@ enum class ValidationState {
     PROCESSING,
     SUCCESS,
     INVALID,
+    AUTO_VALIDATION,
     NONE
 }
 

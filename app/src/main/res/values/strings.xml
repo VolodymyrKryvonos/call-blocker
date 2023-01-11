@@ -1,6 +1,4 @@
 <resources>
-    <!--    <string name="app_name">Bottega SMS</string>-->
-    <string name="app_name">ASAR</string>
 
     <string name="login_title">Welcome</string>
 
@@ -88,5 +86,6 @@
     <string name="your_verification_failed">Sorry, could not verify your number %s, please try again</string>
     <string name="verification_failed">Verification failed</string>
     <string name="verification_failed_check_entered_number">Verification was failed. Please check entered phone number. If you find a mistake, please enter the correct number. </string>
+    <string name="auto_verification_failed">"Verification SMS wasn't delivered. "</string>
 
 </resources>

@@ -1,6 +1,7 @@
 package com.call_blocke.app.screen.sim_info
 
 import android.telephony.SubscriptionInfo
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
@@ -8,6 +9,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.runtime.*
@@ -19,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -31,11 +34,8 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.ValidationState
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.model.Resource
-import com.rokobit.adstv.ui.element.AlertDialog
-import com.rokobit.adstv.ui.element.Button
-import com.rokobit.adstv.ui.element.Field
-import com.rokobit.adstv.ui.element.TextNormal
-import com.rokobit.adstv.ui.element.Title
+import com.example.common.CountryCodeExtractor
+import com.rokobit.adstv.ui.element.*
 import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor
@@ -171,9 +171,11 @@ private fun VerifyNumberDialog(
     validationState: State<Resource<Unit>>,
     onClose: () -> Unit
 ) {
+    val countryCode = CountryCodeExtractor.getCountryPhoneCode(simID)
+    Log.e("CountryCode", countryCode ?: "")
     val keyboardController = LocalSoftwareKeyboardController.current
     val phoneNumber = remember {
-        mutableStateOf("")
+        mutableStateOf("+${CountryCodeExtractor.getCountryPhoneCode(simID) ?: ""}")
     }
     val monthlyLimit = remember {
         mutableStateOf("")
@@ -191,15 +193,15 @@ private fun VerifyNumberDialog(
         title = stringResource(id = R.string.verifyPhoneNumber),
         onClose = onClose,
         content = {
-            Field(
+            PhoneNumberInputField(
                 hint = stringResource(id = R.string.phone_number),
-                value = phoneNumber,
                 isError = !isCorrectNumber,
                 onValueChange = {
                     phoneNumber.value = it
                     isCorrectNumber = isPhoneValid(it)
                 },
-                keyboardType = KeyboardType.Number,
+                value = phoneNumber,
+                keyboardType = KeyboardType.Phone,
                 icon = Icons.Filled.Phone
             )
             Spacer(modifier = Modifier.height(10.dp))
@@ -228,7 +230,7 @@ private fun VerifyNumberDialog(
                         SendingSMSWorker.start(context = context)
                     }
                     viewModel.validatePhoneNumber(
-                        phoneNumber.value,
+                        phoneNumber.value.removePrefix("+"),
                         simID,
                         monthlyLimit.value,
                         simSlot = simSlot
@@ -258,7 +260,7 @@ private fun SimInfoCard(
     shape = RoundedCornerShape(15),
     backgroundColor = when (validationState) {
         ValidationState.INVALID -> Color.Red
-        ValidationState.PROCESSING, ValidationState.FAILED -> Color.Gray
+        ValidationState.PROCESSING, ValidationState.FAILED, ValidationState.AUTO_VALIDATION -> Color.Gray
         else -> secondaryColor
     },
     enabled = validationState == ValidationState.INVALID || validationState == ValidationState.FAILED,

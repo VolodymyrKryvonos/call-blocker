@@ -10,5 +10,6 @@ enum class SimValidationStatus{
     VALID,
     INVALID,
     PROCESSING,
+    AUTO_VALIDATION,
     UNKNOWN
 }

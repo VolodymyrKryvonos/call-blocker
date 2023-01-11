@@ -1,4 +1,4 @@
-package com.call_blocke.app.util
+package com.example.common
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -22,11 +22,11 @@ object ConnectionManager {
     }
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
-    fun getSignalStrength(): String? {
-        var strength: String? = null
+    fun getSignalStrength(): Int? {
+        var strength: Int? = null
         val cellInfos = telephonyManager?.allCellInfo
         if (getNetworkGeneration() == "WIFI") {
-            strength = getWifiSignalStrength().toString()
+            strength = getWifiSignalStrength()
         } else
             if (cellInfos != null) {
                 for (i in cellInfos.indices) {
@@ -34,19 +34,19 @@ object ConnectionManager {
                         if (cellInfos[i] is CellInfoWcdma) {
                             val cellInfoWcdma = cellInfos[i] as CellInfoWcdma
                             val cellSignalStrengthWcdma = cellInfoWcdma.cellSignalStrength
-                            strength = cellSignalStrengthWcdma.dbm.toString()
+                            strength = cellSignalStrengthWcdma.dbm
                         } else if (cellInfos[i] is CellInfoGsm) {
                             val cellInfoGsm = cellInfos[i] as CellInfoGsm
                             val cellSignalStrengthGsm = cellInfoGsm.cellSignalStrength
-                            strength = cellSignalStrengthGsm.dbm.toString()
+                            strength = cellSignalStrengthGsm.dbm
                         } else if (cellInfos[i] is CellInfoLte) {
                             val cellInfoLte = cellInfos[i] as CellInfoLte
                             val cellSignalStrengthLte = cellInfoLte.cellSignalStrength
-                            strength = cellSignalStrengthLte.dbm.toString()
+                            strength = cellSignalStrengthLte.dbm
                         } else if (cellInfos[i] is CellInfoCdma) {
                             val cellInfoCdma = cellInfos[i] as CellInfoCdma
                             val cellSignalStrengthCdma = cellInfoCdma.cellSignalStrength
-                            strength = cellSignalStrengthCdma.dbm.toString()
+                            strength = cellSignalStrengthCdma.dbm
                         }
                     }
                 }

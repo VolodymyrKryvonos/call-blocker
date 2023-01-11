@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.rokobit.adstv.ui.mainFont
@@ -143,6 +144,56 @@ fun Field(
             )
         },
         visualTransformation = visualTransformation,
+        isError = isError
+    )
+}
+
+@Composable
+@Preview
+fun PhoneNumberInputField(
+    hint: String = "",
+    isError: Boolean = false,
+    isEnable: Boolean = true,
+    keyboardType: KeyboardType = KeyboardType.Phone,
+    icon: ImageVector = Icons.Filled.Email,
+    value: MutableState<String> = remember {
+        mutableStateOf("")
+    },
+    onValueChange: (String) -> Unit = {
+        value.value = it
+    },
+) {
+    OutlinedTextField(
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.None,
+            autoCorrect = true,
+            keyboardType = keyboardType
+        ),
+        value = value.value,
+        onValueChange = onValueChange,
+        label = {
+            Text(
+                text = hint,
+                fontFamily = mainFont,
+                fontSize = 14.sp
+            )
+        },
+        enabled = isEnable,
+        textStyle = TextStyle(
+            fontSize = 18.sp,
+            fontFamily = mainFont,
+        ),
+        shape = RoundedCornerShape(20),
+        singleLine = true,
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = TextFieldDefaults.outlinedTextFieldColors(),
+        leadingIcon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null
+            )
+        },
         isError = isError
     )
 }

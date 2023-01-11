@@ -9,11 +9,11 @@ import androidx.core.app.ActivityCompat
 import androidx.work.*
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.TaskManager
-import com.call_blocke.app.util.ConnectionManager
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.TaskMessage
+import com.example.common.ConnectionManager
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.rokobit.adstvv_unit.loger.SmartLog
@@ -126,6 +126,7 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
                 }
             }.launchIn(this)
             taskManager.checkConnection()
+            taskManager.sendSignalStrength()
         }
         return Result.success()
     }

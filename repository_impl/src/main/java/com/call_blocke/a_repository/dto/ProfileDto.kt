@@ -11,6 +11,8 @@ data class ProfileDto(
     val delayIsConnected: Int,
     @SerializedName("delay_sms_send")
     val delaySmsSend: Int,
+    @SerializedName("delay_signal_strength")
+    val delaySignalStrength: Int,
     @SerializedName("is_connected")
     val isConnected: Boolean,
     @SerializedName("is_keep_alive")
@@ -40,6 +42,7 @@ data class ProfileDto(
         return Profile(
             delayIsConnected,
             delaySmsSend,
+            delaySignalStrength,
             isConnected,
             isKeepAlive,
             keepAliveDelay,

@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,7 +39,6 @@ import kotlinx.coroutines.delay
 @ExperimentalAnimationApi
 @ExperimentalComposeUiApi
 @Composable
-@Preview
 fun SplashScreen(mViewModel: SplashViewModel, deapLink: String? = null) {
     val isPermissionsGranted by mViewModel.isPermissionGranted.observeAsState(initial = null)
     val isAppDefault by mViewModel.isAppDefault.observeAsState(initial = null)

@@ -225,7 +225,6 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 mViewMode.simsInfo()
                 mViewMode.getProfile()
                 mViewMode.resetSimIfChanged(context)
-                mViewMode.checkIsSimCardsShouldBeValidated()
             }
             else -> {}
         }
@@ -268,13 +267,14 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 when (i) {
                     1 -> {
                         if (isExecutorRunning) {
-                            mViewMode.notifyServerUserStopService()
                             SmartLog.e("User stop service")
                             mViewMode.stopExecutor(context)
+                            mViewMode.notifyServerUserStopService()
                         } else {
                             SmartLog.e("User start service")
-                            mViewMode.checkIsSimCardsShouldBeValidated()
                             mViewMode.runExecutor(context)
+                            mViewMode.checkSimCards(context)
+                            mViewMode.checkIsSimCardsShouldBeValidated()
                         }
                     }
                     2 -> navController.navigate("refresh")

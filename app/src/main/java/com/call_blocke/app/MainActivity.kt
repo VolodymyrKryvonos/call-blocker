@@ -54,6 +54,7 @@ class MainActivity : ComponentActivity() {
                         .userIsAuthLiveData
                         .observeAsState(initial = SmsBlockerDatabase.userToken != null)
 
+
                     if (isUserAuth)
                         MainView(intent?.data?.toString())
                     else

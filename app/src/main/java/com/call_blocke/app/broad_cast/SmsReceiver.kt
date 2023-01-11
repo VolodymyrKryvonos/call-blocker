@@ -59,19 +59,21 @@ class SmsReceiver : BroadcastReceiver() {
         RepositoryImp.settingsRepository.confirmValidation(
             simSlot = verificationSms.simSlot,
             iccid = verificationSms.simIccid,
-            verificationCode = verificationSms.verificationCode
+            verificationCode = verificationSms.verificationCode ?: ""
         ).collectLatest {
-            if (it is Resource.Success) {
-                emitValidationCompletion(verificationSms.simSlot, ValidationState.SUCCESS)
-                NotificationService.showPhoneNumberVerifiedNotification(
-                    sms.senderNumber,
-                    context,
-                    verificationSms.simSlot.last().digitToIntOrNull() ?: -1
-                )
-                return@collectLatest
-            }
-            if (it is Resource.Error) {
-                emitValidationCompletion(verificationSms.simSlot, ValidationState.FAILED)
+            if (verificationSms.uniqueId == SmsBlockerDatabase.deviceID) {
+                if (it is Resource.Success) {
+                    emitValidationCompletion(verificationSms.simSlot, ValidationState.SUCCESS)
+                    NotificationService.showPhoneNumberVerifiedNotification(
+                        sms.senderNumber,
+                        context,
+                        verificationSms.simSlot.last().digitToIntOrNull() ?: -1
+                    )
+                    return@collectLatest
+                }
+                if (it is Resource.Error) {
+                    emitValidationCompletion(verificationSms.simSlot, ValidationState.FAILED)
+                }
             }
         }
         return true
@@ -130,5 +132,7 @@ data class VerificationSms(
     @SerializedName("sim_iccid")
     val simIccid: String,
     @SerializedName("verification_code")
-    val verificationCode: String
+    val verificationCode: String?,
+    @SerializedName("unique_id")
+    val uniqueId: String
 )

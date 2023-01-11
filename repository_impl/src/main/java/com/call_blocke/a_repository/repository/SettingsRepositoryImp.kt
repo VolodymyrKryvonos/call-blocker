@@ -2,12 +2,12 @@ package com.call_blocke.a_repository.repository
 
 import android.content.Context
 import android.telephony.TelephonyManager
+import androidx.annotation.RequiresPermission
 import com.call_blocke.a_repository.BuildConfig
 import com.call_blocke.a_repository.Const
 import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.request.GetProfileRequest
 import com.call_blocke.a_repository.rest.SettingsRest
-import com.call_blocke.a_repository.unit.CountryCodeExtractor
 import com.call_blocke.a_repository.unit.NetworkInfo
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
@@ -17,6 +17,8 @@ import com.call_blocke.rest_work_imp.model.Resource
 import com.call_blocke.rest_work_imp.model.SimValidationInfo
 import com.call_blocke.rest_work_imp.model.SimValidationStatus
 import com.call_blocker.model.ConnectionStatus
+import com.example.common.ConnectionManager
+import com.example.common.CountryCodeExtractor
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.Flow
@@ -202,11 +204,20 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
     override suspend fun checkSimCard(
-        iccId: String
+        iccId: String,
+        simSlot: Int
     ) = flow {
         try {
+            val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(iccId)
             emit(
-                settingsRest.checkSimCard(CheckSimCardRequest(iccId)).toSimValidationInfo()
+                settingsRest.checkSimCard(
+                    CheckSimCardRequest(
+                        iccId,
+                        countryCode,
+                        "msisdn_${simSlot + 1}"
+                    )
+                )
+                    .toSimValidationInfo()
             )
         } catch (e: Exception) {
             emit(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
@@ -239,5 +250,20 @@ class SettingsRepositoryImp : SettingsRepository() {
             SmartLog.e("Failed confirm validation ${getStackTrace(e)}")
         }
 
+    }
+
+    @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
+    override suspend fun sendSignalStrengthInfo() {
+        try {
+            settingsRest.sendSignalStrengthInfo(
+                SignalStrengthRequest(
+                    signalStrength = ConnectionManager.getSignalStrength()
+                        ?: throw Exception("Signal strength is null"),
+                    signalGeneration = ConnectionManager.getNetworkGeneration()
+                )
+            )
+        } catch (e: Exception) {
+            SmartLog.e("Failed send signal strength ${getStackTrace(e)}")
+        }
     }
 }

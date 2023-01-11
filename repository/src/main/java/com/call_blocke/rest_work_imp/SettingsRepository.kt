@@ -69,7 +69,8 @@ abstract class SettingsRepository {
     abstract suspend fun checkConnection(): Resource<ConnectionStatus>
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
     abstract suspend fun checkSimCard(
-        iccId: String
+        iccId: String,
+        simSlot: Int
     ): Flow<SimValidationInfo>
 
     abstract suspend fun confirmValidation(
@@ -77,4 +78,6 @@ abstract class SettingsRepository {
         simSlot: String,
         verificationCode: String
     ): Flow<Resource<Unit>>
+
+    abstract suspend fun sendSignalStrengthInfo()
 }

@@ -39,6 +39,16 @@ android {
         buildConfigField("int", "patch", "${Config.patch}")
     }
 
+    flavorDimensions += "version"
+
+    productFlavors {
+        create("bottega_sms") {
+            resValue("string", "app_name", "Bottega SMS")
+        }
+        create("asar") {
+            resValue("string", "app_name", "ASAR")
+        }
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -101,6 +111,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics-ktx")
 
     implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation(project(mapOf("path" to ":common")))
 
     impTester()
 
