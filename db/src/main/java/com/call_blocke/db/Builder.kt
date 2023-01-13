@@ -24,6 +24,24 @@ object SmsBlockerDatabase {
 
     val secondSimValidationState = MutableStateFlow(ValidationState.NONE)
 
+    var simFirstAutoValidationResult: AutoValidationResult
+        get() {
+            return (preference
+                ?: throw DbModuleException("please init db module")).simFirstAutoValidationResult
+        }
+        set(value) {
+            preference?.simFirstAutoValidationResult = value
+        }
+
+    var simSecondAutoValidationResult: AutoValidationResult
+        get() {
+            return (preference
+                ?: throw DbModuleException("please init db module")).simSecondAutoValidationResult
+        }
+        set(value) {
+            preference?.simSecondAutoValidationResult = value
+        }
+
     private var preference: Preference? = null
 
     private var database: AppDatabase? = null

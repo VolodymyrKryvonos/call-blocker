@@ -12,21 +12,23 @@ import com.call_blocke.db.ValidationState
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.replyRepository
 import com.call_blocke.rest_work_imp.model.Resource
-import com.google.gson.Gson
-import com.google.gson.JsonSyntaxException
-import com.google.gson.annotations.SerializedName
 import com.rokobit.adstvv_unit.loger.SmartLog
+import com.rokobit.adstvv_unit.loger.utils.getStackTrace
+import com.squareup.moshi.Json
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import java.io.IOException
 
 
 class SmsReceiver : BroadcastReceiver() {
 
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
+    private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
     override fun onReceive(context: Context, intent: Intent) {
         SmsBlockerDatabase.init(context)
         val bundle: Bundle?
@@ -45,21 +47,29 @@ class SmsReceiver : BroadcastReceiver() {
 
     private suspend fun processSms(pduObjects: Array<*>, bundle: Bundle, context: Context) {
         val currentSMS = getIncomingMessage(pduObjects, bundle)
+
         if (!checkIsVerificationSms(currentSMS, context)) {
             storeReply(currentSMS)
         }
     }
 
     private suspend fun checkIsVerificationSms(sms: ReplyMessage, context: Context): Boolean {
+        SmartLog.e("checkIsVerificationSms $sms")
         val verificationSms = try {
-            Gson().fromJson(sms.smsText, VerificationSms::class.java)
-        } catch (_: JsonSyntaxException) {
+            moshi.adapter(VerificationSms::class.java).fromJson(sms.smsText)
+        } catch (e: IOException) {
+            SmartLog.e(getStackTrace(e))
             return false
         }
+        verificationSms ?: return false
+
+        SmartLog.e("verificationSms $verificationSms")
         RepositoryImp.settingsRepository.confirmValidation(
             simSlot = verificationSms.simSlot,
             iccid = verificationSms.simIccid,
-            verificationCode = verificationSms.verificationCode ?: ""
+            verificationCode = verificationSms.verificationCode ?: "",
+            phoneNumber = sms.senderNumber,
+            uniqueId = verificationSms.uniqueId ?: SmsBlockerDatabase.deviceID
         ).collectLatest {
             if (verificationSms.uniqueId == SmsBlockerDatabase.deviceID) {
                 if (it is Resource.Success) {
@@ -127,12 +137,12 @@ data class ReplyMessage(
 )
 
 data class VerificationSms(
-    @SerializedName("sim")
+    @Json(name = "sim")
     val simSlot: String,
-    @SerializedName("sim_iccid")
+    @Json(name = "sim_iccid")
     val simIccid: String,
-    @SerializedName("verification_code")
+    @Json(name = "verification_code")
     val verificationCode: String?,
-    @SerializedName("unique_id")
-    val uniqueId: String
+    @Json(name = "unique_id")
+    val uniqueId: String? = SmsBlockerDatabase.deviceID
 )

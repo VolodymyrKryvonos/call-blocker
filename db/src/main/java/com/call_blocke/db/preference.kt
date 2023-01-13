@@ -7,6 +7,10 @@ import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocker.model.Profile
 import com.google.gson.Gson
 
+enum class AutoValidationResult {
+    NONE, FAILED, SUCCESS
+}
+
 class Preference(context: Context) {
 
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
@@ -141,14 +145,6 @@ class Preference(context: Context) {
             }
         }
 
-    var lastSimSlotUsed: Int
-        get() = sharedPreferences.getInt("last_sim_slot_used", 0)
-        set(value) {
-            with(sharedPreferences.edit()) {
-                putInt("last_sim_slot_used", value)
-                commit()
-            }
-        }
 
     var systemDetail: SystemDetailEntity
         get() {
@@ -225,4 +221,39 @@ class Preference(context: Context) {
             }
         }
 
+    var simFirstAutoValidationResult: AutoValidationResult
+        get() = try {
+            AutoValidationResult.valueOf(
+                sharedPreferences.getString(
+                    "simFirstAutoValidationResult",
+                    ""
+                ) ?: ""
+            )
+        } catch (e: IllegalArgumentException) {
+            AutoValidationResult.NONE
+        }
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("simFirstAutoValidationResult", value.name)
+                commit()
+            }
+        }
+
+    var simSecondAutoValidationResult: AutoValidationResult
+        get() = try {
+            AutoValidationResult.valueOf(
+                sharedPreferences.getString(
+                    "simSecondAutoValidationResult",
+                    ""
+                ) ?: ""
+            )
+        } catch (e: IllegalArgumentException) {
+            AutoValidationResult.NONE
+        }
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putString("simSecondAutoValidationResult", value.name)
+                commit()
+            }
+        }
 }

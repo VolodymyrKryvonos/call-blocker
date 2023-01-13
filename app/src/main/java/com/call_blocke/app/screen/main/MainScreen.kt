@@ -273,7 +273,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                         } else {
                             SmartLog.e("User start service")
                             mViewMode.runExecutor(context)
-                            mViewMode.checkSimCards(context)
+                            mViewMode.checkSimCards(context, createAutoVerificationSms = true)
                             mViewMode.checkIsSimCardsShouldBeValidated()
                         }
                     }

@@ -12,4 +12,6 @@ data class CheckSimCardRequest(
     val simSlot: String,
     @SerializedName("unique_id")
     val uniqueId: String = SmsBlockerDatabase.deviceID,
+    @SerializedName("create_auto_verification_sms")
+    val createAutoVerificationSms: Boolean = false
 )

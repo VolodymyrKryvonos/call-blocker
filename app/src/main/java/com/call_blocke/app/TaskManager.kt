@@ -12,6 +12,7 @@ import android.telephony.SubscriptionInfo
 import androidx.core.app.ActivityCompat
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.app.worker_manager.SendingSMSWorker
+import com.call_blocke.db.AutoValidationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.TaskMethod
 import com.call_blocke.db.ValidationState
@@ -81,7 +82,6 @@ class TaskManager(
                         sendSignalStrength()
                         RepositoryImp.taskRepository.reconnect()
                         if (SmsBlockerDatabase.profile?.isConnected == true) {
-                            checkConnectionJob?.cancel()
                             checkConnection()
                         }
                     }
@@ -93,6 +93,7 @@ class TaskManager(
 
     @OptIn(ExperimentalTime::class)
     fun sendSignalStrength() {
+        sendSignalStrengthJob?.cancel()
         sendSignalStrengthJob = launch {
             while (SendingSMSWorker.isRunning.value) {
                 val delay =
@@ -107,6 +108,7 @@ class TaskManager(
 
     @OptIn(ExperimentalTime::class)
     fun checkConnection() {
+        checkConnectionJob?.cancel()
         checkConnectionJob = launch {
             while (SendingSMSWorker.isRunning.value) {
                 val delay =
@@ -216,6 +218,11 @@ class TaskManager(
             emitValidationCompletion(task.simSlot)
         }
         if (task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
+            if (task.simSlot == 0) {
+                SmsBlockerDatabase.simFirstAutoValidationResult = AutoValidationResult.FAILED
+            } else {
+                SmsBlockerDatabase.simSecondAutoValidationResult = AutoValidationResult.FAILED
+            }
             NotificationService.showAutoVerificationFailedNotification(context)
         }
         taskRepository.taskOnError(task)

@@ -1,7 +1,6 @@
 package com.call_blocke.app.screen.sim_info
 
 import android.telephony.SubscriptionInfo
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.slideInVertically
@@ -21,7 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -29,17 +27,26 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.app.screen.refresh_full.RefreshViewModel
+import com.call_blocke.app.screen.refresh_full.SnackbarVisibility
 import com.call_blocke.app.worker_manager.SendingSMSWorker
+import com.call_blocke.db.AutoValidationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.ValidationState
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocke.rest_work_imp.model.SimValidationInfo
+import com.call_blocke.rest_work_imp.model.SimValidationStatus
 import com.example.common.CountryCodeExtractor
 import com.rokobit.adstv.ui.element.*
 import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor
 import kotlinx.coroutines.delay
+
+data class VerifyingSim(
+    val subscriptionInfo: SubscriptionInfo,
+    val simValidationInfo: SimValidationInfo
+)
 
 @OptIn(ExperimentalAnimationApi::class)
 @ExperimentalMaterialApi
@@ -54,12 +61,14 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
         .collectAsState()
     val context = LocalContext.current
     val openDialog = remember { mutableStateOf(false) }
-    val verifyingSim: MutableState<SubscriptionInfo?> = remember {
+    val verifyingSim: MutableState<VerifyingSim?> = remember {
         mutableStateOf(null)
     }
     val firstSimValidationInfo = mViewModel.firstSimValidationInfo.collectAsState()
     val secondSimValidationInfo = mViewModel.secondSimValidationInfo.collectAsState()
     val validationState = mViewModel.validationState.collectAsState(Resource.None)
+
+    val snackbarVisibility = mViewModel.snackbarVisibility.collectAsState()
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
@@ -93,7 +102,7 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
                             validationState = firstSimValidationState.value
                         ) {
                             openDialog.value = true
-                            verifyingSim.value = it
+                            verifyingSim.value = VerifyingSim(it, firstSimValidationInfo.value)
                         }
                     }
                 }
@@ -109,7 +118,7 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
                             validationState = secondSimValidationState.value
                         ) {
                             openDialog.value = true
-                            verifyingSim.value = it
+                            verifyingSim.value = VerifyingSim(it, secondSimValidationInfo.value)
                         }
                     }
                 }
@@ -120,8 +129,7 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
     if (openDialog.value && verifyingSim.value != null) {
         VerifyNumberDialog(
             viewModel = mViewModel,
-            simID = verifyingSim.value!!.iccId,
-            simSlot = verifyingSim.value!!.simSlotIndex,
+            verifyingSim = verifyingSim.value!!,
             modifier = Modifier.fillMaxSize(),
             validationState = validationState,
             onClose = {
@@ -133,7 +141,7 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
 
     AnimatedVisibility(
         modifier = Modifier.align(alignment = Alignment.BottomCenter),
-        visible = validationState.value is Resource.Error || validationState.value is Resource.Success,
+        visible = snackbarVisibility.value == SnackbarVisibility.Visible,
         enter = slideInVertically(
             initialOffsetY = { -40 }
         ),
@@ -142,10 +150,9 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
         Snackbar(backgroundColor = primaryColor) {
             TextNormal(
                 text = stringResource(
-                    id = if (validationState.value is Resource.Error) {
-                        R.string.something_went_wrong
-                    } else {
-                        R.string.process_verification
+                    id = when (validationState.value) {
+                        is Resource.Error -> R.string.something_went_wrong
+                        else -> R.string.process_verification
                     }
                 ),
                 color = secondaryColor
@@ -153,10 +160,10 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
         }
     }
 
-    if (validationState.value is Resource.Error || validationState.value is Resource.Success) {
+    if (snackbarVisibility.value == SnackbarVisibility.Visible) {
         LaunchedEffect(key1 = Unit) {
             delay(2500L)
-            mViewModel.validationState.emit(Resource.None)
+            mViewModel.hideSnackbar()
         }
     }
 }
@@ -165,17 +172,14 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
 @Composable
 private fun VerifyNumberDialog(
     viewModel: RefreshViewModel,
-    simID: String,
-    simSlot: Int,
+    verifyingSim: VerifyingSim,
     modifier: Modifier,
     validationState: State<Resource<Unit>>,
     onClose: () -> Unit
 ) {
-    val countryCode = CountryCodeExtractor.getCountryPhoneCode(simID)
-    Log.e("CountryCode", countryCode ?: "")
     val keyboardController = LocalSoftwareKeyboardController.current
     val phoneNumber = remember {
-        mutableStateOf("+${CountryCodeExtractor.getCountryPhoneCode(simID) ?: ""}")
+        mutableStateOf("+${CountryCodeExtractor.getCountryPhoneCode(verifyingSim.subscriptionInfo.iccId) ?: ""}")
     }
     val monthlyLimit = remember {
         mutableStateOf("")
@@ -229,18 +233,36 @@ private fun VerifyNumberDialog(
                     if (!SendingSMSWorker.isRunning.value) {
                         SendingSMSWorker.start(context = context)
                     }
+                    viewModel.showSnackbar()
                     viewModel.validatePhoneNumber(
                         phoneNumber.value.removePrefix("+"),
-                        simID,
+                        verifyingSim.subscriptionInfo.iccId,
                         monthlyLimit.value,
-                        simSlot = simSlot
+                        simSlot = verifyingSim.subscriptionInfo.simSlotIndex
                     )
-                    if (simSlot == 0) {
+                    if (verifyingSim.subscriptionInfo.simSlotIndex == 0) {
                         SmsBlockerDatabase.firstSimSlotValidationNumber = phoneNumber.value
                     } else {
                         SmsBlockerDatabase.secondSimSlotValidationNumber = phoneNumber.value
                     }
                     keyboardController?.hide()
+                }
+            }
+            if (verifyingSim.simValidationInfo.status == SimValidationStatus.AUTO_VALIDATION) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    title = stringResource(id = R.string.auto_detect_number),
+                    modifier = Modifier.fillMaxWidth(),
+                    isEnable = true,
+                    fontSize = 16.sp
+                ) {
+                    viewModel.showSnackbar()
+                    viewModel.checkSimCard(
+                        verifyingSim.subscriptionInfo.simSlotIndex,
+                        context,
+                        true
+                    )
+                    onClose()
                 }
             }
         })
@@ -258,12 +280,14 @@ private fun SimInfoCard(
     modifier = Modifier
         .fillMaxWidth(),
     shape = RoundedCornerShape(15),
-    backgroundColor = when (validationState) {
-        ValidationState.INVALID -> Color.Red
-        ValidationState.PROCESSING, ValidationState.FAILED, ValidationState.AUTO_VALIDATION -> Color.Gray
-        else -> secondaryColor
-    },
-    enabled = validationState == ValidationState.INVALID || validationState == ValidationState.FAILED,
+    backgroundColor = getBackgroundColor(
+        if (data.simSlot == 0) {
+            SmsBlockerDatabase.simFirstAutoValidationResult
+        } else {
+            SmsBlockerDatabase.simSecondAutoValidationResult
+        }, validationState
+    ),
+    enabled = isManualValidationEnabled(validationState),
     elevation = 6.dp,
     onClick = onClick,
 ) {
@@ -312,5 +336,31 @@ private fun SimInfoCard(
                 color = Color.Red
             )
         }
+    }
+}
+
+fun isManualValidationEnabled(
+    validationState: ValidationState
+): Boolean {
+    return validationState == ValidationState.INVALID ||
+            validationState == ValidationState.FAILED ||
+            validationState == ValidationState.AUTO_VALIDATION
+}
+
+fun getBackgroundColor(
+    validationResult: AutoValidationResult,
+    validationState: ValidationState
+): Color {
+    return when (validationState) {
+        ValidationState.INVALID -> Color.Red
+        ValidationState.AUTO_VALIDATION -> {
+            if (validationResult == AutoValidationResult.FAILED) {
+                Color.Red
+            } else {
+                Color.Gray
+            }
+        }
+        ValidationState.PROCESSING, ValidationState.FAILED -> Color.Gray
+        else -> secondaryColor
     }
 }

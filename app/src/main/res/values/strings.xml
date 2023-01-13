@@ -86,6 +86,8 @@
     <string name="your_verification_failed">Sorry, could not verify your number %s, please try again</string>
     <string name="verification_failed">Verification failed</string>
     <string name="verification_failed_check_entered_number">Verification was failed. Please check entered phone number. If you find a mistake, please enter the correct number. </string>
-    <string name="auto_verification_failed">"Verification SMS wasn't delivered. "</string>
+    <string name="auto_verification_failed">Auto verification failed</string>
+    <string name="auto_verification_failed_info">Verification SMS wasn\'t delivered. Please enter your phone number manually on the Sims info page.</string>
+    <string name="auto_detect_number">Autodetect number</string>
 
 </resources>

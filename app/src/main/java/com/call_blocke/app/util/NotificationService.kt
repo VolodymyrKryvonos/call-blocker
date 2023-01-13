@@ -160,6 +160,10 @@ object NotificationService {
             .setContentIntent(pendingIntent)
             .setCategory(Notification.CATEGORY_EVENT)
             .setAutoCancel(true)
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(context.getString(R.string.auto_verification_failed_info))
+            )
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as
                     NotificationManager

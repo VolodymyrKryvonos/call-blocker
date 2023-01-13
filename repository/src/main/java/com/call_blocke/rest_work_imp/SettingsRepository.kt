@@ -70,13 +70,16 @@ abstract class SettingsRepository {
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
     abstract suspend fun checkSimCard(
         iccId: String,
-        simSlot: Int
+        simSlot: Int,
+        createAutoVerificationSms: Boolean = false
     ): Flow<SimValidationInfo>
 
     abstract suspend fun confirmValidation(
         iccid: String,
         simSlot: String,
-        verificationCode: String
+        verificationCode: String,
+        phoneNumber: String,
+        uniqueId: String
     ): Flow<Resource<Unit>>
 
     abstract suspend fun sendSignalStrengthInfo()

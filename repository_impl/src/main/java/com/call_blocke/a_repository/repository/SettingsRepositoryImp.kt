@@ -9,6 +9,7 @@ import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.request.GetProfileRequest
 import com.call_blocke.a_repository.rest.SettingsRest
 import com.call_blocke.a_repository.unit.NetworkInfo
+import com.call_blocke.db.AutoValidationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SettingsRepository
@@ -205,20 +206,27 @@ class SettingsRepositoryImp : SettingsRepository() {
 
     override suspend fun checkSimCard(
         iccId: String,
-        simSlot: Int
+        simSlot: Int,
+        createAutoVerificationSms: Boolean,
     ) = flow {
         try {
             val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(iccId)
-            emit(
-                settingsRest.checkSimCard(
-                    CheckSimCardRequest(
-                        iccId,
-                        countryCode,
-                        "msisdn_${simSlot + 1}"
-                    )
+            val response = settingsRest.checkSimCard(
+                CheckSimCardRequest(
+                    iccId,
+                    countryCode,
+                    "msisdn_${simSlot + 1}",
+                    createAutoVerificationSms = createAutoVerificationSms
                 )
-                    .toSimValidationInfo()
             )
+            if (response.status) {
+                if (simSlot == 0) {
+                    SmsBlockerDatabase.simFirstAutoValidationResult = AutoValidationResult.SUCCESS
+                } else {
+                    SmsBlockerDatabase.simSecondAutoValidationResult = AutoValidationResult.SUCCESS
+                }
+            }
+            emit(response.toSimValidationInfo())
         } catch (e: Exception) {
             emit(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
             SmartLog.e("Failed check Sim Card ${getStackTrace(e)}")
@@ -228,8 +236,10 @@ class SettingsRepositoryImp : SettingsRepository() {
     override suspend fun confirmValidation(
         iccid: String,
         simSlot: String,
-        verificationCode: String
-    ) = flow {
+        verificationCode: String,
+        phoneNumber: String,
+        uniqueId: String
+    ): Flow<Resource<Unit>> = flow {
         emit(Resource.Loading<Unit>())
         try {
             settingsRest.confirmSimCardValidation(
@@ -237,11 +247,8 @@ class SettingsRepositoryImp : SettingsRepository() {
                     iccId = iccid,
                     simSlot = simSlot,
                     verificationCode = verificationCode,
-                    phoneNumber = if (simSlot == "msisdn_1") {
-                        SmsBlockerDatabase.firstSimSlotValidationNumber
-                    } else {
-                        SmsBlockerDatabase.secondSimSlotValidationNumber
-                    }
+                    phoneNumber = phoneNumber,
+                    uniqueId = uniqueId
                 )
             )
             emit(Resource.Success<Unit>(Unit))

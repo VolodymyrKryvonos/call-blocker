@@ -189,7 +189,7 @@ class MainViewModel : ViewModel() {
         return isInvalid
     }
 
-    fun checkSimCards(context: Context) {
+    fun checkSimCards(context: Context, createAutoVerificationSms: Boolean = false) {
         val firstSim = firstSim(context)
         val secondSim = secondSim(context)
         viewModelScope.launch(Dispatchers.IO) {
@@ -197,7 +197,8 @@ class MainViewModel : ViewModel() {
                 firstSimValidationInfo.emitAll(
                     settingsRepository.checkSimCard(
                         firstSim.iccId ?: "",
-                        firstSim.simSlotIndex
+                        firstSim.simSlotIndex,
+                        createAutoVerificationSms
                     )
                 )
             }
@@ -207,7 +208,8 @@ class MainViewModel : ViewModel() {
                 secondSimValidationInfo.emitAll(
                     settingsRepository.checkSimCard(
                         secondSim.iccId ?: "",
-                        secondSim.simSlotIndex
+                        secondSim.simSlotIndex,
+                        createAutoVerificationSms
                     )
                 )
             }
