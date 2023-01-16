@@ -8,6 +8,7 @@ package com.call_blocke.a_repository.unit
 
 import com.call_blocke.a_repository.Const
 import com.call_blocke.db.SmsBlockerDatabase
+import com.rokobit.adstvv_unit.loger.SmartLog
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.logging.HttpLoggingInterceptor
@@ -42,7 +43,7 @@ class ApiFactory {
         }
 
 
-        val logging = HttpLoggingInterceptor { }
+        val logging = HttpLoggingInterceptor { SmartLog.e(it) }
         logging.level = HttpLoggingInterceptor.Level.BASIC
         builder?.addInterceptor(logging)
     }
@@ -85,7 +86,6 @@ class ApiFactory {
     }
 
     companion object {
-        var TAG: String = ApiFactory::class.java.simpleName
 
         private const val DEFAULT_TIMEOUT = 15
         const val CONNECT_TIMEOUT = DEFAULT_TIMEOUT

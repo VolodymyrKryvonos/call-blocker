@@ -121,6 +121,19 @@ object SmsBlockerDatabase {
             preference?.smsPerDaySimSecond = value
         }
 
+    var smsPerMonthSimFirst: Int
+        get() = (preference ?: throw DbModuleException("please init db module")).smsPerMonthSimFirst
+        set(value) {
+            preference?.smsPerMonthSimFirst = value
+        }
+
+    var smsPerMonthSimSecond: Int
+        get() = (preference
+            ?: throw DbModuleException("please init db module")).smsPerMonthSimSecond
+        set(value) {
+            preference?.smsPerMonthSimSecond = value
+        }
+
     var lastRefreshTime: Long
         get() = (preference ?: throw DbModuleException("please init db module")).lastRefreshTime
         set(value) {

@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -63,6 +64,7 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
 
     val isSuccessLogin: Boolean? by mViewModel.isSuccessLogin.observeAsState(initial = null)
 
+    val context = LocalContext.current
     Field(
         hint = stringResource(id = R.string.register_login_field),
         value = emailValue,
@@ -108,7 +110,8 @@ fun Fields(mViewModel: AuthViewModel = viewModel()) {
         keyboardController?.hide()
         mViewModel.register(
             email = emailValue.value,
-            password = passwordValue.value
+            password = passwordValue.value,
+            packageName = context.packageName
         )
     }
 }

@@ -8,7 +8,6 @@ import com.call_blocke.a_repository.Const
 import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.request.GetProfileRequest
 import com.call_blocke.a_repository.rest.SettingsRest
-import com.call_blocke.a_repository.unit.NetworkInfo
 import com.call_blocke.db.AutoValidationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
@@ -33,7 +32,13 @@ class SettingsRepositoryImp : SettingsRepository() {
             SettingsRest::class.java
         )
 
-    override suspend fun updateSmsPerDay(context: Context, sim1Limit: Int, sim2Limit: Int) {
+    override suspend fun updateSmsPerDay(
+        context: Context,
+        smsPerDaySimFirst: Int,
+        smsPerDaySimSecond: Int,
+        smsPerMonthSimFirst: Int,
+        smsPerMonthSimSecond: Int,
+    ) {
         try {
             val simInfo =
                 SimUtil.getSIMInfo(context)
@@ -56,19 +61,23 @@ class SettingsRepositoryImp : SettingsRepository() {
             SmartLog.e("CountryCode = $countryCode")
             settingsRest.setSmsPerDay(
                 SmsPerDayRequest(
-                    forSimFirst = sim1Limit,
-                    forSimSecond = sim2Limit,
+                    smsPerDaySimFirst = smsPerDaySimFirst,
+                    smsPerDaySimSecond = smsPerDaySimSecond,
+                    smsPerMonthSimFirst = smsPerMonthSimFirst,
+                    smsPerMonthSimSecond = smsPerMonthSimSecond,
                     firstSimName = firstSimName.toString(),
                     secondSimName = secondSimName.toString(),
                     firstSimICCID = firstSim?.iccId ?: "",
                     secondSimICCID = secondSim?.iccId ?: "",
                     countryCode = countryCode,
-                    connectionType = NetworkInfo.connectionType()
+                    connectionType = ConnectionManager.getNetworkGeneration()
                 )
             )
 
-            SmsBlockerDatabase.smsPerDaySimFirst = sim1Limit
-            SmsBlockerDatabase.smsPerDaySimSecond = sim2Limit
+            SmsBlockerDatabase.smsPerDaySimFirst = smsPerDaySimFirst
+            SmsBlockerDatabase.smsPerDaySimSecond = smsPerDaySimSecond
+            SmsBlockerDatabase.smsPerMonthSimFirst = smsPerMonthSimFirst
+            SmsBlockerDatabase.smsPerMonthSimSecond = smsPerMonthSimSecond
         } catch (e: Exception) {
             SmartLog.e("Failed update sms per day ${getStackTrace(e)}")
         }
@@ -76,7 +85,7 @@ class SettingsRepositoryImp : SettingsRepository() {
 
     override suspend fun blackPhoneNumberList(): List<String> {
         return settingsRest.blackList(
-            TasksRequest()
+            TasksRequest(connectionType = ConnectionManager.getNetworkGeneration())
         ).data.map {
             it.number
         }
@@ -89,6 +98,7 @@ class SettingsRepositoryImp : SettingsRepository() {
             } else {
                 SmsBlockerDatabase.secondSimChanged = false
             }
+            val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(iccid)
             settingsRest.resetSim(
                 RefreshDataForSimRequest(
                     simName = if (simSlot == 0)
@@ -96,7 +106,8 @@ class SettingsRepositoryImp : SettingsRepository() {
                     else
                         "msisdn_2",
                     simICCID = iccid,
-                    simNumber = number
+                    simNumber = number,
+                    countryCode = countryCode
                 )
             )
         } catch (e: Exception) {

@@ -145,6 +145,23 @@ class Preference(context: Context) {
             }
         }
 
+    var smsPerMonthSimFirst: Int
+        get() = sharedPreferences.getInt("smsPerMonthSimFirst", 0)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putInt("smsPerMonthSimFirst", value)
+                commit()
+            }
+        }
+
+    var smsPerMonthSimSecond: Int
+        get() = sharedPreferences.getInt("smsPerMonthSimSecond", 0)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putInt("smsPerMonthSimSecond", value)
+                commit()
+            }
+        }
 
     var systemDetail: SystemDetailEntity
         get() {

@@ -38,19 +38,20 @@ class AuthViewModel : ViewModel() {
         isSuccessLogin.postValue(isSuccess)
     }
 
-    fun register(email: String, password: String) = viewModelScope.launch(Dispatchers.IO) {
-        isSuccessLogin.postValue(null)
+    fun register(email: String, password: String, packageName: String) =
+        viewModelScope.launch(Dispatchers.IO) {
+            isSuccessLogin.postValue(null)
 
-        isLoading.postValue(true)
+            isLoading.postValue(true)
 
-        val isSuccess = userRepository.register(
-            email, password
-        )
+            val isSuccess = userRepository.register(
+                email, password, packageName, BuildConfig.VERSION_NAME
+            )
 
-        isLoading.postValue(false)
+            isLoading.postValue(false)
 
-        isSuccessLogin.postValue(isSuccess)
-    }
+            isSuccessLogin.postValue(isSuccess)
+        }
 
     fun resetPass(email: String) {
         userRepository.reset(email).onEach {

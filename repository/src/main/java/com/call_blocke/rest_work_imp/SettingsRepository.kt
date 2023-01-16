@@ -13,21 +13,33 @@ import kotlinx.coroutines.flow.Flow
 
 abstract class SettingsRepository {
 
-    val currentSmsContFirstSimSlot: Int
-        get() = SmsBlockerDatabase.smsPerDaySimFirst
-
-    val currentSmsContSecondSimSlot: Int
-        get() = SmsBlockerDatabase.smsPerDaySimSecond
-
-    suspend fun setSmsPerDay(forFirstSim: Int, forSecondSim: Int) {
+    suspend fun setSmsPerDay(
+        context: Context,
+        smsPerDaySimFirst: Int,
+        smsPerDaySimSecond: Int,
+        smsPerMonthSimFirst: Int = SmsBlockerDatabase.smsPerMonthSimFirst,
+        smsPerMonthSimSecond: Int = SmsBlockerDatabase.smsPerMonthSimSecond
+    ) {
         try {
-            updateSmsPerDay(RepositoryBuilder.mContext, forFirstSim, forSecondSim)
+            updateSmsPerDay(
+                context,
+                smsPerDaySimFirst,
+                smsPerDaySimSecond,
+                smsPerMonthSimFirst,
+                smsPerMonthSimSecond
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    protected abstract suspend fun updateSmsPerDay(context: Context, sim1Limit: Int, sim2Limit: Int)
+    protected abstract suspend fun updateSmsPerDay(
+        context: Context,
+        smsPerDaySimFirst: Int,
+        smsPerDaySimSecond: Int,
+        smsPerMonthSimFirst: Int,
+        smsPerMonthSimSecond: Int
+    )
 
     protected abstract suspend fun blackPhoneNumberList(): List<String>
 

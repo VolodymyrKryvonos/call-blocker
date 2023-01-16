@@ -31,7 +31,7 @@
     <string name="main_menu_sim_info">Sims info</string>
 
     <string name="settings_title">Settings</string>
-    <string name="settings_set_sms_per_day">Set SMS count per day</string>
+    <string name="settings_set_sms">Set SMS count</string>
     <string name="settings_first_sim_slot_sms_count_hint">First SIM slot</string>
     <string name="settings_secound_sim_slot_sms_count_hint">Second SIM slot</string>
     <string name="settings_set_sms_per_day_button">Apply</string>
@@ -89,5 +89,9 @@
     <string name="auto_verification_failed">Auto verification failed</string>
     <string name="auto_verification_failed_info">Verification SMS wasn\'t delivered. Please enter your phone number manually on the Sims info page.</string>
     <string name="auto_detect_number">Autodetect number</string>
+    <string name="first_sim_card">First SIM Card</string>
+    <string name="sms_count_per_day">SMS count per day</string>
+    <string name="sms_count_per_month">SMS count per month</string>
+    <string name="second_sim_card">Second SIM Card</string>
 
 </resources>

@@ -1,6 +1,5 @@
 package com.call_blocke.a_repository.repository
 
-import android.content.Context
 import android.os.Build
 import com.call_blocke.a_repository.model.LoginRequest
 import com.call_blocke.a_repository.model.RegisterRequest
@@ -11,6 +10,7 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocke.rest_work_imp.UserRepository
 import com.call_blocke.rest_work_imp.model.Resource
+import com.example.common.ConnectionManager
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.flow
@@ -25,7 +25,6 @@ class UserRepositoryImp : UserRepository() {
     override suspend fun doLogin(
         email: String,
         password: String,
-        context: Context,
         version: String
     ): String {
         return userRest.signIn(
@@ -38,17 +37,18 @@ class UserRepositoryImp : UserRepository() {
         ).data.success.token
     }
 
-    override suspend fun doRegister(email: String, password: String, context: Context): String {
+    override suspend fun doRegister(
+        email: String, password: String,
+        packageName: String,
+        versionName: String
+    ): String {
         return userRest.signUp(
             RegisterRequest(
                 uniqueId = SmsBlockerDatabase.deviceID,
                 email = email,
                 password = password,
-                nameOfPackage = context.packageName,
-                versionOfPackage = kotlin.run {
-                    val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                    return@run pInfo.versionName
-                },
+                nameOfPackage = packageName,
+                versionOfPackage = versionName,
                 deviceModel = Build.MODEL,
                 deviceType = "Smarthone",
                 campaign = "App Sms",
@@ -61,10 +61,11 @@ class UserRepositoryImp : UserRepository() {
 
     override suspend fun loadSystemDetail(): SystemDetailEntity {
         val data = try {
-            userRest.userInfo(TasksRequest()).let {
-                SmsBlockerDatabase.userName = "${it.data.user.name} ${it.data.user.lastName}"
-                it
-            }
+            userRest.userInfo(TasksRequest(connectionType = ConnectionManager.getNetworkGeneration()))
+                .let {
+                    SmsBlockerDatabase.userName = "${it.data.user.name} ${it.data.user.lastName}"
+                    it
+                }
         } catch (e: Exception) {
             SmartLog.e("Failed load system details ${getStackTrace(e)}")
            // SmsBlockerDatabase.userToken = null

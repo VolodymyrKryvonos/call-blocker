@@ -6,14 +6,12 @@ import com.google.gson.annotations.SerializedName
 data class RefreshDataForSimRequest(
     @SerializedName("unique_id")
     val uniqueId: String = SmsBlockerDatabase.deviceID,
-
     @SerializedName("sim_id")
     val simName: String,
-
     @SerializedName("sim_iccid")
     val simICCID: String,
-
     @SerializedName("msisdn")
-    val simNumber: String
-
+    val simNumber: String,
+    @SerializedName("country_code")
+    val countryCode: String
 )

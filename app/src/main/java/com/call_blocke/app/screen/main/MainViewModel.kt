@@ -75,8 +75,9 @@ class MainViewModel : ViewModel() {
             val forSimSecond =
                 if (SimUtil.isSecondSimAllow(context)) SmsBlockerDatabase.smsPerDaySimSecond else 0
             settingsRepository.setSmsPerDay(
-                forFirstSim = forSimFirst,
-                forSecondSim = forSimSecond
+                context,
+                smsPerDaySimFirst = forSimFirst,
+                smsPerDaySimSecond = forSimSecond
             )
         }
     }

@@ -309,14 +309,21 @@ fun getMenuButtonBackground(
         sim.simPerDay <= sim.simDelivered && SimUtil.isSimAllow(
             context,
             sim.simSlot
+        ) && sim.simPerDay != 0
+    }
+    val isSimSmsLimitUndefined = sims.any { sim ->
+        sim.simPerDay == 0 && SimUtil.isSimAllow(
+            context,
+            sim.simSlot
         )
     }
     val isAnyCardInvalid =
         firstSimValidationInfo.status == SimValidationStatus.INVALID ||
                 secondSimValidationInfo.status == SimValidationStatus.INVALID
     return when {
-        index == 5 && isAnyCardInvalid -> Color.Red
         index == 2 && isAnySimOutOfSMS -> Color.Red
+        index == 3 && isSimSmsLimitUndefined -> Color.Red
+        index == 5 && isAnyCardInvalid -> Color.Red
         else -> secondaryColor
     }
 }

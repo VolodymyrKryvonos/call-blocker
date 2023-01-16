@@ -7,11 +7,11 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.call_blocke.app.broad_cast.SimSlotReceiver
-import com.example.common.ConnectionManager
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.app.worker_manager.ClearPhoneNumbersTableScheduler
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
+import com.example.common.ConnectionManager
 import com.google.firebase.FirebaseApp
 import com.rokobit.adstvv_unit.loger.LogBuild
 import java.util.concurrent.TimeUnit
@@ -27,7 +27,7 @@ class SmsApp : Application() {
         }
         RepositoryImp.init(this)
         FirebaseApp.initializeApp(applicationContext)
-        ConnectionManager.innit(applicationContext)
+        ConnectionManager.init(applicationContext)
         registerReceiver(
             SimSlotReceiver(),
             IntentFilter("android.intent.action.SIM_STATE_CHANGED")

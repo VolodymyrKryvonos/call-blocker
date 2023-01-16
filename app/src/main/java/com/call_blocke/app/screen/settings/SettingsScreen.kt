@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.element.*
@@ -53,11 +54,7 @@ fun SettingsScreen(mViewModel: SettingsViewModel = viewModel()) =
                 .verticalScroll(state = scrollState)
         ) {
             Title(text = stringResource(id = R.string.settings_title))
-            Label(text = stringResource(id = R.string.settings_set_sms_per_day))
-            Divider(
-                modifier = Modifier.height(primaryDimens),
-                color = Color.Transparent
-            )
+            Label(text = stringResource(id = R.string.settings_set_sms))
             SmsLimitFields(mViewModel)
             Divider(
                 modifier = Modifier.height(5.dp),
@@ -117,15 +114,6 @@ fun Profile() {
             Text(text = profile.delayIsConnected.toString())
         }
     }
-//    Row {
-//        Text(text = stringResource(id = R.string.socket_ip))
-//        Text(text = profile?.socketIp ?: "")
-//    }
-//    Row {
-//        Text(text = stringResource(id = R.string.base_url))
-//        Text(text = profile?.url ?: "")
-//    }
-
 }
 
 @Composable
@@ -140,89 +128,126 @@ fun LogsButtons(mViewModel: SettingsViewModel) {
             context.startActivity(getLogsShareIntent(context))
         }
     )
-
-    Divider(
-        modifier = Modifier.height(5.dp),
-        color = Color.Transparent
-    )
-    Button(
-        title = "Clear logs",
-        modifier = Modifier.fillMaxWidth(),
-        isEnable = true,
-        fontSize = 16.sp,
-        onClick = {
-            clearLogs(context)
-            mViewModel.onSuccessUpdated.postValue(true)
-        }
-    )
+    if (BuildConfig.DEBUG) {
+        Divider(
+            modifier = Modifier.height(5.dp),
+            color = Color.Transparent
+        )
+        Button(
+            title = "Clear logs",
+            modifier = Modifier.fillMaxWidth(),
+            isEnable = true,
+            fontSize = 16.sp,
+            onClick = {
+                clearLogs(context)
+                mViewModel.onSuccessUpdated.postValue(true)
+            }
+        )
+    }
 }
+
 
 @ExperimentalAnimationApi
 @ExperimentalComposeUiApi
 @Composable
-fun SmsLimitFields(mViewModel: SettingsViewModel) {
+fun SmsLimitFields(viewModel: SettingsViewModel) {
     val context = LocalContext.current
-    var isFirstFieldError: Boolean by remember {
+
+    var isFirstSimSmsPerDayError: Boolean by remember {
         mutableStateOf(false)
     }
-
-    var isSecondFieldError: Boolean by remember {
+    var isFirstSimSmsPerMonthError: Boolean by remember {
+        mutableStateOf(false)
+    }
+    var isSecondSimSmsPerDayError: Boolean by remember {
+        mutableStateOf(false)
+    }
+    var isSecondSimSmsPerMonthError: Boolean by remember {
         mutableStateOf(false)
     }
     val isFirstSimAllow = remember {
-        mViewModel.isFirstSimAllow(context)
+        viewModel.isFirstSimAllow(context)
     }
-
     val isSecondSimAllow = remember {
-        mViewModel.isSecondSimAllow(context)
+        viewModel.isSecondSimAllow(context)
     }
-
-    val smsOneCountValue = remember {
-        mutableStateOf(mViewModel.fistSimSlotSmsCount.toString())
+    val firstSimSmsDayLimit = remember {
+        mutableStateOf(viewModel.firstSimSlotSmsCountPerDay.toString())
     }
-
-    val smsTwoCountValue = remember {
-        mutableStateOf(
-            if (isSecondSimAllow)
-                mViewModel.secondSimSlotSmsCount.toString()
-            else
-                "0"
-        )
+    val secondSimSmsDayLimit = remember {
+        mutableStateOf(viewModel.secondSimSlotSmsCountPerDay.toString())
     }
-
+    val firstSimSmsMonthLimit = remember {
+        mutableStateOf(viewModel.firstSimSlotSmsCountPerMonth.toString())
+    }
+    val secondSimSmsMonthLimit = remember {
+        mutableStateOf(viewModel.secondSimSlotSmsCountPerMonth.toString())
+    }
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    val isLoading by mViewModel.onLoading.observeAsState(false)
-
+    val isLoading by viewModel.onLoading.observeAsState(false)
+    Label(text = stringResource(id = R.string.first_sim_card))
     Field(
-        hint = stringResource(id = R.string.settings_first_sim_slot_sms_count_hint),
-        value = smsOneCountValue,
+        hint = stringResource(id = R.string.sms_count_per_day),
+        value = firstSimSmsDayLimit,
         isEnable = !isLoading && isFirstSimAllow,
-        isError = isFirstFieldError,
+        isError = isFirstSimSmsPerDayError,
         onValueChange = {
             if ((it.toIntOrNull() ?: 0) > 1000 || it.length > 4) {
-                smsOneCountValue.value = 1000.toString()
+                firstSimSmsDayLimit.value = 1000.toString()
             } else {
-                smsOneCountValue.value = it
+                firstSimSmsDayLimit.value = it
             }
         },
         keyboardType = KeyboardType.Number
     )
     Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
     Field(
-        hint = stringResource(id = R.string.settings_secound_sim_slot_sms_count_hint),
-        value = smsTwoCountValue,
+        hint = stringResource(id = R.string.sms_count_per_month),
+        value = firstSimSmsMonthLimit,
         isEnable = !isLoading && isSecondSimAllow,
-        isError = isSecondFieldError,
+        isError = isFirstSimSmsPerMonthError,
         onValueChange = {
-            if ((it.toIntOrNull() ?: 0) > 1000 || it.length > 4) {
-                smsTwoCountValue.value = 1000.toString()
+            if (it.length > 5) {
+                firstSimSmsMonthLimit.value = 5000.toString()
             } else {
-                smsTwoCountValue.value = it
+                firstSimSmsMonthLimit.value = it
             }
         },
         keyboardType = KeyboardType.Number
     )
+
+    if (isSecondSimAllow) {
+        Label(text = stringResource(id = R.string.second_sim_card))
+        Field(
+            hint = stringResource(id = R.string.sms_count_per_day),
+            value = secondSimSmsDayLimit,
+            isEnable = !isLoading,
+            isError = isSecondSimSmsPerDayError,
+            onValueChange = {
+                if ((it.toIntOrNull() ?: 0) > 1000 || it.length > 4) {
+                    secondSimSmsDayLimit.value = 1000.toString()
+                } else {
+                    secondSimSmsDayLimit.value = it
+                }
+            },
+            keyboardType = KeyboardType.Number
+        )
+        Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
+        Field(
+            hint = stringResource(id = R.string.sms_count_per_month),
+            value = secondSimSmsMonthLimit,
+            isEnable = !isLoading,
+            isError = isSecondSimSmsPerMonthError,
+            onValueChange = {
+                if (it.length > 5) {
+                    secondSimSmsMonthLimit.value = 5000.toString()
+                } else {
+                    secondSimSmsMonthLimit.value = it
+                }
+            },
+            keyboardType = KeyboardType.Number
+        )
+    }
 
     Divider(
         modifier = Modifier.height(primaryDimens),
@@ -234,37 +259,31 @@ fun SmsLimitFields(mViewModel: SettingsViewModel) {
         modifier = Modifier.fillMaxWidth(),
         isEnable = true,
         fontSize = 16.sp,
-        isProgress = mViewModel.onLoading.observeAsState(false)
+        isProgress = viewModel.onLoading.observeAsState(false)
     ) {
 
-        val forFist = run {
-            try {
-                smsOneCountValue.value.toInt()
-            } catch (e: Exception) {
-                -1
-            }
+        val firstSimSmsPerDay = firstSimSmsDayLimit.value.toIntOrNull() ?: -1
+        val secondSimSmsPerDay = secondSimSmsDayLimit.value.toIntOrNull() ?: -1
+        val firstSimSmsPerMonth = firstSimSmsMonthLimit.value.toIntOrNull() ?: -1
+        val secondSimSmsPerMonth = secondSimSmsMonthLimit.value.toIntOrNull() ?: -1
+
+        isFirstSimSmsPerDayError = firstSimSmsPerDay < 0
+        isFirstSimSmsPerMonthError = firstSimSmsPerMonth < 0
+        if (isSecondSimAllow) {
+            isSecondSimSmsPerDayError = secondSimSmsPerDay < 0
+            isSecondSimSmsPerMonthError = secondSimSmsPerMonth < 0
         }
-
-        val forSecond = run {
-            try {
-                smsTwoCountValue.value.toInt()
-            } catch (e: Exception) {
-                -1
-            }
-        }
-
-        isFirstFieldError = forFist < 0
-        if (isSecondSimAllow)
-            isSecondFieldError = forSecond < 0
-
-        if (isFirstFieldError || isSecondFieldError)
+        if (isFirstSimSmsPerDayError || isSecondSimSmsPerDayError || isSecondSimSmsPerMonthError || isFirstSimSmsPerMonthError)
             return@Button
 
         keyboardController?.hide()
 
-        mViewModel.updateSmsPerDay(
-            forSimFirst = forFist,
-            forSimSecond = forSecond
+        viewModel.updateSmsPerDay(
+            context = context,
+            smsPerDaySimFirst = firstSimSmsPerDay,
+            smsPerDaySimSecond = secondSimSmsPerDay,
+            smsPerMonthSimFirst = firstSimSmsPerMonth,
+            smsPerMonthSimSecond = secondSimSmsPerMonth
         )
     }
 }
@@ -291,9 +310,6 @@ fun getLogsShareIntent(context: Context): Intent {
 
             }
             putParcelableArrayListExtra(Intent.EXTRA_STREAM, files)
-            getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.forEach {
-                Log.e("getParcelableArrayListExtra", it.toString())
-            }
             flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
         }
     }
