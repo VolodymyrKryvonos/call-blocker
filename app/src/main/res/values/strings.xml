@@ -94,5 +94,8 @@
     <string name="sms_count_per_month">SMS count per month</string>
     <string name="second_sim_card">Second SIM Card</string>
     <string name="validate_sim_card_first">Please verify SIM card first</string>
+    <string name="verify">Verify</string>
+    <string name="first_sim_card_not_verified">First SIM Card not verified</string>
+    <string name="second_sim_card_not_verified">Second SIM Card not verified</string>
 
 </resources>

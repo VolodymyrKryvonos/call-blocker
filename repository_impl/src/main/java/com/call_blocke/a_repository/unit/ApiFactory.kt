@@ -6,6 +6,7 @@
 
 package com.call_blocke.a_repository.unit
 
+import com.call_blocke.a_repository.BuildConfig
 import com.call_blocke.a_repository.Const
 import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstvv_unit.loger.SmartLog
@@ -42,9 +43,15 @@ class ApiFactory {
             chain.proceed(request)
         }
 
-
-        val logging = HttpLoggingInterceptor { SmartLog.e(it) }
-        logging.level = HttpLoggingInterceptor.Level.BASIC
+        val logging = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+        } else {
+            HttpLoggingInterceptor { SmartLog.e(it) }.apply {
+                level = HttpLoggingInterceptor.Level.BASIC
+            }
+        }
         builder?.addInterceptor(logging)
     }
 

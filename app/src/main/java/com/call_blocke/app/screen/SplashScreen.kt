@@ -21,6 +21,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.call_blocke.app.Navigation
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.black_list.BlackListScreen
 import com.call_blocke.app.screen.intro.IntroScreen
@@ -86,22 +87,22 @@ fun Main(deapLink: String?) {
     val navController: NavHostController = rememberNavController()
 
     NavHost(navController = navController, startDestination = "main") {
-        composable("main") {
+        composable(Navigation.MainScreen.destination) {
             MainScreen(navController)
         }
-        composable("settings") {
-            SettingsScreen()
+        composable(Navigation.SettingsScreen.destination) {
+            SettingsScreen(navController)
         }
-        composable("task_list") {
+        composable(Navigation.TaskListScreen.destination) {
             TaskListScreen()
         }
-        composable("black_list") {
+        composable(Navigation.BlackListScreen.destination) {
             BlackListScreen()
         }
-        composable("refresh") {
+        composable(Navigation.ResetSimScreen.destination) {
             RefreshScreen()
         }
-        composable("sim_info") {
+        composable(Navigation.SimInfoScreen.destination) {
             SimInfoScreen()
         }
     }

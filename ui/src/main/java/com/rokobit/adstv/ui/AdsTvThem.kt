@@ -14,6 +14,7 @@ val primaryColor = Color.Black
 val secondaryColor = Color.White
 val accentColor = Color(73, 73, 73)
 val backgroundColor = Color(247, 247, 247)
+val errorColor = Color(237, 67, 55)
 
 val primaryDimens by lazy { 24.dp }
 val secondaryDimens by lazy { 16.dp }

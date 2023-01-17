@@ -22,31 +22,28 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.call_blocke.app.BuildConfig
+import com.call_blocke.app.Navigation
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.model.SimValidationStatus
+import com.rokobit.adstv.ui.*
 import com.rokobit.adstv.ui.element.*
-import com.rokobit.adstv.ui.primaryColor
-import com.rokobit.adstv.ui.primaryDimens
-import com.rokobit.adstv.ui.secondaryColor
-import com.rokobit.adstv.ui.secondaryDimens
 import kotlinx.coroutines.delay
 import java.io.File
 
 
 @ExperimentalAnimationApi
 @ExperimentalComposeUiApi
-@Preview
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
+fun SettingsScreen(navController: NavHostController, viewModel: SettingsViewModel = viewModel()) {
     val context = LocalContext.current
     OnLifecycleEvent { _, event ->
         when (event) {
@@ -67,7 +64,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
         ) {
             Title(text = stringResource(id = R.string.settings_title))
             Label(text = stringResource(id = R.string.settings_set_sms))
-            SmsLimitFields(viewModel)
+            SmsLimitFields(navController, viewModel)
             Divider(
                 modifier = Modifier.height(5.dp),
                 color = Color.Transparent
@@ -164,7 +161,7 @@ fun LogsButtons(viewModel: SettingsViewModel) {
 @ExperimentalAnimationApi
 @ExperimentalComposeUiApi
 @Composable
-fun SmsLimitFields(viewModel: SettingsViewModel) {
+fun SmsLimitFields(navController: NavHostController, viewModel: SettingsViewModel) {
     val context = LocalContext.current
 
     val firstSimValidationInfo = viewModel.firstSimValidationInfo.collectAsState()
@@ -202,85 +199,67 @@ fun SmsLimitFields(viewModel: SettingsViewModel) {
     }
     val keyboardController = LocalSoftwareKeyboardController.current
     val isLoading by viewModel.onLoading.observeAsState(false)
-    Label(text = stringResource(id = R.string.first_sim_card))
+
     val isFirstSimNeedVerification = isNeedVerification(firstSimValidationInfo.value.status)
-    if (isFirstSimNeedVerification) {
-        Text(
-            text = stringResource(id = R.string.validate_sim_card_first),
-            color = Color(237, 67, 55)
-        )
-    }
-    Field(
-        hint = stringResource(id = R.string.sms_count_per_day),
-        value = firstSimSmsDayLimit,
-        isEnable = !isLoading && isFirstSimAllow && !isFirstSimNeedVerification,
-        isError = isFirstSimSmsPerDayError,
-        onValueChange = {
-            if ((it.toIntOrNull() ?: 0) > 1000 || it.length > 4) {
-                firstSimSmsDayLimit.value = 1000.toString()
-            } else {
-                firstSimSmsDayLimit.value = it
-            }
-        },
-        keyboardType = KeyboardType.Number
-    )
-    Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
-    Field(
-        hint = stringResource(id = R.string.sms_count_per_month),
-        value = firstSimSmsMonthLimit,
-        isEnable = !isLoading && isSecondSimAllow && firstSimValidationInfo.value.status == SimValidationStatus.VALID,
-        isError = isFirstSimSmsPerMonthError,
-        onValueChange = {
-            if (it.length > 5) {
-                firstSimSmsMonthLimit.value = 5000.toString()
-            } else {
-                firstSimSmsMonthLimit.value = it
-            }
-        },
-        keyboardType = KeyboardType.Number
-    )
+    val isSecondSimNeedVerification = isNeedVerification(secondSimValidationInfo.value.status)
 
-    if (isSecondSimAllow) {
+    if (isFirstSimAllow) {
+        if (isFirstSimNeedVerification) {
+            Label(
+                text = stringResource(id = R.string.first_sim_card_not_verified),
+                color = errorColor
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                title = stringResource(id = R.string.verify),
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = 16.sp
+            ) {
+                navController.navigate(Navigation.SimInfoScreen.destination)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        } else {
 
-        val isSecondSimNeedVerification = isNeedVerification(firstSimValidationInfo.value.status)
-        Label(text = stringResource(id = R.string.second_sim_card))
-        if (isSecondSimNeedVerification) {
-            Text(
-                text = stringResource(id = R.string.validate_sim_card_first),
-                color = Color(237, 67, 55)
+            Label(
+                text = stringResource(id = R.string.first_sim_card)
+            )
+            SimLimitFields(
+                firstSimSmsDayLimit,
+                firstSimSmsMonthLimit,
+                isLoading,
+                isFirstSimSmsPerDayError,
+                isFirstSimSmsPerMonthError
             )
         }
-        Field(
-            hint = stringResource(id = R.string.sms_count_per_day),
-            value = secondSimSmsDayLimit,
-            isEnable = !isLoading && !isSecondSimNeedVerification,
-            isError = isSecondSimSmsPerDayError,
-            onValueChange = {
-                if ((it.toIntOrNull() ?: 0) > 1000 || it.length > 4) {
-                    secondSimSmsDayLimit.value = 1000.toString()
-                } else {
-                    secondSimSmsDayLimit.value = it
-                }
-            },
-            keyboardType = KeyboardType.Number
-        )
-        Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
-        Field(
-            hint = stringResource(id = R.string.sms_count_per_month),
-            value = secondSimSmsMonthLimit,
-            isEnable = !isLoading && secondSimValidationInfo.value.status == SimValidationStatus.VALID,
-            isError = isSecondSimSmsPerMonthError,
-            onValueChange = {
-                if (it.length > 5) {
-                    secondSimSmsMonthLimit.value = 5000.toString()
-                } else {
-                    secondSimSmsMonthLimit.value = it
-                }
-            },
-            keyboardType = KeyboardType.Number
-        )
     }
-
+    if (isSecondSimAllow) {
+        if (isSecondSimNeedVerification) {
+            Label(
+                text = stringResource(id = R.string.second_sim_card_not_verified),
+                color = errorColor
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                title = stringResource(id = R.string.verify),
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = 16.sp
+            ) {
+                navController.navigate(Navigation.SimInfoScreen.destination)
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+        } else {
+            Label(
+                text = stringResource(id = R.string.second_sim_card)
+            )
+            SimLimitFields(
+                secondSimSmsDayLimit,
+                secondSimSmsMonthLimit,
+                isLoading,
+                isSecondSimSmsPerDayError,
+                isSecondSimSmsPerMonthError
+            )
+        }
+    }
     Divider(
         modifier = Modifier.height(primaryDimens),
         color = Color.Transparent
@@ -289,7 +268,7 @@ fun SmsLimitFields(viewModel: SettingsViewModel) {
     Button(
         title = stringResource(id = R.string.settings_set_sms_per_day_button),
         modifier = Modifier.fillMaxWidth(),
-        isEnable = true,
+        isEnable = !isFirstSimNeedVerification && !isSecondSimNeedVerification,
         fontSize = 16.sp,
         isProgress = viewModel.onLoading.observeAsState(false)
     ) {
@@ -323,6 +302,48 @@ fun SmsLimitFields(viewModel: SettingsViewModel) {
         )
     }
 }
+
+@ExperimentalAnimationApi
+@ExperimentalComposeUiApi
+@Composable
+fun SimLimitFields(
+    simSmsDayLimit: MutableState<String>,
+    simSmsMonthLimit: MutableState<String>,
+    isLoading: Boolean,
+    isSimSmsPerDayError: Boolean,
+    isSimSmsPerMonthError: Boolean
+) {
+    Field(
+        hint = stringResource(id = R.string.sms_count_per_day),
+        value = simSmsDayLimit,
+        isEnable = !isLoading,
+        isError = isSimSmsPerDayError,
+        onValueChange = {
+            if ((it.toIntOrNull() ?: 0) > 1000 || it.length > 4) {
+                simSmsDayLimit.value = 1000.toString()
+            } else {
+                simSmsDayLimit.value = it
+            }
+        },
+        keyboardType = KeyboardType.Number
+    )
+    Divider(modifier = Modifier.height(secondaryDimens), color = Color.Transparent)
+    Field(
+        hint = stringResource(id = R.string.sms_count_per_month),
+        value = simSmsMonthLimit,
+        isEnable = !isLoading,
+        isError = isSimSmsPerMonthError,
+        onValueChange = {
+            if (it.length > 5) {
+                simSmsMonthLimit.value = 5000.toString()
+            } else {
+                simSmsMonthLimit.value = it
+            }
+        },
+        keyboardType = KeyboardType.Number
+    )
+}
+
 
 fun isNeedVerification(status: SimValidationStatus): Boolean {
     return status != SimValidationStatus.VALID && status != SimValidationStatus.UNKNOWN
