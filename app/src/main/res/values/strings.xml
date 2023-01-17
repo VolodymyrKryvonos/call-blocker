@@ -93,5 +93,6 @@
     <string name="sms_count_per_day">SMS count per day</string>
     <string name="sms_count_per_month">SMS count per month</string>
     <string name="second_sim_card">Second SIM Card</string>
+    <string name="validate_sim_card_first">Please verify SIM card first</string>
 
 </resources>

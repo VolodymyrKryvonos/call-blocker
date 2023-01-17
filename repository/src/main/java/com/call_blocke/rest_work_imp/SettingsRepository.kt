@@ -5,11 +5,16 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.BlockedNumberContract.BlockedNumbers
+import android.telephony.SubscriptionInfo
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.db.ValidationState
 import com.call_blocke.rest_work_imp.model.Resource
 import com.call_blocke.rest_work_imp.model.SimValidationInfo
+import com.call_blocke.rest_work_imp.model.SimValidationStatus
 import com.call_blocker.model.ConnectionStatus
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 
 abstract class SettingsRepository {
 
@@ -95,4 +100,31 @@ abstract class SettingsRepository {
     ): Flow<Resource<Unit>>
 
     abstract suspend fun sendSignalStrengthInfo()
+
+    suspend fun checkSim(
+        simInfo: SubscriptionInfo?,
+        simValidationInfo: MutableStateFlow<SimValidationInfo>,
+        simValidationState: MutableStateFlow<ValidationState>,
+        createAutoVerificationSms: Boolean = false
+    ) {
+        if (simInfo != null) {
+            checkSimCard(
+                simInfo.iccId ?: "",
+                simInfo.simSlotIndex,
+                createAutoVerificationSms
+            )
+                .collectLatest {
+                    simValidationInfo.emit(it)
+                    if (it.status == SimValidationStatus.INVALID && simValidationState.value != ValidationState.FAILED) {
+                        simValidationState.emit(ValidationState.INVALID)
+                        return@collectLatest
+                    }
+                    if (it.status == SimValidationStatus.AUTO_VALIDATION) {
+                        simValidationState.emit(ValidationState.AUTO_VALIDATION)
+                        return@collectLatest
+                    }
+                    simValidationState.emit(ValidationState.SUCCESS)
+                }
+        }
+    }
 }

@@ -51,7 +51,7 @@ data class VerifyingSim(
 @OptIn(ExperimentalAnimationApi::class)
 @ExperimentalMaterialApi
 @Composable
-fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
+fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
     modifier = Modifier
         .fillMaxSize()
 ) {
@@ -64,16 +64,16 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
     val verifyingSim: MutableState<VerifyingSim?> = remember {
         mutableStateOf(null)
     }
-    val firstSimValidationInfo = mViewModel.firstSimValidationInfo.collectAsState()
-    val secondSimValidationInfo = mViewModel.secondSimValidationInfo.collectAsState()
-    val validationState = mViewModel.validationState.collectAsState(Resource.None)
+    val firstSimValidationInfo = viewModel.firstSimValidationInfo.collectAsState()
+    val secondSimValidationInfo = viewModel.secondSimValidationInfo.collectAsState()
+    val validationState = viewModel.validationState.collectAsState(Resource.None)
 
-    val snackbarVisibility = mViewModel.snackbarVisibility.collectAsState()
+    val snackbarVisibility = viewModel.snackbarVisibility.collectAsState()
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                mViewModel.simsInfo()
-                mViewModel.checkSimCards(context)
+                viewModel.simsInfo()
+                viewModel.checkSimCards(context)
             }
             else -> {}
         }
@@ -87,14 +87,14 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        val sims by mViewModel.simInfoState.collectAsState(initial = null)
+        val sims by viewModel.simInfoState.collectAsState(initial = null)
         if (sims == null)
             CircularProgressIndicator()
         else {
             for ((index, fullSimInfoModel) in sims!!.withIndex()) {
 
                 if (index == 0) {
-                    mViewModel.firstSim(context = context)?.let {
+                    viewModel.firstSim(context = context)?.let {
                         SimInfoCard(
                             info = it,
                             data = fullSimInfoModel,
@@ -110,7 +110,7 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
                 Spacer(modifier = Modifier.height(primaryDimens))
 
                 if (index == 1) {
-                    mViewModel.secondSim(context = context)?.let {
+                    viewModel.secondSim(context = context)?.let {
                         SimInfoCard(
                             info = it,
                             data = fullSimInfoModel,
@@ -128,7 +128,7 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
     }
     if (openDialog.value && verifyingSim.value != null) {
         VerifyNumberDialog(
-            viewModel = mViewModel,
+            viewModel = viewModel,
             verifyingSim = verifyingSim.value!!,
             modifier = Modifier.fillMaxSize(),
             validationState = validationState,
@@ -163,7 +163,7 @@ fun SimInfoScreen(mViewModel: RefreshViewModel = viewModel()) = Box(
     if (snackbarVisibility.value == SnackbarVisibility.Visible) {
         LaunchedEffect(key1 = Unit) {
             delay(2500L)
-            mViewModel.hideSnackbar()
+            viewModel.hideSnackbar()
         }
     }
 }
