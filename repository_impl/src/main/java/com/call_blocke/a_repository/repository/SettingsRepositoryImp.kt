@@ -8,14 +8,14 @@ import com.call_blocke.a_repository.Const
 import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.request.GetProfileRequest
 import com.call_blocke.a_repository.rest.SettingsRest
-import com.call_blocke.db.AutoValidationResult
+import com.call_blocke.db.AutoVerificationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocke.rest_work_imp.SimUtil
 import com.call_blocke.rest_work_imp.model.Resource
-import com.call_blocke.rest_work_imp.model.SimValidationInfo
-import com.call_blocke.rest_work_imp.model.SimValidationStatus
+import com.call_blocke.rest_work_imp.model.SimVerificationInfo
+import com.call_blocke.rest_work_imp.model.SimVerificationStatus
 import com.call_blocker.model.ConnectionStatus
 import com.example.common.ConnectionManager
 import com.example.common.CountryCodeExtractor
@@ -118,7 +118,6 @@ class SettingsRepositoryImp : SettingsRepository() {
     override suspend fun validateSimCard(
         phoneNumber: String,
         simID: String,
-        monthlyLimit: Int,
         simSlot: Int
     ): Flow<Resource<Unit>> = flow {
         try {
@@ -128,7 +127,6 @@ class SettingsRepositoryImp : SettingsRepository() {
                 ValidateSimCardRequest(
                     simICCID = simID,
                     simNumber = phoneNumber,
-                    monthlyLimit = monthlyLimit,
                     simSlot = "msisdn_${simSlot + 1}",
                     countryCode = countryCode
                 )
@@ -218,6 +216,7 @@ class SettingsRepositoryImp : SettingsRepository() {
     override suspend fun checkSimCard(
         iccId: String,
         simSlot: Int,
+        phoneNumber: String?,
         createAutoVerificationSms: Boolean,
     ) = flow {
         try {
@@ -227,24 +226,27 @@ class SettingsRepositoryImp : SettingsRepository() {
                     iccId,
                     countryCode,
                     "msisdn_${simSlot + 1}",
-                    createAutoVerificationSms = createAutoVerificationSms
+                    createAutoVerificationSms = createAutoVerificationSms,
+                    phoneNumber = phoneNumber
                 )
             )
             if (response.status) {
                 if (simSlot == 0) {
-                    SmsBlockerDatabase.simFirstAutoValidationResult = AutoValidationResult.SUCCESS
+                    SmsBlockerDatabase.simFirstAutoVerificationResult =
+                        AutoVerificationResult.SUCCESS
                 } else {
-                    SmsBlockerDatabase.simSecondAutoValidationResult = AutoValidationResult.SUCCESS
+                    SmsBlockerDatabase.simSecondAutoVerificationResult =
+                        AutoVerificationResult.SUCCESS
                 }
             }
-            emit(response.toSimValidationInfo())
+            emit(response.toSimVerificationInfo())
         } catch (e: Exception) {
-            emit(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
+            emit(SimVerificationInfo(SimVerificationStatus.UNKNOWN))
             SmartLog.e("Failed check Sim Card ${getStackTrace(e)}")
         }
     }
 
-    override suspend fun confirmValidation(
+    override suspend fun confirmVerification(
         iccid: String,
         simSlot: String,
         verificationCode: String,
@@ -253,8 +255,8 @@ class SettingsRepositoryImp : SettingsRepository() {
     ): Flow<Resource<Unit>> = flow {
         emit(Resource.Loading<Unit>())
         try {
-            settingsRest.confirmSimCardValidation(
-                ConfirmSimCardValidationRequest(
+            settingsRest.confirmSimCardVerification(
+                ConfirmSimCardVerificationRequest(
                     iccId = iccid,
                     simSlot = simSlot,
                     verificationCode = verificationCode,
@@ -269,6 +271,7 @@ class SettingsRepositoryImp : SettingsRepository() {
         }
 
     }
+
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
     override suspend fun sendSignalStrengthInfo() {

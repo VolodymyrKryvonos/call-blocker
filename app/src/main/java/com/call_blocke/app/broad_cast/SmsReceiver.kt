@@ -8,7 +8,7 @@ import android.telephony.SmsMessage
 import com.call_blocke.app.util.Const
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.ValidationState
+import com.call_blocke.db.VerificationState
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.replyRepository
 import com.call_blocke.rest_work_imp.model.Resource
@@ -64,7 +64,7 @@ class SmsReceiver : BroadcastReceiver() {
         verificationSms ?: return false
 
         SmartLog.e("verificationSms $verificationSms")
-        RepositoryImp.settingsRepository.confirmValidation(
+        RepositoryImp.settingsRepository.confirmVerification(
             simSlot = verificationSms.simSlot,
             iccid = verificationSms.simIccid,
             verificationCode = verificationSms.verificationCode ?: "",
@@ -73,7 +73,7 @@ class SmsReceiver : BroadcastReceiver() {
         ).collectLatest {
             if (verificationSms.uniqueId == SmsBlockerDatabase.deviceID) {
                 if (it is Resource.Success) {
-                    emitValidationCompletion(verificationSms.simSlot, ValidationState.SUCCESS)
+                    emitVerificationCompletion(verificationSms.simSlot, VerificationState.SUCCESS)
                     NotificationService.showPhoneNumberVerifiedNotification(
                         sms.senderNumber,
                         context,
@@ -82,18 +82,18 @@ class SmsReceiver : BroadcastReceiver() {
                     return@collectLatest
                 }
                 if (it is Resource.Error) {
-                    emitValidationCompletion(verificationSms.simSlot, ValidationState.FAILED)
+                    emitVerificationCompletion(verificationSms.simSlot, VerificationState.FAILED)
                 }
             }
         }
         return true
     }
 
-    private suspend fun emitValidationCompletion(simSlot: String, status: ValidationState) {
+    private suspend fun emitVerificationCompletion(simSlot: String, status: VerificationState) {
         if (simSlot == Const.firstSim) {
-            SmsBlockerDatabase.firstSimValidationState.emit(status)
+            SmsBlockerDatabase.firstSimVerificationState.emit(status)
         } else {
-            SmsBlockerDatabase.secondSimValidationState.emit(status)
+            SmsBlockerDatabase.secondSimVerificationState.emit(status)
         }
     }
 

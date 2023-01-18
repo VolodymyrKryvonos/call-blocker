@@ -37,7 +37,7 @@ interface SettingsRest {
     suspend fun checkSimCard(@Body checkSimCardRequest: CheckSimCardRequest): CheckSimCardResponse
 
     @POST("apps/confirm-validation")
-    suspend fun confirmSimCardValidation(@Body confirmSimCardValidationRequest: ConfirmSimCardValidationRequest)
+    suspend fun confirmSimCardVerification(@Body body: ConfirmSimCardVerificationRequest)
 
     @POST("apps/signal-strength")
     suspend fun sendSignalStrengthInfo(@Body signalStrengthBody: SignalStrengthRequest)

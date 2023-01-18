@@ -12,10 +12,10 @@ import android.telephony.SubscriptionInfo
 import androidx.core.app.ActivityCompat
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.app.worker_manager.SendingSMSWorker
-import com.call_blocke.db.AutoValidationResult
+import com.call_blocke.db.AutoVerificationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.TaskMethod
-import com.call_blocke.db.ValidationState
+import com.call_blocke.db.VerificationState
 import com.call_blocke.db.entity.PhoneNumber
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
@@ -215,24 +215,24 @@ class TaskManager(
     private suspend fun processSendError(task: TaskEntity) {
         if (task.method == TaskMethod.VERIFY_PHONE_NUMBER) {
             NotificationService.showVerificationFailedNotification(context, task)
-            emitValidationCompletion(task.simSlot)
+            emitVerificationCompletion(task.simSlot)
         }
         if (task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
             if (task.simSlot == 0) {
-                SmsBlockerDatabase.simFirstAutoValidationResult = AutoValidationResult.FAILED
+                SmsBlockerDatabase.simFirstAutoVerificationResult = AutoVerificationResult.FAILED
             } else {
-                SmsBlockerDatabase.simSecondAutoValidationResult = AutoValidationResult.FAILED
+                SmsBlockerDatabase.simSecondAutoVerificationResult = AutoVerificationResult.FAILED
             }
             NotificationService.showAutoVerificationFailedNotification(context)
         }
         taskRepository.taskOnError(task)
     }
 
-    private suspend fun emitValidationCompletion(simSlot: Int?) {
+    private suspend fun emitVerificationCompletion(simSlot: Int?) {
         if (simSlot == 0) {
-            SmsBlockerDatabase.firstSimValidationState.emit(ValidationState.FAILED)
+            SmsBlockerDatabase.firstSimVerificationState.emit(VerificationState.FAILED)
         } else {
-            SmsBlockerDatabase.secondSimValidationState.emit(ValidationState.FAILED)
+            SmsBlockerDatabase.secondSimVerificationState.emit(VerificationState.FAILED)
         }
     }
 

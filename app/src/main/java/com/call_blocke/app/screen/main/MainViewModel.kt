@@ -5,22 +5,22 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.app.BuildConfig
+import com.call_blocke.app.util.SimCardVerificationChecker
+import com.call_blocke.app.util.SimCardVerificationCheckerImpl
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
-import com.call_blocke.repository.RepositoryImp.settingsRepository
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
 import com.call_blocke.rest_work_imp.model.Resource
-import com.call_blocke.rest_work_imp.model.SimValidationInfo
-import com.call_blocke.rest_work_imp.model.SimValidationStatus
+import com.call_blocke.rest_work_imp.model.SimVerificationStatus
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
+class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerificationCheckerImpl() {
 
     private val _openValidateSimCardDialog: MutableSharedFlow<Boolean> = MutableSharedFlow()
     val openValidateSimCardDialog = _openValidateSimCardDialog.asSharedFlow()
@@ -45,12 +45,6 @@ class MainViewModel : ViewModel() {
     private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
         MutableStateFlow(emptyList())
     val simInfoState = _simInfoState.asStateFlow()
-
-    val firstSimValidationInfo =
-        MutableStateFlow(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
-    val secondSimValidationInfo =
-        MutableStateFlow(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
-
 
     fun simsInfo() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -175,48 +169,6 @@ class MainViewModel : ViewModel() {
         return isMajorUpToDate && isMinorUpToDate && isPatchUpToDate
     }
 
-    private fun firstSim(context: Context) = SimUtil.firstSim(context)
-
-    private fun secondSim(context: Context) = SimUtil.secondSim(context)
-
-    fun checkIsSimCardsShouldBeValidated(): Boolean {
-        val isInvalid = firstSimValidationInfo.value.status == SimValidationStatus.INVALID ||
-                secondSimValidationInfo.value.status == SimValidationStatus.INVALID
-        viewModelScope.launch(Dispatchers.IO) {
-            _openValidateSimCardDialog.emit(
-                isInvalid
-            )
-        }
-        return isInvalid
-    }
-
-    fun checkSimCards(context: Context, createAutoVerificationSms: Boolean = false) {
-        val firstSim = firstSim(context)
-        val secondSim = secondSim(context)
-        viewModelScope.launch(Dispatchers.IO) {
-            if (firstSim != null) {
-                firstSimValidationInfo.emitAll(
-                    settingsRepository.checkSimCard(
-                        firstSim.iccId ?: "",
-                        firstSim.simSlotIndex,
-                        createAutoVerificationSms
-                    )
-                )
-            }
-        }
-        viewModelScope.launch(Dispatchers.IO) {
-            if (secondSim != null) {
-                secondSimValidationInfo.emitAll(
-                    settingsRepository.checkSimCard(
-                        secondSim.iccId ?: "",
-                        secondSim.simSlotIndex,
-                        createAutoVerificationSms
-                    )
-                )
-            }
-        }
-    }
-
     fun notifyServerUserStopService() {
         viewModelScope.launch {
             settingsRepository.notifyServerUserStopService().collectLatest {
@@ -231,10 +183,21 @@ class MainViewModel : ViewModel() {
             _openOutdatedVersionDialog.emit(false)
         }
     }
+
     fun closeValidateSimCardDialog() {
         viewModelScope.launch {
             _openValidateSimCardDialog.emit(false)
         }
     }
 
+    fun checkIsSimCardsShouldBeValidated(): Boolean {
+        val isInvalid = firstSimVerificationInfo.value.status == SimVerificationStatus.INVALID ||
+                secondSimVerificationInfo.value.status == SimVerificationStatus.INVALID
+        viewModelScope.launch(Dispatchers.IO) {
+            _openValidateSimCardDialog.emit(
+                isInvalid
+            )
+        }
+        return isInvalid
+    }
 }

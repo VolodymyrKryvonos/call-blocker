@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.call_blocke.app.util.SimCardValidationChecker
-import com.call_blocke.app.util.SimCardValidationCheckerImpl
+import com.call_blocke.app.util.SimCardVerificationChecker
+import com.call_blocke.app.util.SimCardVerificationCheckerImpl
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.ValidationState
+import com.call_blocke.db.VerificationState
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
@@ -25,7 +25,7 @@ enum class SnackbarVisibility {
 }
 
 class RefreshViewModel : ViewModel(),
-    SimCardValidationChecker by SimCardValidationCheckerImpl(RepositoryImp.settingsRepository) {
+    SimCardVerificationChecker by SimCardVerificationCheckerImpl() {
 
     private val taskRepository = RepositoryImp.taskRepository
 
@@ -33,7 +33,7 @@ class RefreshViewModel : ViewModel(),
     val snackbarVisibility = _snackbarVisibility.asStateFlow()
 
     val onLoading = MutableLiveData(false)
-    val validationState = MutableSharedFlow<Resource<Unit>>()
+    val verificationState = MutableSharedFlow<Resource<Unit>>()
 
     private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
         MutableStateFlow(emptyList())
@@ -81,25 +81,23 @@ class RefreshViewModel : ViewModel(),
     fun validatePhoneNumber(
         phoneNumber: String,
         simID: String,
-        monthlyLimit: String,
         simSlot: Int
     ) =
         viewModelScope.launch(Dispatchers.IO) {
             settingsRepository.validateSimCard(
                 phoneNumber = phoneNumber,
                 simID = simID,
-                monthlyLimit = monthlyLimit.toIntOrNull() ?: 5000,
                 simSlot = simSlot
 
             ).collectLatest {
                 if (it is Resource.Success) {
                     if (simSlot == 0) {
-                        SmsBlockerDatabase.firstSimValidationState.emit(ValidationState.PROCESSING)
+                        SmsBlockerDatabase.firstSimVerificationState.emit(VerificationState.PROCESSING)
                     } else {
-                        SmsBlockerDatabase.secondSimValidationState.emit(ValidationState.PROCESSING)
+                        SmsBlockerDatabase.secondSimVerificationState.emit(VerificationState.PROCESSING)
                     }
                 }
-                validationState.emit(it)
+                verificationState.emit(it)
             }
         }
 

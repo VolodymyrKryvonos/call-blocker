@@ -32,12 +32,13 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.call_blocke.app.BuildConfig
+import com.call_blocke.app.Navigation
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SimUtil
-import com.call_blocke.rest_work_imp.model.SimValidationInfo
-import com.call_blocke.rest_work_imp.model.SimValidationStatus
+import com.call_blocke.rest_work_imp.model.SimVerificationInfo
+import com.call_blocke.rest_work_imp.model.SimVerificationStatus
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.rokobit.adstv.ui.element.*
@@ -51,15 +52,15 @@ import com.rokobit.adstvv_unit.loger.SmartLog
 @ExperimentalMaterialApi
 @ExperimentalFoundationApi
 @Composable
-fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = viewModel()) {
+fun MainScreen(navController: NavHostController, viewMode: MainViewModel = viewModel()) {
 
-    val isLoading by mViewMode.isLoading.observeAsState(false)
-    val openValidateSimCardDialog = mViewMode.openValidateSimCardDialog.collectAsState(false)
-    val openOutdatedVersionDialog = mViewMode.openOutdatedVersionDialog.collectAsState(false)
+    val isLoading by viewMode.isLoading.observeAsState(false)
+    val openValidateSimCardDialog = viewMode.openValidateSimCardDialog.collectAsState(false)
+    val openOutdatedVersionDialog = viewMode.openOutdatedVersionDialog.collectAsState(false)
     val context = LocalContext.current
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
-        onRefresh = { mViewMode.reloadSystemInfo() },
+        onRefresh = { viewMode.reloadSystemInfo() },
     ) {
         Box(
             modifier = Modifier
@@ -69,14 +70,14 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                 modifier = Modifier
                     .fillMaxSize()
             ) {
-                Header(mViewMode)
+                Header(viewMode)
 
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
-                    Menu(navController = navController, mViewMode = mViewMode)
+                    Menu(navController = navController, mViewMode = viewMode)
                 }
 
                 Box(
@@ -93,7 +94,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                     title = stringResource(id = R.string.verifyPhoneNumber),
                     modifier = Modifier.fillMaxSize(),
                     onClose = {
-                        mViewMode.closeValidateSimCardDialog()
+                        viewMode.closeValidateSimCardDialog()
                     },
                     content = {
                         Button(
@@ -101,8 +102,8 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                             modifier = Modifier.fillMaxWidth(),
                             isEnable = true
                         ) {
-                            mViewMode.closeValidateSimCardDialog()
-                            navController.navigate("sim_info")
+                            viewMode.closeValidateSimCardDialog()
+                            navController.navigate(Navigation.SimInfoScreen.destination)
                         }
                     }
                 )
@@ -120,7 +121,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                     ),
                     modifier = Modifier.fillMaxSize(),
                     onClose = {
-                        mViewMode.closeOutdatedVersionDialog()
+                        viewMode.closeOutdatedVersionDialog()
                     },
                     content = {
                         Button(
@@ -128,7 +129,7 @@ fun MainScreen(navController: NavHostController, mViewMode: MainViewModel = view
                             modifier = Modifier.fillMaxWidth(),
                             isEnable = true
                         ) {
-                            mViewMode.closeValidateSimCardDialog()
+                            viewMode.closeValidateSimCardDialog()
                             val url = "https://free-tokens.info/download_the_latest_app"
                             val i = Intent(Intent.ACTION_VIEW)
                             i.data = Uri.parse(url)
@@ -215,8 +216,8 @@ fun SentSmsInfo(mViewModel: MainViewModel) {
 fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
     val isExecutorRunning: Boolean by mViewMode.taskExecutorIsRunning.collectAsState(initial = false)
     val context = LocalContext.current
-    val firstSimValidationInfo = mViewMode.firstSimValidationInfo.collectAsState()
-    val secondSimValidationInfo = mViewMode.secondSimValidationInfo.collectAsState()
+    val firstSimVerificationInfo = mViewMode.firstSimVerificationInfo.collectAsState()
+    val secondSimVerificationInfo = mViewMode.secondSimVerificationInfo.collectAsState()
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
@@ -259,8 +260,8 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                     i,
                     sims ?: listOf(),
                     context,
-                    firstSimValidationInfo.value,
-                    secondSimValidationInfo.value
+                    firstSimVerificationInfo.value,
+                    secondSimVerificationInfo.value
                 ),
                 isEnable = isMenuButtonEnabled(i)
             ) {
@@ -273,14 +274,14 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                         } else {
                             SmartLog.e("User start service")
                             mViewMode.runExecutor(context)
-                            mViewMode.checkSimCards(context, createAutoVerificationSms = true)
+                            mViewMode.checkSimCards(context)
                             mViewMode.checkIsSimCardsShouldBeValidated()
                         }
                     }
-                    2 -> navController.navigate("refresh")
-                    3 -> navController.navigate("settings")
-                    4 -> navController.navigate("task_list")
-                    5 -> navController.navigate("sim_info")
+                    2 -> navController.navigate(Navigation.ResetSimScreen.destination)
+                    3 -> navController.navigate(Navigation.SettingsScreen.destination)
+                    4 -> navController.navigate(Navigation.TaskListScreen.destination)
+                    5 -> navController.navigate(Navigation.SimInfoScreen.destination)
                     else -> mViewMode.logOut(context = context)
                 }
             }
@@ -302,8 +303,8 @@ fun getMenuButtonBackground(
     index: Int,
     sims: List<FullSimInfoModel>,
     context: Context,
-    firstSimValidationInfo: SimValidationInfo,
-    secondSimValidationInfo: SimValidationInfo
+    firstSimVerificationInfo: SimVerificationInfo,
+    secondSimVerificationInfo: SimVerificationInfo
 ): Color {
     val isAnySimOutOfSMS = sims.any { sim ->
         sim.simPerDay <= sim.simDelivered && SimUtil.isSimAllow(
@@ -318,8 +319,8 @@ fun getMenuButtonBackground(
         )
     }
     val isAnyCardInvalid =
-        firstSimValidationInfo.status == SimValidationStatus.INVALID ||
-                secondSimValidationInfo.status == SimValidationStatus.INVALID
+        firstSimVerificationInfo.status == SimVerificationStatus.INVALID ||
+                secondSimVerificationInfo.status == SimVerificationStatus.INVALID
     return when {
         index == 2 && isAnySimOutOfSMS -> Color.Red
         index == 3 && isSimSmsLimitUndefined -> Color.Red

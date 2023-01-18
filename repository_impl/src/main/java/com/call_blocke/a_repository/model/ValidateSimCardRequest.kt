@@ -13,9 +13,6 @@ data class ValidateSimCardRequest(
     @SerializedName("msisdn")
     val simNumber: String,
 
-    @SerializedName("monthly_limit")
-    val monthlyLimit: Int,
-
     @SerializedName("sim_slot")
     val simSlot: String,
 

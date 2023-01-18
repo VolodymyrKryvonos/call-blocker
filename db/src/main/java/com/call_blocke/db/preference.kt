@@ -7,7 +7,7 @@ import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocker.model.Profile
 import com.google.gson.Gson
 
-enum class AutoValidationResult {
+enum class AutoVerificationResult {
     NONE, FAILED, SUCCESS
 }
 
@@ -220,56 +220,56 @@ class Preference(context: Context) {
         }
 
 
-    var firstSimSlotValidationNumber: String
-        get() = sharedPreferences.getString("firstSimSlotValidationNumber", "") ?: ""
+    var firstSimSlotVerificationNumber: String
+        get() = sharedPreferences.getString("firstSimSlotVerificationNumber", "") ?: ""
         set(value) {
             with(sharedPreferences.edit()) {
-                putString("firstSimSlotValidationNumber", value)
+                putString("firstSimSlotVerificationNumber", value)
                 commit()
             }
         }
 
-    var secondSimSlotValidationNumber: String
-        get() = sharedPreferences.getString("secondSimSlotValidationNumber", "") ?: ""
+    var secondSimSlotVerificationNumber: String
+        get() = sharedPreferences.getString("secondSimSlotVerificationNumber", "") ?: ""
         set(value) {
             with(sharedPreferences.edit()) {
-                putString("secondSimSlotValidationNumber", value)
+                putString("secondSimSlotVerificationNumber", value)
                 commit()
             }
         }
 
-    var simFirstAutoValidationResult: AutoValidationResult
+    var simFirstAutoVerificationResult: AutoVerificationResult
         get() = try {
-            AutoValidationResult.valueOf(
+            AutoVerificationResult.valueOf(
                 sharedPreferences.getString(
-                    "simFirstAutoValidationResult",
+                    "simFirstAutoVerificationResult",
                     ""
                 ) ?: ""
             )
         } catch (e: IllegalArgumentException) {
-            AutoValidationResult.NONE
+            AutoVerificationResult.NONE
         }
         set(value) {
             with(sharedPreferences.edit()) {
-                putString("simFirstAutoValidationResult", value.name)
+                putString("simFirstAutoVerificationResult", value.name)
                 commit()
             }
         }
 
-    var simSecondAutoValidationResult: AutoValidationResult
+    var simSecondAutoVerificationResult: AutoVerificationResult
         get() = try {
-            AutoValidationResult.valueOf(
+            AutoVerificationResult.valueOf(
                 sharedPreferences.getString(
-                    "simSecondAutoValidationResult",
+                    "simSecondAutoVerificationResult",
                     ""
                 ) ?: ""
             )
         } catch (e: IllegalArgumentException) {
-            AutoValidationResult.NONE
+            AutoVerificationResult.NONE
         }
         set(value) {
             with(sharedPreferences.edit()) {
-                putString("simSecondAutoValidationResult", value.name)
+                putString("simSecondAutoVerificationResult", value.name)
                 commit()
             }
         }

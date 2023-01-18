@@ -5,12 +5,11 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.provider.BlockedNumberContract.BlockedNumbers
-import android.telephony.SubscriptionInfo
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.ValidationState
+import com.call_blocke.db.VerificationState
 import com.call_blocke.rest_work_imp.model.Resource
-import com.call_blocke.rest_work_imp.model.SimValidationInfo
-import com.call_blocke.rest_work_imp.model.SimValidationStatus
+import com.call_blocke.rest_work_imp.model.SimVerificationInfo
+import com.call_blocke.rest_work_imp.model.SimVerificationStatus
 import com.call_blocker.model.ConnectionStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,7 +51,6 @@ abstract class SettingsRepository {
     abstract suspend fun validateSimCard(
         phoneNumber: String,
         simID: String,
-        monthlyLimit: Int,
         simSlot: Int
     ): Flow<Resource<Unit>>
 
@@ -88,10 +86,11 @@ abstract class SettingsRepository {
     abstract suspend fun checkSimCard(
         iccId: String,
         simSlot: Int,
+        phoneNumber: String?,
         createAutoVerificationSms: Boolean = false
-    ): Flow<SimValidationInfo>
+    ): Flow<SimVerificationInfo>
 
-    abstract suspend fun confirmValidation(
+    abstract suspend fun confirmVerification(
         iccid: String,
         simSlot: String,
         verificationCode: String,
@@ -102,29 +101,30 @@ abstract class SettingsRepository {
     abstract suspend fun sendSignalStrengthInfo()
 
     suspend fun checkSim(
-        simInfo: SubscriptionInfo?,
-        simValidationInfo: MutableStateFlow<SimValidationInfo>,
-        simValidationState: MutableStateFlow<ValidationState>,
+        simId: String,
+        simSlot: Int,
+        simVerificationInfo: MutableStateFlow<SimVerificationInfo>,
+        simVerificationState: MutableStateFlow<VerificationState>,
+        phoneNumber: String?,
         createAutoVerificationSms: Boolean = false
     ) {
-        if (simInfo != null) {
-            checkSimCard(
-                simInfo.iccId ?: "",
-                simInfo.simSlotIndex,
-                createAutoVerificationSms
-            )
-                .collectLatest {
-                    simValidationInfo.emit(it)
-                    if (it.status == SimValidationStatus.INVALID && simValidationState.value != ValidationState.FAILED) {
-                        simValidationState.emit(ValidationState.INVALID)
-                        return@collectLatest
-                    }
-                    if (it.status == SimValidationStatus.AUTO_VALIDATION) {
-                        simValidationState.emit(ValidationState.AUTO_VALIDATION)
-                        return@collectLatest
-                    }
-                    simValidationState.emit(ValidationState.SUCCESS)
+        checkSimCard(
+            simId,
+            simSlot,
+            phoneNumber,
+            createAutoVerificationSms,
+        )
+            .collectLatest {
+                simVerificationInfo.emit(it)
+                if (it.status == SimVerificationStatus.INVALID && simVerificationState.value != VerificationState.FAILED) {
+                    simVerificationState.emit(VerificationState.INVALID)
+                    return@collectLatest
                 }
-        }
+                if (it.isAutoVerificationAvailable) {
+                    simVerificationState.emit(VerificationState.AUTO_VERIFICATION)
+                    return@collectLatest
+                }
+                simVerificationState.emit(VerificationState.SUCCESS)
+            }
     }
 }

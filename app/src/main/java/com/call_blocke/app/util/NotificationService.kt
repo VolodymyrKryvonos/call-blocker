@@ -21,7 +21,7 @@ object NotificationService {
     private const val SERVICE_NOTIFICATION_CHANNEL_ID = "Service_Bottega_SMS"
     private const val EVENT_NOTIFICATION_CHANNEL_ID = "Event_Bottega_SMS"
     private const val CHANNEL_NAME = "Bottega SMS"
-    private const val VALIDATION_SUCCESS_ID = 785
+    private const val VERIFICATION_SUCCESS_ID = 785
     private const val SERVICE_NOTIFICATION_ID = 772
 
     fun showPhoneNumberVerifiedNotification(
@@ -53,8 +53,8 @@ object NotificationService {
             context.getSystemService(Context.NOTIFICATION_SERVICE) as
                     NotificationManager
 
-        notificationManager.cancel(VALIDATION_SUCCESS_ID + simSlot)
-        notificationManager.notify(VALIDATION_SUCCESS_ID, notificationBuilder.build())
+        notificationManager.cancel(VERIFICATION_SUCCESS_ID + simSlot)
+        notificationManager.notify(VERIFICATION_SUCCESS_ID, notificationBuilder.build())
     }
 
     fun showVerificationFailedNotification(context: Context, task: TaskEntity) {

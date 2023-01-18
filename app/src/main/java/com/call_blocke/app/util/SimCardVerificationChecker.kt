@@ -3,10 +3,11 @@ package com.call_blocke.app.util
 import android.content.Context
 import android.telephony.SubscriptionInfo
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocke.rest_work_imp.SimUtil
-import com.call_blocke.rest_work_imp.model.SimValidationInfo
-import com.call_blocke.rest_work_imp.model.SimValidationStatus
+import com.call_blocke.rest_work_imp.model.SimVerificationInfo
+import com.call_blocke.rest_work_imp.model.SimVerificationStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -14,12 +15,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
-interface SimCardValidationChecker {
+interface SimCardVerificationChecker {
     val settingsRepository: SettingsRepository
 
-    val firstSimValidationInfo: MutableStateFlow<SimValidationInfo>
+    val firstSimVerificationInfo: MutableStateFlow<SimVerificationInfo>
 
-    val secondSimValidationInfo: MutableStateFlow<SimValidationInfo>
+    val secondSimVerificationInfo: MutableStateFlow<SimVerificationInfo>
 
     var coroutineScope: CoroutineScope
 
@@ -35,19 +36,18 @@ interface SimCardValidationChecker {
 }
 
 
-class SimCardValidationCheckerImpl(
-    override val settingsRepository: SettingsRepository
-) : SimCardValidationChecker {
-
-    override val firstSimValidationInfo =
-        MutableStateFlow(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
-    override val secondSimValidationInfo =
-        MutableStateFlow(SimValidationInfo(SimValidationStatus.UNKNOWN, ""))
+class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
+    override val settingsRepository: SettingsRepository = RepositoryImp.settingsRepository
+    override val firstSimVerificationInfo =
+        MutableStateFlow(SimVerificationInfo(SimVerificationStatus.UNKNOWN))
+    override val secondSimVerificationInfo =
+        MutableStateFlow(SimVerificationInfo(SimVerificationStatus.UNKNOWN))
     override var coroutineScope: CoroutineScope = object : CoroutineScope {
         override val coroutineContext: CoroutineContext
             get() = SupervisorJob()
     }
 
+    @Suppress("LABEL_NAME_CLASH")
     override fun checkSimCards(context: Context) {
         coroutineScope.launch(Dispatchers.IO) {
             launch {
@@ -78,9 +78,11 @@ class SimCardValidationCheckerImpl(
         createAutoVerificationSms: Boolean = false
     ) {
         settingsRepository.checkSim(
-            subscriptionInfo,
-            firstSimValidationInfo,
-            SmsBlockerDatabase.firstSimValidationState,
+            subscriptionInfo.iccId,
+            subscriptionInfo.simSlotIndex,
+            firstSimVerificationInfo,
+            SmsBlockerDatabase.firstSimVerificationState,
+            subscriptionInfo.number.ifEmpty { null },
             createAutoVerificationSms
         )
     }
@@ -90,9 +92,11 @@ class SimCardValidationCheckerImpl(
         createAutoVerificationSms: Boolean = false
     ) {
         settingsRepository.checkSim(
-            subscriptionInfo,
-            secondSimValidationInfo,
-            SmsBlockerDatabase.secondSimValidationState,
+            subscriptionInfo.iccId,
+            subscriptionInfo.simSlotIndex,
+            secondSimVerificationInfo,
+            SmsBlockerDatabase.secondSimVerificationState,
+            subscriptionInfo.number.ifEmpty { null },
             createAutoVerificationSms
         )
     }

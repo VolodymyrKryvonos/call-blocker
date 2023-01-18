@@ -9,37 +9,37 @@ import com.call_blocke.db.entity.*
 import com.call_blocker.model.Profile
 import kotlinx.coroutines.flow.MutableStateFlow
 
-enum class ValidationState {
+enum class VerificationState {
     FAILED,
     PROCESSING,
     SUCCESS,
     INVALID,
-    AUTO_VALIDATION,
+    AUTO_VERIFICATION,
     NONE
 }
 
 object SmsBlockerDatabase {
 
-    val firstSimValidationState = MutableStateFlow(ValidationState.NONE)
+    val firstSimVerificationState = MutableStateFlow(VerificationState.NONE)
 
-    val secondSimValidationState = MutableStateFlow(ValidationState.NONE)
+    val secondSimVerificationState = MutableStateFlow(VerificationState.NONE)
 
-    var simFirstAutoValidationResult: AutoValidationResult
+    var simFirstAutoVerificationResult: AutoVerificationResult
         get() {
             return (preference
-                ?: throw DbModuleException("please init db module")).simFirstAutoValidationResult
+                ?: throw DbModuleException("please init db module")).simFirstAutoVerificationResult
         }
         set(value) {
-            preference?.simFirstAutoValidationResult = value
+            preference?.simFirstAutoVerificationResult = value
         }
 
-    var simSecondAutoValidationResult: AutoValidationResult
+    var simSecondAutoVerificationResult: AutoVerificationResult
         get() {
             return (preference
-                ?: throw DbModuleException("please init db module")).simSecondAutoValidationResult
+                ?: throw DbModuleException("please init db module")).simSecondAutoVerificationResult
         }
         set(value) {
-            preference?.simSecondAutoValidationResult = value
+            preference?.simSecondAutoVerificationResult = value
         }
 
     private var preference: Preference? = null
@@ -182,19 +182,19 @@ object SmsBlockerDatabase {
             preference?.secondSimChanged = value
         }
 
-    var firstSimSlotValidationNumber: String
+    var firstSimSlotVerificationNumber: String
         get() = (preference
-            ?: throw DbModuleException("please init db module")).firstSimSlotValidationNumber
+            ?: throw DbModuleException("please init db module")).firstSimSlotVerificationNumber
         set(value) {
-            preference?.firstSimSlotValidationNumber = value
+            preference?.firstSimSlotVerificationNumber = value
         }
 
 
-    var secondSimSlotValidationNumber: String
+    var secondSimSlotVerificationNumber: String
         get() = (preference
-            ?: throw DbModuleException("please init db module")).secondSimSlotValidationNumber
+            ?: throw DbModuleException("please init db module")).secondSimSlotVerificationNumber
         set(value) {
-            preference?.secondSimSlotValidationNumber = value
+            preference?.secondSimSlotVerificationNumber = value
         }
 
 
