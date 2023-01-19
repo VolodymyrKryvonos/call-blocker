@@ -6,14 +6,9 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.BlockedNumberContract.BlockedNumbers
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.VerificationState
-import com.call_blocke.rest_work_imp.model.Resource
-import com.call_blocke.rest_work_imp.model.SimVerificationInfo
-import com.call_blocke.rest_work_imp.model.SimVerificationStatus
 import com.call_blocker.model.ConnectionStatus
+import com.example.common.Resource
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 
 abstract class SettingsRepository {
 
@@ -48,12 +43,6 @@ abstract class SettingsRepository {
     protected abstract suspend fun blackPhoneNumberList(): List<String>
 
     abstract suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String = "")
-    abstract suspend fun validateSimCard(
-        phoneNumber: String,
-        simID: String,
-        simSlot: Int
-    ): Flow<Resource<Unit>>
-
     abstract suspend fun simInfo(): List<FullSimInfoModel>
 
     fun blackList(context: Context): List<String> {
@@ -83,48 +72,7 @@ abstract class SettingsRepository {
     abstract suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>>
     abstract suspend fun checkConnection(): Resource<ConnectionStatus>
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
-    abstract suspend fun checkSimCard(
-        iccId: String,
-        simSlot: Int,
-        phoneNumber: String?,
-        createAutoVerificationSms: Boolean = false
-    ): Flow<SimVerificationInfo>
-
-    abstract suspend fun confirmVerification(
-        iccid: String,
-        simSlot: String,
-        verificationCode: String,
-        phoneNumber: String,
-        uniqueId: String
-    ): Flow<Resource<Unit>>
-
     abstract suspend fun sendSignalStrengthInfo()
 
-    suspend fun checkSim(
-        simId: String,
-        simSlot: Int,
-        simVerificationInfo: MutableStateFlow<SimVerificationInfo>,
-        simVerificationState: MutableStateFlow<VerificationState>,
-        phoneNumber: String?,
-        createAutoVerificationSms: Boolean = false
-    ) {
-        checkSimCard(
-            simId,
-            simSlot,
-            phoneNumber,
-            createAutoVerificationSms,
-        )
-            .collectLatest {
-                simVerificationInfo.emit(it)
-                if (it.status == SimVerificationStatus.INVALID && simVerificationState.value != VerificationState.FAILED) {
-                    simVerificationState.emit(VerificationState.INVALID)
-                    return@collectLatest
-                }
-                if (it.isAutoVerificationAvailable) {
-                    simVerificationState.emit(VerificationState.AUTO_VERIFICATION)
-                    return@collectLatest
-                }
-                simVerificationState.emit(VerificationState.SUCCESS)
-            }
-    }
+
 }

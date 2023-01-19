@@ -5,13 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.telephony.SmsMessage
-import com.call_blocke.app.util.Const
-import com.call_blocke.app.util.NotificationService
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.VerificationState
-import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.replyRepository
-import com.call_blocke.rest_work_imp.model.Resource
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import com.squareup.moshi.Json
@@ -20,7 +15,6 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -64,37 +58,7 @@ class SmsReceiver : BroadcastReceiver() {
         verificationSms ?: return false
 
         SmartLog.e("verificationSms $verificationSms")
-        RepositoryImp.settingsRepository.confirmVerification(
-            simSlot = verificationSms.simSlot,
-            iccid = verificationSms.simIccid,
-            verificationCode = verificationSms.verificationCode ?: "",
-            phoneNumber = sms.senderNumber,
-            uniqueId = verificationSms.uniqueId ?: SmsBlockerDatabase.deviceID
-        ).collectLatest {
-            if (verificationSms.uniqueId == SmsBlockerDatabase.deviceID) {
-                if (it is Resource.Success) {
-                    emitVerificationCompletion(verificationSms.simSlot, VerificationState.SUCCESS)
-                    NotificationService.showPhoneNumberVerifiedNotification(
-                        sms.senderNumber,
-                        context,
-                        verificationSms.simSlot.last().digitToIntOrNull() ?: -1
-                    )
-                    return@collectLatest
-                }
-                if (it is Resource.Error) {
-                    emitVerificationCompletion(verificationSms.simSlot, VerificationState.FAILED)
-                }
-            }
-        }
         return true
-    }
-
-    private suspend fun emitVerificationCompletion(simSlot: String, status: VerificationState) {
-        if (simSlot == Const.firstSim) {
-            SmsBlockerDatabase.firstSimVerificationState.emit(status)
-        } else {
-            SmsBlockerDatabase.secondSimVerificationState.emit(status)
-        }
     }
 
     private suspend fun storeReply(sms: ReplyMessage) {

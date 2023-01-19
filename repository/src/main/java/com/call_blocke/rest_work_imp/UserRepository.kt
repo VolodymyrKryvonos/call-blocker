@@ -2,7 +2,7 @@ package com.call_blocke.rest_work_imp
 
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.SystemDetailEntity
-import com.call_blocke.rest_work_imp.model.Resource
+import com.example.common.Resource
 import kotlinx.coroutines.flow.Flow
 
 abstract class UserRepository {

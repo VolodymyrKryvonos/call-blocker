@@ -30,15 +30,6 @@ interface SettingsRest {
     @POST("apps/get-profile")
     suspend fun getProfile(@Body model: GetProfileRequest): ApiResponse<ProfileDto>
 
-    @POST("apps/validate-sim-card")
-    suspend fun validateSimCard(@Body validateSimCardRequest: ValidateSimCardRequest)
-
-    @POST("apps/get-number-info")
-    suspend fun checkSimCard(@Body checkSimCardRequest: CheckSimCardRequest): CheckSimCardResponse
-
-    @POST("apps/confirm-validation")
-    suspend fun confirmSimCardVerification(@Body body: ConfirmSimCardVerificationRequest)
-
     @POST("apps/signal-strength")
     suspend fun sendSignalStrengthInfo(@Body signalStrengthBody: SignalStrengthRequest)
 }

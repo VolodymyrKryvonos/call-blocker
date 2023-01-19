@@ -1,13 +1,13 @@
 package com.call_blocke.a_repository.model
 
 import com.call_blocke.db.SmsBlockerDatabase
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class SignalStrengthRequest(
-    @SerializedName("unique_id")
+    @Json(name = "unique_id")
     val uniqueId: String = SmsBlockerDatabase.deviceID,
-    @SerializedName("signal_strength")
+    @Json(name = "signal_strength")
     val signalStrength: Int,
-    @SerializedName("signal_generation")
+    @Json(name = "signal_generation")
     val signalGeneration: String
 )

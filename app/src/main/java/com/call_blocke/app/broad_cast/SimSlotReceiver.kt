@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.rest_work_imp.SimUtil
+import com.example.common.SimUtil
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.rokobit.adstvv_unit.loger.SmartLog

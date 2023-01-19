@@ -59,7 +59,9 @@
         android:theme="@style/App"
         android:usesCleartextTraffic="true"
         android:fullBackupContent="false"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        tools:targetApi="s">
 
         <activity
             android:name=".SplashActivity"

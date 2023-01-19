@@ -35,4 +35,5 @@ dependencies {
 
     implementation (project(":loger"))
     implementation (project(":model"))
+    implementation project(path: ':common')
 }

@@ -36,9 +36,7 @@ import com.call_blocke.app.Navigation
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
-import com.call_blocke.rest_work_imp.SimUtil
-import com.call_blocke.rest_work_imp.model.SimVerificationInfo
-import com.call_blocke.rest_work_imp.model.SimVerificationStatus
+import com.example.common.SimUtil
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.rokobit.adstv.ui.element.*
@@ -216,12 +214,9 @@ fun SentSmsInfo(mViewModel: MainViewModel) {
 fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
     val isExecutorRunning: Boolean by mViewMode.taskExecutorIsRunning.collectAsState(initial = false)
     val context = LocalContext.current
-    val firstSimVerificationInfo = mViewMode.firstSimVerificationInfo.collectAsState()
-    val secondSimVerificationInfo = mViewMode.secondSimVerificationInfo.collectAsState()
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                mViewMode.checkSimCards(context)
                 mViewMode.reloadSystemInfo()
                 mViewMode.simsInfo()
                 mViewMode.getProfile()
@@ -259,9 +254,7 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 backgroundColor = getMenuButtonBackground(
                     i,
                     sims ?: listOf(),
-                    context,
-                    firstSimVerificationInfo.value,
-                    secondSimVerificationInfo.value
+                    context
                 ),
                 isEnable = isMenuButtonEnabled(i)
             ) {
@@ -274,8 +267,6 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                         } else {
                             SmartLog.e("User start service")
                             mViewMode.runExecutor(context)
-                            mViewMode.checkSimCards(context)
-                            mViewMode.checkIsSimCardsShouldBeValidated()
                         }
                     }
                     2 -> navController.navigate(Navigation.ResetSimScreen.destination)
@@ -302,9 +293,7 @@ fun isMenuButtonEnabled(
 fun getMenuButtonBackground(
     index: Int,
     sims: List<FullSimInfoModel>,
-    context: Context,
-    firstSimVerificationInfo: SimVerificationInfo,
-    secondSimVerificationInfo: SimVerificationInfo
+    context: Context
 ): Color {
     val isAnySimOutOfSMS = sims.any { sim ->
         sim.simPerDay <= sim.simDelivered && SimUtil.isSimAllow(
@@ -318,13 +307,9 @@ fun getMenuButtonBackground(
             sim.simSlot
         )
     }
-    val isAnyCardInvalid =
-        firstSimVerificationInfo.status == SimVerificationStatus.INVALID ||
-                secondSimVerificationInfo.status == SimVerificationStatus.INVALID
     return when {
         index == 2 && isAnySimOutOfSMS -> Color.Red
         index == 3 && isSimSmsLimitUndefined -> Color.Red
-        index == 5 && isAnyCardInvalid -> Color.Red
         else -> secondaryColor
     }
 }

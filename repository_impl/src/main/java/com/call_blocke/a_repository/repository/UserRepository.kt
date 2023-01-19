@@ -9,8 +9,10 @@ import com.call_blocke.a_repository.rest.UserRest
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocke.rest_work_imp.UserRepository
-import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocker.common.rest.AppRest
+import com.call_blocker.common.rest.Const
 import com.example.common.ConnectionManager
+import com.example.common.Resource
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.flow
@@ -18,9 +20,8 @@ import kotlinx.coroutines.flow.flow
 class UserRepositoryImp : UserRepository() {
 
     private val userRest: UserRest
-        get() = ApiRepositoryHelper.createRest(
-            UserRest::class.java
-        )
+        get() = AppRest(Const.url, SmsBlockerDatabase.userToken ?: "", UserRest::class.java).build()
+
 
     override suspend fun doLogin(
         email: String,

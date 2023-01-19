@@ -1,14 +1,14 @@
 package com.call_blocke.a_repository.model
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class UserDetailInfo(
-    @SerializedName("left_count")
+    @Json(name = "left_count")
     val leftCount: Int,
 
-    @SerializedName("delivered_count")
+    @Json(name = "delivered_count")
     val deliveredCount: Int,
 
-    @SerializedName("undelivered_count")
+    @Json(name = "undelivered_count")
     val undeliveredCount: Int
 )

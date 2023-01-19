@@ -15,7 +15,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -29,13 +28,10 @@ import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.app.screen.refresh_full.RefreshViewModel
 import com.call_blocke.app.screen.refresh_full.SnackbarVisibility
 import com.call_blocke.app.worker_manager.SendingSMSWorker
-import com.call_blocke.db.AutoVerificationResult
-import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.VerificationState
 import com.call_blocke.rest_work_imp.FullSimInfoModel
-import com.call_blocke.rest_work_imp.model.Resource
-import com.call_blocke.rest_work_imp.model.SimVerificationInfo
+import com.call_blocker.verification.data.model.SimVerificationInfo
 import com.example.common.CountryCodeExtractor
+import com.example.common.Resource
 import com.rokobit.adstv.ui.element.*
 import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.primaryDimens
@@ -54,10 +50,6 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
     modifier = Modifier
         .fillMaxSize()
 ) {
-    val firstSimVerificationState = SmsBlockerDatabase.firstSimVerificationState
-        .collectAsState()
-    val secondSimVerificationState = SmsBlockerDatabase.secondSimVerificationState
-        .collectAsState()
     val context = LocalContext.current
     val openDialog = remember { mutableStateOf(false) }
     val verifyingSim: MutableState<VerifyingSim?> = remember {
@@ -97,11 +89,9 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
                         SimInfoCard(
                             info = it,
                             data = fullSimInfoModel,
-                            phoneNumber = firstSimVerificationInfo.value.number,
-                            verificationState = firstSimVerificationState.value
+                            phoneNumber = firstSimVerificationInfo.value.number
                         ) {
-                            openDialog.value = true
-                            verifyingSim.value = VerifyingSim(it, firstSimVerificationInfo.value)
+                            viewModel.checkSimCard(it.simSlotIndex, context, true)
                         }
                     }
                 }
@@ -113,11 +103,9 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
                         SimInfoCard(
                             info = it,
                             data = fullSimInfoModel,
-                            phoneNumber = secondSimVerificationInfo.value.number,
-                            verificationState = secondSimVerificationState.value
+                            phoneNumber = secondSimVerificationInfo.value.number
                         ) {
-                            openDialog.value = true
-                            verifyingSim.value = VerifyingSim(it, secondSimVerificationInfo.value)
+                            viewModel.checkSimCard(it.simSlotIndex, context, true)
                         }
                     }
                 }
@@ -220,16 +208,6 @@ private fun VerifyNumberDialog(
                         SendingSMSWorker.start(context = context)
                     }
                     viewModel.showSnackbar()
-                    viewModel.validatePhoneNumber(
-                        phoneNumber.value.removePrefix("+"),
-                        verifyingSim.subscriptionInfo.iccId,
-                        simSlot = verifyingSim.subscriptionInfo.simSlotIndex
-                    )
-                    if (verifyingSim.subscriptionInfo.simSlotIndex == 0) {
-                        SmsBlockerDatabase.firstSimSlotVerificationNumber = phoneNumber.value
-                    } else {
-                        SmsBlockerDatabase.secondSimSlotVerificationNumber = phoneNumber.value
-                    }
                     keyboardController?.hide()
                 }
             }
@@ -259,22 +237,12 @@ private fun SimInfoCard(
     info: SubscriptionInfo,
     data: FullSimInfoModel,
     phoneNumber: String,
-    verificationState: VerificationState,
     onClick: () -> Unit
 ) = Card(
     modifier = Modifier
         .fillMaxWidth(),
     shape = RoundedCornerShape(15),
-    backgroundColor = getBackgroundColor(
-        if (data.simSlot == 0) {
-            SmsBlockerDatabase.simFirstAutoVerificationResult
-        } else {
-            SmsBlockerDatabase.simSecondAutoVerificationResult
-        }, verificationState
-    ),
-    enabled = isManualVerificationEnabled(verificationState),
     elevation = 6.dp,
-    onClick = onClick,
 ) {
     Column(
         modifier = Modifier
@@ -314,33 +282,32 @@ private fun SimInfoCard(
             Text(text = info.iccId)
         }
         Spacer(modifier = Modifier.height(4.dp))
-
-
-    }
-}
-
-fun isManualVerificationEnabled(
-    verificationState: VerificationState
-): Boolean {
-    return verificationState == VerificationState.INVALID ||
-            verificationState == VerificationState.FAILED ||
-            verificationState == VerificationState.AUTO_VERIFICATION
-}
-
-fun getBackgroundColor(
-    verificationResult: AutoVerificationResult,
-    verificationState: VerificationState
-): Color {
-    return when (verificationState) {
-        VerificationState.INVALID -> Color.Red
-        VerificationState.AUTO_VERIFICATION -> {
-            if (verificationResult == AutoVerificationResult.FAILED) {
-                Color.Red
-            } else {
-                Color.Gray
+        if (false) {
+            Button(
+                title = stringResource(id = R.string.verify),
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = 16.sp
+            ) {
+                onClick()
             }
         }
-        VerificationState.PROCESSING, VerificationState.FAILED -> Color.Gray
-        else -> secondaryColor
+
     }
 }
+
+//fun isManualVerificationEnabled(
+//    verificationState: VerificationState
+//): Boolean {
+//    return verificationState == VerificationState.INVALID ||
+//            verificationState == VerificationState.FAILED
+//}
+//
+//fun getBackgroundColor(
+//    verificationState: VerificationState
+//): Color {
+//    return when (verificationState) {
+//        VerificationState.INVALID -> Color.Red
+//        VerificationState.PROCESSING, VerificationState.FAILED -> Color.Gray
+//        else -> secondaryColor
+//    }
+//}

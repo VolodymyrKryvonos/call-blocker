@@ -1,22 +1,22 @@
 package com.call_blocke.a_repository.model
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class SimInfoResponse(
-    @SerializedName("msisdn_1")
+    @Json(name = "msisdn_1")
     val simFirst: SSimInfo?,
 
-    @SerializedName("msisdn_2")
+    @Json(name = "msisdn_2")
     val simSecond: SSimInfo?
 )
 
 data class SSimInfo(
-    @SerializedName("updated_at")
+    @Json(name = "updated_at")
     val updatedAt: String,
 
     val delivered: Int,
 
-    @SerializedName("sms_per_day")
+    @Json(name = "sms_per_day")
     val smsPerDay: Int
 )
 

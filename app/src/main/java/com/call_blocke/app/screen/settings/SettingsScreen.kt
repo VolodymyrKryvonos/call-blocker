@@ -33,7 +33,6 @@ import com.call_blocke.app.Navigation
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.rest_work_imp.model.SimVerificationStatus
 import com.rokobit.adstv.ui.*
 import com.rokobit.adstv.ui.element.*
 import kotlinx.coroutines.delay
@@ -48,7 +47,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: SettingsViewMode
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                viewModel.checkSimCards(context)
+
             }
             else -> Unit
         }
@@ -164,9 +163,6 @@ fun LogsButtons(viewModel: SettingsViewModel) {
 fun SmsLimitFields(navController: NavHostController, viewModel: SettingsViewModel) {
     val context = LocalContext.current
 
-    val firstSimVerificationInfo = viewModel.firstSimVerificationInfo.collectAsState()
-    val secondSimVerificationInfo = viewModel.secondSimVerificationInfo.collectAsState()
-
     var isFirstSimSmsPerDayError: Boolean by remember {
         mutableStateOf(false)
     }
@@ -200,8 +196,8 @@ fun SmsLimitFields(navController: NavHostController, viewModel: SettingsViewMode
     val keyboardController = LocalSoftwareKeyboardController.current
     val isLoading by viewModel.onLoading.observeAsState(false)
 
-    val isFirstSimNeedVerification = isNeedVerification(firstSimVerificationInfo.value.status)
-    val isSecondSimNeedVerification = isNeedVerification(secondSimVerificationInfo.value.status)
+    val isFirstSimNeedVerification = false
+    val isSecondSimNeedVerification = false
 
     if (isFirstSimAllow) {
         if (isFirstSimNeedVerification) {
@@ -345,9 +341,9 @@ fun SimLimitFields(
 }
 
 
-fun isNeedVerification(status: SimVerificationStatus): Boolean {
-    return status != SimVerificationStatus.VALID && status != SimVerificationStatus.UNKNOWN
-}
+//fun isNeedVerification(status: SimVerificationStatus): Boolean {
+//    return status != SimVerificationStatus.VALID && status != SimVerificationStatus.UNKNOWN
+//}
 
 fun getLogsShareIntent(context: Context): Intent {
     val files = arrayListOf<Uri>()

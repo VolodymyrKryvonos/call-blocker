@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.repository.RepositoryImp
-import com.call_blocke.rest_work_imp.model.Resource
+import com.example.common.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach

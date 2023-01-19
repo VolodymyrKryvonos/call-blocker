@@ -4,21 +4,20 @@ import android.content.Context
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresPermission
 import com.call_blocke.a_repository.BuildConfig
-import com.call_blocke.a_repository.Const
 import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.request.GetProfileRequest
 import com.call_blocke.a_repository.rest.SettingsRest
-import com.call_blocke.db.AutoVerificationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SettingsRepository
-import com.call_blocke.rest_work_imp.SimUtil
-import com.call_blocke.rest_work_imp.model.Resource
-import com.call_blocke.rest_work_imp.model.SimVerificationInfo
-import com.call_blocke.rest_work_imp.model.SimVerificationStatus
+import com.call_blocker.common.rest.AppRest
+import com.call_blocker.common.rest.Const
 import com.call_blocker.model.ConnectionStatus
+import com.call_blocker.model.Profile
 import com.example.common.ConnectionManager
 import com.example.common.CountryCodeExtractor
+import com.example.common.Resource
+import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.Flow
@@ -28,10 +27,11 @@ import kotlinx.coroutines.flow.flow
 class SettingsRepositoryImp : SettingsRepository() {
 
     private val settingsRest: SettingsRest
-        get() = ApiRepositoryHelper.createRest(
+        get() = AppRest(
+            Const.url,
+            SmsBlockerDatabase.userToken ?: "",
             SettingsRest::class.java
-        )
-
+        ).build()
     override suspend fun updateSmsPerDay(
         context: Context,
         smsPerDaySimFirst: Int,
@@ -115,28 +115,6 @@ class SettingsRepositoryImp : SettingsRepository() {
         }
     }
 
-    override suspend fun validateSimCard(
-        phoneNumber: String,
-        simID: String,
-        simSlot: Int
-    ): Flow<Resource<Unit>> = flow {
-        try {
-            val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(simID)
-            emit(Resource.Loading())
-            settingsRest.validateSimCard(
-                ValidateSimCardRequest(
-                    simICCID = simID,
-                    simNumber = phoneNumber,
-                    simSlot = "msisdn_${simSlot + 1}",
-                    countryCode = countryCode
-                )
-            )
-            emit(Resource.Success(Unit))
-        } catch (e: Exception) {
-            emit(Resource.Error(""))
-            SmartLog.e("Failed validate phone number ${getStackTrace(e)}")
-        }
-    }
 
     override suspend fun simInfo(): List<FullSimInfoModel> {
         try {
@@ -172,7 +150,7 @@ class SettingsRepositoryImp : SettingsRepository() {
         return emptyList()
     }
 
-    override suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>> = flow {
+    override suspend fun getProfile(): Flow<Resource<Profile>> = flow {
         emit(Resource.Loading<com.call_blocker.model.Profile>())
         try {
             val profile = settingsRest.getProfile(
@@ -212,66 +190,6 @@ class SettingsRepositoryImp : SettingsRepository() {
             emit(Resource.Error<Unit>(e.message ?: ""))
         }
     }
-
-    override suspend fun checkSimCard(
-        iccId: String,
-        simSlot: Int,
-        phoneNumber: String?,
-        createAutoVerificationSms: Boolean,
-    ) = flow {
-        try {
-            val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(iccId)
-            val response = settingsRest.checkSimCard(
-                CheckSimCardRequest(
-                    iccId,
-                    countryCode,
-                    "msisdn_${simSlot + 1}",
-                    createAutoVerificationSms = createAutoVerificationSms,
-                    phoneNumber = phoneNumber
-                )
-            )
-            if (response.status) {
-                if (simSlot == 0) {
-                    SmsBlockerDatabase.simFirstAutoVerificationResult =
-                        AutoVerificationResult.SUCCESS
-                } else {
-                    SmsBlockerDatabase.simSecondAutoVerificationResult =
-                        AutoVerificationResult.SUCCESS
-                }
-            }
-            emit(response.toSimVerificationInfo())
-        } catch (e: Exception) {
-            emit(SimVerificationInfo(SimVerificationStatus.UNKNOWN))
-            SmartLog.e("Failed check Sim Card ${getStackTrace(e)}")
-        }
-    }
-
-    override suspend fun confirmVerification(
-        iccid: String,
-        simSlot: String,
-        verificationCode: String,
-        phoneNumber: String,
-        uniqueId: String
-    ): Flow<Resource<Unit>> = flow {
-        emit(Resource.Loading<Unit>())
-        try {
-            settingsRest.confirmSimCardVerification(
-                ConfirmSimCardVerificationRequest(
-                    iccId = iccid,
-                    simSlot = simSlot,
-                    verificationCode = verificationCode,
-                    phoneNumber = phoneNumber,
-                    uniqueId = uniqueId
-                )
-            )
-            emit(Resource.Success<Unit>(Unit))
-        } catch (e: Exception) {
-            emit(Resource.Error<Unit>(""))
-            SmartLog.e("Failed confirm validation ${getStackTrace(e)}")
-        }
-
-    }
-
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
     override suspend fun sendSignalStrengthInfo() {

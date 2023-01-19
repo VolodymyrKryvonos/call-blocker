@@ -34,7 +34,7 @@ dependencies {
     kapt("androidx.room:room-compiler:2.3.0")
     implementation("androidx.room:room-ktx:2.3.0")
 
-    implementation(AppDependencies.gson)
+    implementation(AppDependencies.moshi)
     implementation(AppDependencies.security)
 
     implementation(AppDependencies.paged)

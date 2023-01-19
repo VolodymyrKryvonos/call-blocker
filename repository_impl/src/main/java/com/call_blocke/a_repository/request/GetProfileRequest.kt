@@ -1,13 +1,12 @@
 package com.call_blocke.a_repository.request
 
-
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class GetProfileRequest(
-    @SerializedName("app_ver")
+    @Json(name = "app_ver")
     val appVersion: String,
-    @SerializedName("protocol_ver")
+    @Json(name = "protocol_ver")
     val protocolVersion: String,
-    @SerializedName("unique_id")
+    @Json(name = "unique_id")
     val uniqueId: String
 )

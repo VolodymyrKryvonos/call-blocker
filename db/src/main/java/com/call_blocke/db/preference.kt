@@ -5,13 +5,12 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocker.model.Profile
-import com.google.gson.Gson
-
-enum class AutoVerificationResult {
-    NONE, FAILED, SUCCESS
-}
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 class Preference(context: Context) {
+
+    private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
 
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
         "sms_send_app",
@@ -30,13 +29,14 @@ class Preference(context: Context) {
 
     var profile: Profile?
         get() = try {
-            Gson().fromJson(sharedPreferences.getString("Profile", ""), Profile::class.java)
+            moshi.adapter(Profile::class.java)
+                .fromJson(sharedPreferences.getString("Profile", "") ?: "")
         } catch (e: Exception) {
             null
         }
         set(value) {
             with(sharedPreferences.edit()) {
-                putString("Profile", Gson().toJson(value))
+                putString("Profile", moshi.adapter(Profile::class.java).toJson(value))
                 commit()
             }
         }
@@ -59,20 +59,12 @@ class Preference(context: Context) {
             }
         }
 
-    var isSimChanged: Boolean
-        get() = sharedPreferences.getBoolean("isSimChanged", false)
-        set(value) {
-            with(sharedPreferences.edit()) {
-                putBoolean("isSimChanged", value)
-                commit()
-            }
-        }
 
     var ipType: String
         get() {
             val type = sharedPreferences.getString("ipType", "") ?: "Production"
             Log.e("Type", "Type$type")
-            return if (type.isNotEmpty()) type else "Production"
+            return type.ifEmpty { "Production" }
         }
         set(value) {
             with(sharedPreferences.edit()) {
@@ -167,10 +159,9 @@ class Preference(context: Context) {
         get() {
             if (sharedPreferences.contains("system_detail"))
                 return try {
-                    Gson().fromJson(
-                        sharedPreferences.getString("system_detail", ""),
-                        SystemDetailEntity::class.java
-                    )
+                    moshi.adapter(SystemDetailEntity::class.java).fromJson(
+                        sharedPreferences.getString("system_detail", "") ?: ""
+                    ) ?: SystemDetailEntity()
                 } catch (e: Exception) {
                     SystemDetailEntity()
                 }
@@ -178,7 +169,10 @@ class Preference(context: Context) {
         }
         set(value) {
             with(sharedPreferences.edit()) {
-                putString("system_detail", Gson().toJson(value))
+                putString(
+                    "system_detail",
+                    moshi.adapter(SystemDetailEntity::class.java).toJson(value)
+                )
                 commit()
             }
         }
@@ -215,61 +209,6 @@ class Preference(context: Context) {
         set(value) {
             with(sharedPreferences.edit()) {
                 putBoolean("secondSimChanged", value)
-                commit()
-            }
-        }
-
-
-    var firstSimSlotVerificationNumber: String
-        get() = sharedPreferences.getString("firstSimSlotVerificationNumber", "") ?: ""
-        set(value) {
-            with(sharedPreferences.edit()) {
-                putString("firstSimSlotVerificationNumber", value)
-                commit()
-            }
-        }
-
-    var secondSimSlotVerificationNumber: String
-        get() = sharedPreferences.getString("secondSimSlotVerificationNumber", "") ?: ""
-        set(value) {
-            with(sharedPreferences.edit()) {
-                putString("secondSimSlotVerificationNumber", value)
-                commit()
-            }
-        }
-
-    var simFirstAutoVerificationResult: AutoVerificationResult
-        get() = try {
-            AutoVerificationResult.valueOf(
-                sharedPreferences.getString(
-                    "simFirstAutoVerificationResult",
-                    ""
-                ) ?: ""
-            )
-        } catch (e: IllegalArgumentException) {
-            AutoVerificationResult.NONE
-        }
-        set(value) {
-            with(sharedPreferences.edit()) {
-                putString("simFirstAutoVerificationResult", value.name)
-                commit()
-            }
-        }
-
-    var simSecondAutoVerificationResult: AutoVerificationResult
-        get() = try {
-            AutoVerificationResult.valueOf(
-                sharedPreferences.getString(
-                    "simSecondAutoVerificationResult",
-                    ""
-                ) ?: ""
-            )
-        } catch (e: IllegalArgumentException) {
-            AutoVerificationResult.NONE
-        }
-        set(value) {
-            with(sharedPreferences.edit()) {
-                putString("simSecondAutoVerificationResult", value.name)
                 commit()
             }
         }

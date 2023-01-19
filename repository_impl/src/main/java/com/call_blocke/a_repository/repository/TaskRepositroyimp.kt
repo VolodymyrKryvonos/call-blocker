@@ -1,8 +1,6 @@
 package com.call_blocke.a_repository.repository
 
-import com.call_blocke.a_repository.Const.domain
 import com.call_blocke.a_repository.model.*
-import com.call_blocke.a_repository.model.TaskStatusRequest
 import com.call_blocke.a_repository.rest.TaskRest
 import com.call_blocke.a_repository.socket.SocketBuilder
 import com.call_blocke.db.SmsBlockerDatabase
@@ -12,10 +10,14 @@ import com.call_blocke.db.entity.TaskStatus
 import com.call_blocke.db.entity.TaskStatusData
 import com.call_blocke.rest_work_imp.TaskMessage
 import com.call_blocke.rest_work_imp.TaskRepository
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import com.call_blocker.common.rest.AppRest
+import com.call_blocker.common.rest.Const
+import com.call_blocker.common.rest.Const.domain
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -29,7 +31,10 @@ import java.util.*
 
 class TaskRepositoryImp : TaskRepository() {
 
-    private val taskRest = ApiRepositoryHelper.createRest(TaskRest::class.java)
+    private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
+    private val taskRest =
+        AppRest(Const.url, SmsBlockerDatabase.userToken ?: "", TaskRest::class.java).build()
+
 
     private val socketBuilder by lazy {
         SocketBuilder
@@ -112,10 +117,9 @@ class TaskRepositoryImp : TaskRepository() {
 
     private suspend fun toTaskMessage(msg: String?): TaskMessage? {
         try {
-            val parsedMsg = Gson().fromJson<SocketMessage<TaskResponse>>(
-                msg,
-                (object : TypeToken<SocketMessage<TaskResponse>>() {}).type
-            )
+            val type =
+                Types.newParameterizedType(SocketMessage::class.java, TaskResponse::class.java)
+            val parsedMsg = moshi.adapter<SocketMessage<TaskResponse>>(type).fromJson(msg ?: "")
 
             if (((parsedMsg != null) && (System.currentTimeMillis() - getDate(
                     parsedMsg.options.dateTime ?: ""
@@ -188,9 +192,7 @@ class TaskRepositoryImp : TaskRepository() {
             )
 
             if (!socketBuilder.sendMessage(
-                    Gson().toJson(
-                        req
-                    )
+                    moshi.adapter(TaskStatusRequest::class.java).toJson(req)
                 )
             ) {
                 SmartLog.e("Failed send status $req")
@@ -222,9 +224,7 @@ class TaskRepositoryImp : TaskRepository() {
         }
         for ((i, status) in statuesMaped.withIndex()) {
             if (socketBuilder.sendMessage(
-                    Gson().toJson(
-                        status
-                    )
+                    moshi.adapter(TaskStatusRequest::class.java).toJson(status)
                 )
             ) {
                 SmsBlockerDatabase.taskStatusDao.deleteTaskStatus(statues[i])

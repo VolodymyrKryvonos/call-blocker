@@ -7,40 +7,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.room.Room
 import com.call_blocke.db.entity.*
 import com.call_blocker.model.Profile
-import kotlinx.coroutines.flow.MutableStateFlow
-
-enum class VerificationState {
-    FAILED,
-    PROCESSING,
-    SUCCESS,
-    INVALID,
-    AUTO_VERIFICATION,
-    NONE
-}
 
 object SmsBlockerDatabase {
-
-    val firstSimVerificationState = MutableStateFlow(VerificationState.NONE)
-
-    val secondSimVerificationState = MutableStateFlow(VerificationState.NONE)
-
-    var simFirstAutoVerificationResult: AutoVerificationResult
-        get() {
-            return (preference
-                ?: throw DbModuleException("please init db module")).simFirstAutoVerificationResult
-        }
-        set(value) {
-            preference?.simFirstAutoVerificationResult = value
-        }
-
-    var simSecondAutoVerificationResult: AutoVerificationResult
-        get() {
-            return (preference
-                ?: throw DbModuleException("please init db module")).simSecondAutoVerificationResult
-        }
-        set(value) {
-            preference?.simSecondAutoVerificationResult = value
-        }
 
     private var preference: Preference? = null
 
@@ -181,23 +149,6 @@ object SmsBlockerDatabase {
         set(value) {
             preference?.secondSimChanged = value
         }
-
-    var firstSimSlotVerificationNumber: String
-        get() = (preference
-            ?: throw DbModuleException("please init db module")).firstSimSlotVerificationNumber
-        set(value) {
-            preference?.firstSimSlotVerificationNumber = value
-        }
-
-
-    var secondSimSlotVerificationNumber: String
-        get() = (preference
-            ?: throw DbModuleException("please init db module")).secondSimSlotVerificationNumber
-        set(value) {
-            preference?.secondSimSlotVerificationNumber = value
-        }
-
-
     @SuppressLint("HardwareIds")
     fun init(context: Context) {
         if (isInitialized)

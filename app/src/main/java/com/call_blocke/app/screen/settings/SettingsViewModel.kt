@@ -4,17 +4,18 @@ import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.call_blocke.app.util.SimCardVerificationChecker
-import com.call_blocke.app.util.SimCardVerificationCheckerImpl
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.rest_work_imp.SimUtil
+import com.call_blocke.repository.RepositoryImp
+import com.call_blocker.verification.domain.SimCardVerificationChecker
+import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
+import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class SettingsViewModel : ViewModel(),
     SimCardVerificationChecker by SimCardVerificationCheckerImpl() {
-
+    private val settingsRepository = RepositoryImp.settingsRepository
     init {
         coroutineScope = viewModelScope
     }

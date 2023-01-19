@@ -1,34 +1,34 @@
 package com.call_blocke.a_repository.model
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class RegisterRequest(
-    @SerializedName("unique_id")
+    @Json(name = "unique_id")
     override val uniqueId: String,
     override val email: String,
     override val password: String,
-    @SerializedName("name_of_package")
+    @Json(name = "name_of_package")
     val nameOfPackage: String,
-    @SerializedName("version_of_package")
+    @Json(name = "version_of_package")
     val versionOfPackage: String,
-    @SerializedName("os_name")
+    @Json(name = "os_name")
     val osName: String = "Android",
-    @SerializedName("device_model")
+    @Json(name = "device_model")
     val deviceModel: String,
-    @SerializedName("device_brand")
+    @Json(name = "device_brand")
     val deviceBrand: String,
-    @SerializedName("device_type")
+    @Json(name = "device_type")
     val deviceType: String,
-    @SerializedName("display_height")
+    @Json(name = "display_height")
     val displayHeight: Int = 0,
-    @SerializedName("display_width")
+    @Json(name = "display_width")
     val displayWidth: Int = 0,
     val campaign: String,
-    @SerializedName("connection_type")
+    @Json(name = "connection_type")
     val connectionType: String,
-    @SerializedName("sms_per_day")
+    @Json(name = "sms_per_day")
     val smsPerDay: Int = 0,
     val msisdn: String,
-    @SerializedName("firebase_token")
+    @Json(name = "firebase_token")
     val firebase_token: String = ""
 ): AuthRequest
