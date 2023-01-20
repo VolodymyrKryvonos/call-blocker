@@ -18,6 +18,10 @@ import com.call_blocke.db.entity.PhoneNumber
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
 import com.call_blocke.repository.RepositoryImp
+import com.call_blocker.verification.domain.SimCardVerificationChecker
+import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
+import com.call_blocker.verification.domain.VerificationInfoStateHolder
+import com.call_blocker.verification.domain.VerificationStatus
 import com.example.common.ConnectionManager
 import com.example.common.Resource
 import com.example.common.SimUtil
@@ -185,6 +189,12 @@ class TaskManager(
 
     private suspend fun sendStatus(status: Boolean, task: TaskEntity) {
         if (status) {
+            if (task.method == TaskMethod.VERIFY_PHONE_NUMBER || task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
+                val simCardVerificationChecker: SimCardVerificationChecker =
+                    SimCardVerificationCheckerImpl()
+                simCardVerificationChecker.coroutineScope = this
+                simCardVerificationChecker.waitForVerification(task.simSlot ?: -1, context)
+            }
             try {
                 taskRepository.taskOnDelivered(task)
             } catch (e: Exception) {
@@ -213,11 +223,22 @@ class TaskManager(
     private suspend fun processSendError(task: TaskEntity) {
         if (task.method == TaskMethod.VERIFY_PHONE_NUMBER) {
             NotificationService.showVerificationFailedNotification(context, task)
+            updateVerificationState(task.simSlot)
         }
         if (task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
             NotificationService.showAutoVerificationFailedNotification(context)
+            updateVerificationState(task.simSlot)
+
         }
         taskRepository.taskOnError(task)
+    }
+
+    private suspend fun updateVerificationState(simSlot: Int?) {
+        if (simSlot != null) {
+            VerificationInfoStateHolder.getStateHolderBySimSlotIndex(simSlot).apply {
+                emit(this.value.copy(status = VerificationStatus.Failed))
+            }
+        }
     }
 
     private fun sim(id: Int): SubscriptionInfo? = if (id == 0) {

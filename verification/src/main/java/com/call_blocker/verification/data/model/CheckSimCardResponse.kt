@@ -8,14 +8,4 @@ data class CheckSimCardResponse(
     val number: String? = null,
     @Json(name = "auto_verification")
     val autoVerification: Boolean? = false
-) {
-    fun toSimVerificationInfo() = SimVerificationInfo(
-        status = if (status) {
-            SimVerificationStatus.VALID
-        } else {
-            SimVerificationStatus.INVALID
-        },
-        isAutoVerificationAvailable = autoVerification == true,
-        number = number ?: ""
-    )
-}
+)

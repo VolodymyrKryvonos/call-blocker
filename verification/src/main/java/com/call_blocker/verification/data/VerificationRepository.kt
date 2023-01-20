@@ -1,35 +1,25 @@
 package com.call_blocker.verification.data
 
-import com.call_blocker.verification.data.model.SimVerificationInfo
+import com.call_blocker.verification.data.model.CheckSimCardResponse
 import com.example.common.Resource
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 
 interface VerificationRepository {
-    suspend fun checkSim(
-        simId: String,
-        simSlot: Int,
-        simVerificationInfo: MutableStateFlow<SimVerificationInfo>,
-        phoneNumber: String?,
-        createAutoVerificationSms: Boolean
-    )
 
     fun checkSimCard(
         iccId: String,
         simSlot: Int,
-        phoneNumber: String?,
-        createAutoVerificationSms: Boolean = false
-    ): Flow<SimVerificationInfo>
+        phoneNumber: String?
+    ): Flow<Resource<CheckSimCardResponse>>
 
     fun confirmVerification(
         iccid: String,
-        simSlot: String,
+        simSlot: Int,
         verificationCode: String,
-        phoneNumber: String,
-        uniqueId: String
+        phoneNumber: String
     ): Flow<Resource<Unit>>
 
-    fun validateSimCard(
+    fun verifySimCard(
         phoneNumber: String,
         simID: String,
         simSlot: Int

@@ -9,30 +9,23 @@ import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
-import com.example.common.Resource
+import com.call_blocker.verification.domain.SimCardVerifier
 import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-enum class SnackbarVisibility {
-    Visible, Gone
-}
 
 class RefreshViewModel : ViewModel(),
     SimCardVerificationChecker by SimCardVerificationCheckerImpl() {
 
     private val taskRepository = RepositoryImp.taskRepository
     private val settingsRepository = RepositoryImp.settingsRepository
-
-    private val _snackbarVisibility = MutableStateFlow(SnackbarVisibility.Gone)
-    val snackbarVisibility = _snackbarVisibility.asStateFlow()
+    private val simCardVerifier = SimCardVerifier()
 
     val onLoading = MutableLiveData(false)
-    val verificationState = MutableSharedFlow<Resource<Unit>>()
 
     private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
         MutableStateFlow(emptyList())
@@ -49,9 +42,6 @@ class RefreshViewModel : ViewModel(),
             )
         }
     }
-
-    fun firstSim(context: Context) = SimUtil.firstSim(context)
-    fun secondSim(context: Context) = SimUtil.secondSim(context)
 
     fun reset(simSlotID: Int, context: Context?) = viewModelScope.launch(Dispatchers.IO) {
         onLoading.postValue(true)
@@ -76,15 +66,9 @@ class RefreshViewModel : ViewModel(),
         simsInfo()
     }
 
-    fun hideSnackbar() {
+    fun verifySimCard(phoneNumber: String = "", simId: String, simSlot: Int) {
         viewModelScope.launch {
-            _snackbarVisibility.emit(SnackbarVisibility.Gone)
-        }
-    }
-
-    fun showSnackbar() {
-        viewModelScope.launch {
-            _snackbarVisibility.emit(SnackbarVisibility.Visible)
+            simCardVerifier.verifySimCard(phoneNumber, simId, simSlot)
         }
     }
 }

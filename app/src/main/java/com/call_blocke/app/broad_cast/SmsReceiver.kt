@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.telephony.SmsMessage
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp.replyRepository
+import com.call_blocker.verification.domain.SimCardVerifier
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import com.squareup.moshi.Json
@@ -32,22 +33,22 @@ class SmsReceiver : BroadcastReceiver() {
                 val pduObjects = bundle["pdus"] as Array<*>?
                 if (pduObjects != null) {
                     coroutineScope.launch {
-                        processSms(pduObjects, bundle, context)
+                        processSms(pduObjects, bundle)
                     }
                 }
             }
         }
     }
 
-    private suspend fun processSms(pduObjects: Array<*>, bundle: Bundle, context: Context) {
+    private suspend fun processSms(pduObjects: Array<*>, bundle: Bundle) {
         val currentSMS = getIncomingMessage(pduObjects, bundle)
 
-        if (!checkIsVerificationSms(currentSMS, context)) {
+        if (!checkIsVerificationSms(currentSMS)) {
             storeReply(currentSMS)
         }
     }
 
-    private suspend fun checkIsVerificationSms(sms: ReplyMessage, context: Context): Boolean {
+    private suspend fun checkIsVerificationSms(sms: ReplyMessage): Boolean {
         SmartLog.e("checkIsVerificationSms $sms")
         val verificationSms = try {
             moshi.adapter(VerificationSms::class.java).fromJson(sms.smsText)
@@ -58,6 +59,17 @@ class SmsReceiver : BroadcastReceiver() {
         verificationSms ?: return false
 
         SmartLog.e("verificationSms $verificationSms")
+        val verifier = SimCardVerifier()
+        verifier.confirmVerification(
+            simID = verificationSms.simIccid,
+            verificationCode = verificationSms.verificationCode ?: "",
+            phoneNumber = sms.senderNumber,
+            simSlot = if (verificationSms.simSlot == "msisdn_1") {
+                0
+            } else {
+                1
+            }
+        )
         return true
     }
 

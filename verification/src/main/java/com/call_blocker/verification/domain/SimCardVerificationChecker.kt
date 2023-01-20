@@ -3,22 +3,14 @@ package com.call_blocker.verification.domain
 import android.content.Context
 import android.telephony.SubscriptionInfo
 import com.call_blocker.verification.data.VerificationRepository
-import com.call_blocker.verification.data.model.SimVerificationInfo
-import com.call_blocker.verification.data.model.SimVerificationStatus
+import com.example.common.Resource
 import com.example.common.SimUtil
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.coroutines.CoroutineContext
 
 interface SimCardVerificationChecker {
     val verificationRepository: VerificationRepository
-
-    val firstSimVerificationInfo: MutableStateFlow<SimVerificationInfo>
-
-    val secondSimVerificationInfo: MutableStateFlow<SimVerificationInfo>
 
     var coroutineScope: CoroutineScope
 
@@ -26,24 +18,27 @@ interface SimCardVerificationChecker {
         context: Context
     )
 
-    fun checkSimCard(
-        index: Int,
-        context: Context,
-        createAutoVerificationSms: Boolean = false
+    suspend fun checkFirstSim(
+        subscriptionInfo: SubscriptionInfo
     )
+
+    suspend fun checkSecondSim(
+        subscriptionInfo: SubscriptionInfo
+    )
+
+    fun checkSimCardByIndex(index: Int, context: Context)
+    fun waitForVerification(index: Int, context: Context)
 }
 
 
 class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
     override val verificationRepository: VerificationRepository = VerificationRepositoryImpl()
-    override val firstSimVerificationInfo =
-        MutableStateFlow(SimVerificationInfo(SimVerificationStatus.UNKNOWN))
-    override val secondSimVerificationInfo =
-        MutableStateFlow(SimVerificationInfo(SimVerificationStatus.UNKNOWN))
     override var coroutineScope: CoroutineScope = object : CoroutineScope {
         override val coroutineContext: CoroutineContext
             get() = SupervisorJob()
     }
+
+    private var waitForVerificationJob: Job? = null
 
     @Suppress("LABEL_NAME_CLASH")
     override fun checkSimCards(context: Context) {
@@ -59,42 +54,71 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
         }
     }
 
-    override fun checkSimCard(index: Int, context: Context, createAutoVerificationSms: Boolean) {
+    private fun checkSimCard(index: Int, subscriptionInfo: SubscriptionInfo) {
         coroutineScope.launch {
-            if (index == 0) {
-                val simCard = SimUtil.firstSim(context) ?: return@launch
-                checkFirstSim(simCard, createAutoVerificationSms)
-            } else {
-                val simCard = SimUtil.secondSim(context) ?: return@launch
-                checkSecondSim(simCard, createAutoVerificationSms)
+            val stateHolder = VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
+            verificationRepository.checkSimCard(
+                subscriptionInfo.iccId,
+                subscriptionInfo.simSlotIndex,
+                subscriptionInfo.number.ifEmpty { null }
+            ).collectLatest {
+                when (it) {
+                    is Resource.Success -> {
+                        val newStatus = VerificationStatus.getUpdatedStatus(
+                            it.data?.status == true,
+                            stateHolder.value.status
+                        )
+                        stateHolder.emit(
+                            stateHolder.value.copy(
+                                status = newStatus,
+                                simId = subscriptionInfo.iccId,
+                                isAutoVerificationEnabled = it.data?.autoVerification == true,
+                                phoneNumber = it.data?.number
+                            )
+                        )
+                        if (newStatus == VerificationStatus.Verified) {
+                            waitForVerificationJob?.cancel()
+                        }
+                    }
+                    else -> Unit
+                }
+                VerificationInfoStateHolder.checkIsAutoVerificationEnabled()
             }
         }
     }
 
-    private suspend fun checkFirstSim(
-        subscriptionInfo: SubscriptionInfo,
-        createAutoVerificationSms: Boolean = false
+    override suspend fun checkFirstSim(
+        subscriptionInfo: SubscriptionInfo
     ) {
-        verificationRepository.checkSim(
-            subscriptionInfo.iccId,
-            subscriptionInfo.simSlotIndex,
-            firstSimVerificationInfo,
-            subscriptionInfo.number.ifEmpty { null },
-            createAutoVerificationSms
-        )
+        checkSimCard(0, subscriptionInfo)
     }
 
-    private suspend fun checkSecondSim(
-        subscriptionInfo: SubscriptionInfo,
-        createAutoVerificationSms: Boolean = false
+    override suspend fun checkSecondSim(
+        subscriptionInfo: SubscriptionInfo
     ) {
-        verificationRepository.checkSim(
-            subscriptionInfo.iccId,
-            subscriptionInfo.simSlotIndex,
-            secondSimVerificationInfo,
-            subscriptionInfo.number.ifEmpty { null },
-            createAutoVerificationSms
-        )
+        checkSimCard(1, subscriptionInfo)
+    }
+
+    override fun checkSimCardByIndex(index: Int, context: Context) {
+        val sim = SimUtil.simInfo(context, index) ?: return
+        coroutineScope.launch {
+            if (index == 0) {
+                checkFirstSim(sim)
+            } else {
+                checkSecondSim(sim)
+            }
+        }
+    }
+
+    override fun waitForVerification(index: Int, context: Context) {
+        waitForVerificationJob = coroutineScope.launch(Dispatchers.IO) {
+            val simInfo = SimUtil.simInfo(context, index) ?: return@launch
+            repeat(5) {
+                delay(30 * 1000)
+                checkSimCard(index, simInfo)
+            }
+        }
+
     }
 
 }

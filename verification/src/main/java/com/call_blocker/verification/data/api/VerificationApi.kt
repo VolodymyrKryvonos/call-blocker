@@ -1,16 +1,13 @@
 package com.call_blocker.verification.data.api
 
-import com.call_blocker.verification.data.model.CheckSimCardRequest
-import com.call_blocker.verification.data.model.CheckSimCardResponse
-import com.call_blocker.verification.data.model.ConfirmSimCardVerificationRequest
-import com.call_blocker.verification.data.model.ValidateSimCardRequest
+import com.call_blocker.verification.data.model.*
 import retrofit2.http.Body
 import retrofit2.http.POST
 
 interface VerificationApi {
 
     @POST("apps/validate-sim-card")
-    suspend fun validateSimCard(@Body validateSimCardRequest: ValidateSimCardRequest)
+    suspend fun verifySimCard(@Body validateSimCardRequest: VerifySimCardRequest)
 
     @POST("apps/get-number-info")
     suspend fun checkSimCard(@Body checkSimCardRequest: CheckSimCardRequest): CheckSimCardResponse
@@ -18,4 +15,6 @@ interface VerificationApi {
     @POST("apps/confirm-validation")
     suspend fun confirmSimCardVerification(@Body body: ConfirmSimCardVerificationRequest)
 
+    @POST("apps/start-auto-verification")
+    suspend fun startAutoVerification(@Body autoVerificationRequest: AutoVerificationRequest)
 }

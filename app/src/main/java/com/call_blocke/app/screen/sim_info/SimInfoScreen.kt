@@ -1,10 +1,8 @@
 package com.call_blocke.app.screen.sim_info
 
+import android.content.Context
 import android.telephony.SubscriptionInfo
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -12,7 +10,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,24 +23,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.app.screen.refresh_full.RefreshViewModel
-import com.call_blocke.app.screen.refresh_full.SnackbarVisibility
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.rest_work_imp.FullSimInfoModel
-import com.call_blocker.verification.data.model.SimVerificationInfo
+import com.call_blocker.verification.domain.VerificationInfoStateHolder
 import com.example.common.CountryCodeExtractor
-import com.example.common.Resource
+import com.example.common.SimUtil
+import com.rokobit.adstv.ui.backgroundColor
 import com.rokobit.adstv.ui.element.*
-import com.rokobit.adstv.ui.primaryColor
 import com.rokobit.adstv.ui.primaryDimens
-import com.rokobit.adstv.ui.secondaryColor
-import kotlinx.coroutines.delay
 
-data class VerifyingSim(
-    val subscriptionInfo: SubscriptionInfo,
-    val simVerificationInfo: SimVerificationInfo
-)
-
-@OptIn(ExperimentalAnimationApi::class)
 @ExperimentalMaterialApi
 @Composable
 fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
@@ -52,14 +40,9 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
 ) {
     val context = LocalContext.current
     val openDialog = remember { mutableStateOf(false) }
-    val verifyingSim: MutableState<VerifyingSim?> = remember {
+    val verifyingSim: MutableState<SubscriptionInfo?> = remember {
         mutableStateOf(null)
     }
-    val firstSimVerificationInfo = viewModel.firstSimVerificationInfo.collectAsState()
-    val secondSimVerificationInfo = viewModel.secondSimVerificationInfo.collectAsState()
-    val verificationState = viewModel.verificationState.collectAsState(Resource.None)
-
-    val snackbarVisibility = viewModel.snackbarVisibility.collectAsState()
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
@@ -85,13 +68,26 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
             for ((index, fullSimInfoModel) in sims!!.withIndex()) {
 
                 if (index == 0) {
-                    viewModel.firstSim(context = context)?.let {
+                    val verificationInfo =
+                        VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
+                            .collectAsState()
+                    Log.e("verificationInfo", verificationInfo.toString())
+                    SimUtil.firstSim(context = context)?.let {
                         SimInfoCard(
                             info = it,
                             data = fullSimInfoModel,
-                            phoneNumber = firstSimVerificationInfo.value.number
+                            phoneNumber = verificationInfo.value.phoneNumber,
+                            isNeedVerification = verificationInfo.value.isNeedVerification(),
+                            isVerificationInProgress = verificationInfo.value.isVerificationInProgress()
                         ) {
-                            viewModel.checkSimCard(it.simSlotIndex, context, true)
+                            verifySimCard(
+                                context,
+                                verificationInfo.value.isAutoVerificationEnabled,
+                                viewModel,
+                                it,
+                                openDialog,
+                                verifyingSim
+                            )
                         }
                     }
                 }
@@ -99,13 +95,26 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
                 Spacer(modifier = Modifier.height(primaryDimens))
 
                 if (index == 1) {
-                    viewModel.secondSim(context = context)?.let {
+                    val verificationInfo =
+                        VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
+                            .collectAsState()
+                    Log.e("verificationInfo", verificationInfo.toString())
+                    SimUtil.secondSim(context = context)?.let {
                         SimInfoCard(
                             info = it,
                             data = fullSimInfoModel,
-                            phoneNumber = secondSimVerificationInfo.value.number
+                            phoneNumber = verificationInfo.value.phoneNumber,
+                            isNeedVerification = verificationInfo.value.isNeedVerification(),
+                            isVerificationInProgress = verificationInfo.value.isVerificationInProgress()
                         ) {
-                            viewModel.checkSimCard(it.simSlotIndex, context, true)
+                            verifySimCard(
+                                context,
+                                verificationInfo.value.isAutoVerificationEnabled,
+                                viewModel,
+                                it,
+                                openDialog,
+                                verifyingSim
+                            )
                         }
                     }
                 }
@@ -116,42 +125,35 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
     if (openDialog.value && verifyingSim.value != null) {
         VerifyNumberDialog(
             viewModel = viewModel,
-            verifyingSim = verifyingSim.value!!,
+            subscriptionInfo = verifyingSim.value!!,
             modifier = Modifier.fillMaxSize(),
-            verificationState = verificationState,
             onClose = {
                 verifyingSim.value = null
                 openDialog.value = false
             }
         )
     }
+}
 
-    AnimatedVisibility(
-        modifier = Modifier.align(alignment = Alignment.BottomCenter),
-        visible = snackbarVisibility.value == SnackbarVisibility.Visible,
-        enter = slideInVertically(
-            initialOffsetY = { -40 }
-        ),
-        exit = slideOutVertically()
-    ) {
-        Snackbar(backgroundColor = primaryColor) {
-            TextNormal(
-                text = stringResource(
-                    id = when (verificationState.value) {
-                        is Resource.Error -> R.string.something_went_wrong
-                        else -> R.string.process_verification
-                    }
-                ),
-                color = secondaryColor
-            )
-        }
+private fun verifySimCard(
+    context: Context,
+    isAutoVerificationEnabled: Boolean,
+    viewModel: RefreshViewModel,
+    subscriptionInfo: SubscriptionInfo,
+    openDialog: MutableState<Boolean>,
+    verifyingSim: MutableState<SubscriptionInfo?>
+) {
+    if (!SendingSMSWorker.isRunning.value) {
+        SendingSMSWorker.start(context = context)
     }
-
-    if (snackbarVisibility.value == SnackbarVisibility.Visible) {
-        LaunchedEffect(key1 = Unit) {
-            delay(2500L)
-            viewModel.hideSnackbar()
-        }
+    if (isAutoVerificationEnabled) {
+        viewModel.verifySimCard(
+            simId = subscriptionInfo.iccId,
+            simSlot = subscriptionInfo.simSlotIndex
+        )
+    } else {
+        openDialog.value = true
+        verifyingSim.value = subscriptionInfo
     }
 }
 
@@ -159,22 +161,17 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
 @Composable
 private fun VerifyNumberDialog(
     viewModel: RefreshViewModel,
-    verifyingSim: VerifyingSim,
+    subscriptionInfo: SubscriptionInfo,
     modifier: Modifier,
-    verificationState: State<Resource<Unit>>,
     onClose: () -> Unit
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val phoneNumber = remember {
-        mutableStateOf("+${CountryCodeExtractor.getCountryPhoneCode(verifyingSim.subscriptionInfo.iccId) ?: ""}")
+        mutableStateOf("+${CountryCodeExtractor.getCountryPhoneCode(subscriptionInfo.iccId) ?: ""}")
     }
     var isCorrectNumber by remember {
         mutableStateOf(false)
     }
-    if (verificationState.value is Resource.Success) {
-        onClose()
-    }
-    val context = LocalContext.current
 
     AlertDialog(
         modifier = modifier,
@@ -193,38 +190,19 @@ private fun VerifyNumberDialog(
                 icon = Icons.Filled.Phone
             )
             Spacer(modifier = Modifier.height(10.dp))
-            val isProgress = remember {
-                mutableStateOf(verificationState.value is Resource.Loading)
-            }
             Button(
                 title = stringResource(id = R.string.verify),
                 modifier = Modifier.fillMaxWidth(),
                 isEnable = true,
-                isProgress = isProgress,
                 fontSize = 16.sp
             ) {
                 if (isCorrectNumber) {
-                    if (!SendingSMSWorker.isRunning.value) {
-                        SendingSMSWorker.start(context = context)
-                    }
-                    viewModel.showSnackbar()
-                    keyboardController?.hide()
-                }
-            }
-            if (verifyingSim.simVerificationInfo.isAutoVerificationAvailable) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Button(
-                    title = stringResource(id = R.string.auto_detect_number),
-                    modifier = Modifier.fillMaxWidth(),
-                    isEnable = true,
-                    fontSize = 16.sp
-                ) {
-                    viewModel.showSnackbar()
-                    viewModel.checkSimCard(
-                        verifyingSim.subscriptionInfo.simSlotIndex,
-                        context,
-                        true
+                    viewModel.verifySimCard(
+                        phoneNumber.value,
+                        subscriptionInfo.iccId,
+                        subscriptionInfo.simSlotIndex
                     )
+                    keyboardController?.hide()
                     onClose()
                 }
             }
@@ -236,12 +214,15 @@ private fun VerifyNumberDialog(
 private fun SimInfoCard(
     info: SubscriptionInfo,
     data: FullSimInfoModel,
-    phoneNumber: String,
+    phoneNumber: String?,
+    isNeedVerification: Boolean = false,
+    isVerificationInProgress: Boolean = false,
     onClick: () -> Unit
 ) = Card(
     modifier = Modifier
         .fillMaxWidth(),
     shape = RoundedCornerShape(15),
+    backgroundColor = backgroundColor,
     elevation = 6.dp,
 ) {
     Column(
@@ -258,7 +239,7 @@ private fun SimInfoCard(
 
         Row {
             Text(text = "IMSI:", modifier = Modifier.weight(1f))
-            Text(text = phoneNumber)
+            Text(text = phoneNumber ?: "unknown")
         }
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -282,11 +263,13 @@ private fun SimInfoCard(
             Text(text = info.iccId)
         }
         Spacer(modifier = Modifier.height(4.dp))
-        if (false) {
+        if (isNeedVerification || isVerificationInProgress) {
+            val progress = mutableStateOf(isVerificationInProgress)
             Button(
                 title = stringResource(id = R.string.verify),
                 modifier = Modifier.fillMaxWidth(),
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                isProgress = progress
             ) {
                 onClick()
             }
@@ -294,20 +277,3 @@ private fun SimInfoCard(
 
     }
 }
-
-//fun isManualVerificationEnabled(
-//    verificationState: VerificationState
-//): Boolean {
-//    return verificationState == VerificationState.INVALID ||
-//            verificationState == VerificationState.FAILED
-//}
-//
-//fun getBackgroundColor(
-//    verificationState: VerificationState
-//): Color {
-//    return when (verificationState) {
-//        VerificationState.INVALID -> Color.Red
-//        VerificationState.PROCESSING, VerificationState.FAILED -> Color.Gray
-//        else -> secondaryColor
-//    }
-//}

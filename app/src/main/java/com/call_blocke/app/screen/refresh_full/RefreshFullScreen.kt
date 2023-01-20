@@ -17,7 +17,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -26,8 +25,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.db.SmsBlockerDatabase
+import com.example.common.SimUtil
 import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Title
+import com.rokobit.adstv.ui.errorColor
 import com.rokobit.adstv.ui.primaryDimens
 import com.rokobit.adstv.ui.secondaryColor
 
@@ -58,7 +59,7 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            mViewModel.firstSim(context)?.let {
+            SimUtil.firstSim(context)?.let {
                 SimSlotBtn(
                     simName = it.carrierName.toString(),
                     simChanged = SmsBlockerDatabase.firstSimChanged,
@@ -75,7 +76,7 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
 
             Spacer(modifier = Modifier.width(primaryDimens))
 
-            mViewModel.secondSim(context)?.let {
+            SimUtil.secondSim(context)?.let {
                 SimSlotBtn(
                     simName = it.carrierName.toString(),
                     simChanged = SmsBlockerDatabase.secondSimChanged,
@@ -115,9 +116,9 @@ private fun SimSlotBtn(
         .fillMaxWidth()
         .padding(primaryDimens),
     shape = RoundedCornerShape(15),
-    backgroundColor = if (simOutOfSms) Color.Red else secondaryColor,
+    backgroundColor = if (simOutOfSms) errorColor else secondaryColor,
     elevation = 6.dp,
-    border = if (simChanged) BorderStroke(2.dp, Color.Red) else null,
+    border = if (simChanged) BorderStroke(2.dp, errorColor) else null,
     onClick = { onClick() }
 ) {
     Column(
