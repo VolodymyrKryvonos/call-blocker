@@ -44,9 +44,29 @@ android {
     productFlavors {
         create("bottega_sms") {
             resValue("string", "app_name", "Bottega SMS")
+            applicationVariants.all {
+                if (name.contains("bottega_sms")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "bottega-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                        }
+                    }
+                }
+            }
         }
         create("asar") {
             resValue("string", "app_name", "ASAR")
+            applicationVariants.all {
+                if (name.contains("asar")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -63,18 +83,7 @@ android {
         kotlinCompilerExtensionVersion = Version.compose
     }
 
-    buildTypes {
-        release {
-            applicationVariants.all {
-                outputs.forEach { output ->
-                    if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                        output.outputFileName =
-                            "sms-sender-remote-v${versionName}.${output.outputFile.extension}"
-                    }
-                }
-            }
-        }
-    }
+
 }
 
 dependencies {
