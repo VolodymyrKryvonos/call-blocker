@@ -9,5 +9,9 @@ data class TasksRequest(
     val connectionType: String,
     val carrier: String = "",
     @Json(name = "unique_id")
-    val uniqueId: String = SmsBlockerDatabase.deviceID
+    val uniqueId: String = SmsBlockerDatabase.deviceID,
+    @Json(name = "first_sim_iccid")
+    val firstSimId: String?,
+    @Json(name = "second_sim_iccid")
+    val secondSimId: String?
 )

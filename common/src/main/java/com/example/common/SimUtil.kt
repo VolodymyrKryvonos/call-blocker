@@ -5,9 +5,6 @@ import android.content.Context
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 
-/**
- * Created by Apipas on 6/4/15.
- */
 object SimUtil {
     @SuppressLint("MissingPermission")
     fun getSIMInfo(context: Context?): List<SubscriptionInfo>? {
@@ -40,16 +37,6 @@ object SimUtil {
         return simInfo?.firstOrNull { it.simSlotIndex == 1 }
     }
 
-    fun firstSimId(context: Context?): String? {
-        val simInfo = getSIMInfo(context)
-        return simInfo?.firstOrNull { it.simSlotIndex == 0 }?.iccId
-    }
-
-    fun secondSimId(context: Context?): String? {
-        val simInfo = getSIMInfo(context)
-        return simInfo?.firstOrNull { it.simSlotIndex == 1 }?.iccId
-    }
-
     fun simInfo(context: Context?, simSlot: Int): SubscriptionInfo? {
         return if (simSlot == 0) {
             firstSim(context)
@@ -58,8 +45,8 @@ object SimUtil {
         }
     }
 
-    fun simSlotById(context: Context?, simId: String): Int? {
+    fun simSlotById(context: Context?, simId: String): Int {
         val simInfo = getSIMInfo(context)
-        return simInfo?.firstOrNull { it.iccId == simId }?.simSlotIndex
+        return simInfo?.firstOrNull { it.iccId.contains(simId) }?.simSlotIndex ?: -1
     }
 }

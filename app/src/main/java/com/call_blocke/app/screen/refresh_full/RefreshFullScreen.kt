@@ -96,7 +96,10 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                mViewModel.simsInfo()
+                mViewModel.simsInfo(
+                    SimUtil.firstSim(context)?.iccId,
+                    SimUtil.secondSim(context)?.iccId
+                )
             }
             else -> {}
         }

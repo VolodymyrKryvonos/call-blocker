@@ -19,17 +19,20 @@ interface SettingsRest {
     suspend fun resetSim(@Body model: RefreshDataForSimRequest)
 
     @POST("apps/get-sim-info")
-    suspend fun simInfo(@Body model: SimInfoRequest = SimInfoRequest()): ApiResponse<SimInfoResponse>
+    suspend fun simInfo(@Body model: SimInfoRequest): ApiResponse<SimInfoResponse>
 
     @POST("apps/stop-service")
-    suspend fun stopService(@Body model: SimInfoRequest = SimInfoRequest())
+    suspend fun stopService(@Body model: SimpleBody = SimpleBody())
 
     @POST("apps/is-connected")
-    suspend fun checkConnection(@Body model: SimInfoRequest = SimInfoRequest()): ConnectionStatusDto
+    suspend fun checkConnection(@Body model: SimpleBody = SimpleBody()): ConnectionStatusDto
 
     @POST("apps/get-profile")
     suspend fun getProfile(@Body model: GetProfileRequest): ApiResponse<ProfileDto>
 
     @POST("apps/signal-strength")
     suspend fun sendSignalStrengthInfo(@Body signalStrengthBody: SignalStrengthRequest)
+
+    @POST("apps/change-sim")
+    suspend fun changeSimCard(@Body body: ChangeSimCardRequest): ChangSimCardResponse
 }

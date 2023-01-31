@@ -28,15 +28,15 @@ object VerificationInfoStateHolder {
         firstSimVerificationInfo.emit(
             firstSimVerificationInfo.value
                 .copy(
-                    isAutoVerificationEnabled =
-                    secondSimVerificationInfo.value.status == VerificationStatus.Verified
+                    isAutoVerificationEnabled = firstSimVerificationInfo.value.isAutoVerificationEnabled ||
+                            secondSimVerificationInfo.value.status == VerificationStatus.Verified
                 )
         )
         secondSimVerificationInfo.emit(
             secondSimVerificationInfo.value
                 .copy(
-                    isAutoVerificationEnabled =
-                    firstSimVerificationInfo.value.status == VerificationStatus.Verified
+                    isAutoVerificationEnabled = secondSimVerificationInfo.value.isAutoVerificationEnabled ||
+                            firstSimVerificationInfo.value.status == VerificationStatus.Verified
                 )
         )
     }

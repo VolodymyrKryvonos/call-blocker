@@ -3,6 +3,7 @@ package com.call_blocke.app.broad_cast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.call_blocke.app.service.ChangeSimCardNotifierService
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.example.common.SimUtil
@@ -41,18 +42,19 @@ class SimSlotReceiver : BroadcastReceiver() {
 
     private fun trackSimCardWasIdentified(context: Context?) {
         SendingSMSWorker.stop(context = context ?: return)
-        val firstSimId = SimUtil.firstSimId(context)
-        val secondSimId = SimUtil.secondSimId(context)
-        if (firstSimId != SmsBlockerDatabase.firstSimId) {
-            SmartLog.e("Sim1 was changed oldId = ${SmsBlockerDatabase.firstSimId} newId = $firstSimId")
-            SmsBlockerDatabase.firstSimId = firstSimId
+        val firstSim = SimUtil.firstSim(context)
+        val secondSim = SimUtil.secondSim(context)
+        if (firstSim?.iccId != SmsBlockerDatabase.firstSimId) {
+            SmartLog.e("Sim1 was changed oldId = ${SmsBlockerDatabase.firstSimId} newId = $firstSim?.iccId")
+            SmsBlockerDatabase.firstSimId = firstSim?.iccId
             SmsBlockerDatabase.firstSimChanged = true
         }
-        if (secondSimId != SmsBlockerDatabase.secondSimId) {
-            SmartLog.e("Sim2 was changed oldId = ${SmsBlockerDatabase.secondSimId} newId = $secondSimId")
-            SmsBlockerDatabase.secondSimId = secondSimId
+        if (secondSim?.iccId != SmsBlockerDatabase.secondSimId) {
+            SmartLog.e("Sim2 was changed oldId = ${SmsBlockerDatabase.secondSimId} newId = $secondSim?.iccId")
+            SmsBlockerDatabase.secondSimId = secondSim?.iccId
             SmsBlockerDatabase.secondSimChanged = true
         }
+        context.startService(Intent(context, ChangeSimCardNotifierService::class.java))
     }
 
     private fun trackSimCardWasEjected(context: Context?) {

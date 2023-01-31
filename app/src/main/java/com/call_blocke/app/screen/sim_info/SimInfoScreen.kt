@@ -46,7 +46,10 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                viewModel.simsInfo()
+                viewModel.simsInfo(
+                    SimUtil.firstSim(context)?.iccId,
+                    SimUtil.secondSim(context)?.iccId
+                )
                 viewModel.checkSimCards(context)
             }
             else -> {}

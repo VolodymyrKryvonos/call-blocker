@@ -35,10 +35,10 @@ class RefreshViewModel : ViewModel(),
         coroutineScope = viewModelScope
     }
 
-    fun simsInfo() {
+    fun simsInfo(firstSimId: String?, secondSimId: String?) {
         viewModelScope.launch(Dispatchers.IO) {
             _simInfoState.emit(
-                settingsRepository.simInfo()
+                settingsRepository.simInfo(firstSimId, secondSimId)
             )
         }
     }
@@ -63,7 +63,10 @@ class RefreshViewModel : ViewModel(),
         SmartLog.e("Reset sim slot = $simSlotID")
         taskRepository.clearFor(simIndex = simSlotID)
         onLoading.postValue(false)
-        simsInfo()
+        simsInfo(
+            SimUtil.firstSim(context)?.iccId,
+            SimUtil.secondSim(context)?.iccId
+        )
     }
 
     fun verifySimCard(phoneNumber: String = "", simId: String, simSlot: Int) {

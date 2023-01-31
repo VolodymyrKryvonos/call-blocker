@@ -46,10 +46,10 @@ class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
         MutableStateFlow(emptyList())
     val simInfoState = _simInfoState.asStateFlow()
 
-    fun simsInfo() {
+    fun simsInfo(firstSimId: String?, secondSimId: String?) {
         viewModelScope.launch(Dispatchers.IO) {
             _simInfoState.emit(
-                settingsRepository.simInfo()
+                settingsRepository.simInfo(firstSimId, secondSimId)
             )
         }
     }
@@ -80,11 +80,14 @@ class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
         SendingSMSWorker.stop(context = context)
     }
 
-    fun reloadSystemInfo() {
+    fun reloadSystemInfo(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             isLoading.postValue(true)
 
-            val systemDetail = userRepository.systemDetail()
+            val systemDetail = userRepository.systemDetail(
+                SimUtil.firstSim(context)?.iccId,
+                SimUtil.secondSim(context)?.iccId
+            )
 
             isLoading.postValue(false)
 

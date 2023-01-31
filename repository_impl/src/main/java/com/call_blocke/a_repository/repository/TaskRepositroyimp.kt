@@ -180,7 +180,7 @@ class TaskRepositoryImp : TaskRepository() {
                     simId = when (task.simSlot) {
                         1 -> "msisdn_2"
                         0 -> "msisdn_1"
-                        else -> "msisdn_1"
+                        else -> "???"
                     },
                     date = when (task.status) {
                         TaskStatus.PROCESS -> task.processAt

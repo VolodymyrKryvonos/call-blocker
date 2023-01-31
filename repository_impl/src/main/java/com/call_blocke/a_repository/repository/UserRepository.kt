@@ -60,16 +60,25 @@ class UserRepositoryImp : UserRepository() {
         ).data.success.token
     }
 
-    override suspend fun loadSystemDetail(): SystemDetailEntity {
+    override suspend fun loadSystemDetail(
+        firstSimId: String?,
+        secondSimId: String?
+    ): SystemDetailEntity {
         val data = try {
-            userRest.userInfo(TasksRequest(connectionType = ConnectionManager.getNetworkGeneration()))
+            userRest.userInfo(
+                TasksRequest(
+                    connectionType = ConnectionManager.getNetworkGeneration(),
+                    firstSimId = firstSimId,
+                    secondSimId = secondSimId
+                )
+            )
                 .let {
                     SmsBlockerDatabase.userName = "${it.data.user.name} ${it.data.user.lastName}"
                     it
                 }
         } catch (e: Exception) {
             SmartLog.e("Failed load system details ${getStackTrace(e)}")
-           // SmsBlockerDatabase.userToken = null
+            // SmsBlockerDatabase.userToken = null
             null
         }?.data?.user ?: return SmsBlockerDatabase.systemDetail
 

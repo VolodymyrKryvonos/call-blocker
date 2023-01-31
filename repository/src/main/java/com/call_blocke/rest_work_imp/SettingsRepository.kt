@@ -7,6 +7,7 @@ import android.net.Uri
 import android.provider.BlockedNumberContract.BlockedNumbers
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocker.model.ConnectionStatus
+import com.call_blocker.model.NewLimits
 import com.example.common.Resource
 import kotlinx.coroutines.flow.Flow
 
@@ -40,10 +41,8 @@ abstract class SettingsRepository {
         smsPerMonthSimSecond: Int
     )
 
-    protected abstract suspend fun blackPhoneNumberList(): List<String>
-
     abstract suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String = "")
-    abstract suspend fun simInfo(): List<FullSimInfoModel>
+    abstract suspend fun simInfo(firstSimId: String?, secondSimId: String?): List<FullSimInfoModel>
 
     fun blackList(context: Context): List<String> {
         val c: Cursor =
@@ -74,5 +73,12 @@ abstract class SettingsRepository {
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
     abstract suspend fun sendSignalStrengthInfo()
 
+    abstract suspend fun changeSimCard(
+        firstSimId: String? = null,
+        secondSimId: String? = null,
+        firstSimOperator: String? = null,
+        secondSimOperator: String? = null,
+        countryCode: String = ""
+    ): NewLimits?
 
 }

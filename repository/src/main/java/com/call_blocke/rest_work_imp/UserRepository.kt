@@ -32,7 +32,10 @@ abstract class UserRepository {
         versionName: String
     ): String
 
-    protected abstract suspend fun loadSystemDetail(): SystemDetailEntity
+    protected abstract suspend fun loadSystemDetail(
+        firstSimId: String?,
+        secondSimId: String?
+    ): SystemDetailEntity
 
     /**
      * @param email is accounts`s login field
@@ -84,8 +87,14 @@ abstract class UserRepository {
         return userToken != null
     }
 
-    suspend fun systemDetail(): SystemDetailEntity {
-        SmsBlockerDatabase.systemDetail = loadSystemDetail()
+    suspend fun systemDetail(
+        firstSimId: String?,
+        secondSimId: String?
+    ): SystemDetailEntity {
+        SmsBlockerDatabase.systemDetail = loadSystemDetail(
+            firstSimId,
+            secondSimId
+        )
         return SmsBlockerDatabase.systemDetail
     }
 

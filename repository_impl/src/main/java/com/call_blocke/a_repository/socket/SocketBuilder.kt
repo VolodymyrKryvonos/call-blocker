@@ -51,7 +51,7 @@ class SocketBuilder private constructor(
                     String.format(
                         socketUrl,
                         profile?.socketIp ?: ip,
-                        profile?.socketPort ?: 8090
+                        profile?.socketPort ?: 8091
                     )
                 }?token=$userToken&unique_id=$uuid"
             )

@@ -74,10 +74,6 @@ class SmsReceiver : BroadcastReceiver() {
     }
 
     private suspend fun storeReply(sms: ReplyMessage) {
-        val sendToReply =
-            SmsBlockerDatabase.phoneNumberDao.isExist(sms.senderNumber) > 0
-        if (!sendToReply)
-            return
         SmartLog.e("storeReply ${sms.smsText} ${sms.senderNumber}")
         replyRepository.storeReply(
             sms.senderNumber,

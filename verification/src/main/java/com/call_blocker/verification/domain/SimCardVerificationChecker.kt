@@ -40,9 +40,8 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
 
     private var waitForVerificationJob: Job? = null
 
-    @Suppress("LABEL_NAME_CLASH")
     override fun checkSimCards(context: Context) {
-        coroutineScope.launch(Dispatchers.IO) {
+        coroutineScope.launch(Dispatchers.IO) outerBlock@{
             launch {
                 val simCard = SimUtil.firstSim(context) ?: return@launch
                 checkFirstSim(simCard)
@@ -60,7 +59,7 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
             verificationRepository.checkSimCard(
                 subscriptionInfo.iccId,
                 subscriptionInfo.simSlotIndex,
-                subscriptionInfo.number.ifEmpty { null }
+                subscriptionInfo.number?.ifEmpty { null }
             ).collectLatest {
                 when (it) {
                     is Resource.Success -> {
@@ -117,8 +116,9 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
                 delay(30 * 1000)
                 checkSimCard(index, simInfo)
             }
+            val stateHolder = VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
+            stateHolder.emit(stateHolder.value.copy(status = VerificationStatus.Failed))
         }
-
     }
 
 }

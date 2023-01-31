@@ -57,7 +57,7 @@ fun MainScreen(navController: NavHostController, viewMode: MainViewModel = viewM
     val context = LocalContext.current
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
-        onRefresh = { viewMode.reloadSystemInfo() },
+        onRefresh = { viewMode.reloadSystemInfo(context) },
     ) {
         Box(
             modifier = Modifier
@@ -221,8 +221,11 @@ fun Menu(navController: NavHostController, viewModel: MainViewModel) {
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                viewModel.reloadSystemInfo()
-                viewModel.simsInfo()
+                viewModel.reloadSystemInfo(context)
+                viewModel.simsInfo(
+                    SimUtil.firstSim(context)?.iccId,
+                    SimUtil.secondSim(context)?.iccId
+                )
                 viewModel.getProfile()
                 viewModel.checkSimCards(context)
             }
@@ -260,8 +263,7 @@ fun Menu(navController: NavHostController, viewModel: MainViewModel) {
                     sims ?: listOf(),
                     isNeedVerification.value,
                     context
-                ),
-                isEnable = isMenuButtonEnabled(i)
+                )
             ) {
                 when (i) {
                     1 -> {
@@ -285,15 +287,6 @@ fun Menu(navController: NavHostController, viewModel: MainViewModel) {
     }
 }
 
-
-fun isMenuButtonEnabled(
-    index: Int
-): Boolean {
-    return when (index) {
-        1 -> !SmsBlockerDatabase.isSimChanged
-        else -> true
-    }
-}
 
 fun getMenuButtonBackground(
     index: Int,
@@ -326,7 +319,7 @@ fun getMenuButtonBackground(
 fun MenuItem(
     icon: ImageVector,
     title: String,
-    isEnable: Boolean,
+    isEnable: Boolean = true,
     backgroundColor: Color,
     onClick: () -> Unit
 ) {

@@ -13,6 +13,7 @@ import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocker.common.rest.AppRest
 import com.call_blocker.common.rest.Const
 import com.call_blocker.model.ConnectionStatus
+import com.call_blocker.model.NewLimits
 import com.call_blocker.model.Profile
 import com.example.common.ConnectionManager
 import com.example.common.CountryCodeExtractor
@@ -32,6 +33,7 @@ class SettingsRepositoryImp : SettingsRepository() {
             SmsBlockerDatabase.userToken ?: "",
             SettingsRest::class.java
         ).build()
+
     override suspend fun updateSmsPerDay(
         context: Context,
         smsPerDaySimFirst: Int,
@@ -83,14 +85,6 @@ class SettingsRepositoryImp : SettingsRepository() {
         }
     }
 
-    override suspend fun blackPhoneNumberList(): List<String> {
-        return settingsRest.blackList(
-            TasksRequest(connectionType = ConnectionManager.getNetworkGeneration())
-        ).data.map {
-            it.number
-        }
-    }
-
     override suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String) {
         try {
             if (simSlot == 0) {
@@ -116,10 +110,18 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
 
-    override suspend fun simInfo(): List<FullSimInfoModel> {
+    override suspend fun simInfo(
+        firstSimId: String?,
+        secondSimId: String?
+    ): List<FullSimInfoModel> {
         try {
             val sims = arrayListOf<FullSimInfoModel>()
-            val data = settingsRest.simInfo()
+            val data = settingsRest.simInfo(
+                SimInfoRequest(
+                    firstSimId = firstSimId,
+                    secondSimId = secondSimId
+                )
+            )
 
             data.data.simFirst?.let {
                 sims.add(
@@ -203,6 +205,35 @@ class SettingsRepositoryImp : SettingsRepository() {
             )
         } catch (e: Exception) {
             SmartLog.e("Failed send signal strength ${getStackTrace(e)}")
+        }
+    }
+
+    override suspend fun changeSimCard(
+        firstSimId: String?,
+        secondSimId: String?,
+        firstSimOperator: String?,
+        secondSimOperator: String?,
+        countryCode: String
+    ): NewLimits? {
+        return try {
+            val response = settingsRest.changeSimCard(
+                ChangeSimCardRequest(
+                    firstSimId = firstSimId,
+                    secondSimId = secondSimId,
+                    firstSimOperator = firstSimOperator,
+                    secondSimOperator = secondSimOperator,
+                    countryCode = countryCode
+                )
+            )
+            if (response.status) {
+                NewLimits(
+                    firstSimLimit = response.firstSimLimit,
+                    secondSimLimit = response.secondSimLimit
+                )
+            } else null
+        } catch (e: Exception) {
+            SmartLog.e("Failed send change sim card request ${getStackTrace(e)}")
+            null
         }
     }
 }

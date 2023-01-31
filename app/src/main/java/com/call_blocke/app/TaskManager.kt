@@ -148,6 +148,7 @@ class TaskManager(
             processSendError(task)
             return false
         }
+
         val sim = sim(task.simSlot!!)
         if (sim == null) {
             SmartLog.e("Sim card is null")
