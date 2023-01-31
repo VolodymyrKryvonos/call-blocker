@@ -71,16 +71,16 @@ class UserRepositoryImp : UserRepository() {
                     firstSimId = firstSimId,
                     secondSimId = secondSimId
                 )
-            )
+            ).toUserInfo()
                 .let {
-                    SmsBlockerDatabase.userName = "${it.data.user.name} ${it.data.user.lastName}"
+                    SmsBlockerDatabase.userName = "${it.user.name} ${it.user.lastName}"
                     it
                 }
         } catch (e: Exception) {
             SmartLog.e("Failed load system details ${getStackTrace(e)}")
             // SmsBlockerDatabase.userToken = null
             null
-        }?.data?.user ?: return SmsBlockerDatabase.systemDetail
+        }?.user ?: return SmsBlockerDatabase.systemDetail
 
         return try {
             SystemDetailEntity(
