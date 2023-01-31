@@ -4,36 +4,28 @@ import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.call_blocke.app.util.SimCardVerificationChecker
-import com.call_blocke.app.util.SimCardVerificationCheckerImpl
 import com.call_blocke.db.SmsBlockerDatabase
-import com.call_blocke.db.VerificationState
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.rest_work_imp.FullSimInfoModel
-import com.call_blocke.rest_work_imp.SimUtil
-import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocker.verification.domain.SimCardVerificationChecker
+import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
+import com.call_blocker.verification.domain.SimCardVerifier
+import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-enum class SnackbarVisibility {
-    Visible, Gone
-}
 
 class RefreshViewModel : ViewModel(),
     SimCardVerificationChecker by SimCardVerificationCheckerImpl() {
 
     private val taskRepository = RepositoryImp.taskRepository
-
-    private val _snackbarVisibility = MutableStateFlow(SnackbarVisibility.Gone)
-    val snackbarVisibility = _snackbarVisibility.asStateFlow()
+    private val settingsRepository = RepositoryImp.settingsRepository
+    private val simCardVerifier = SimCardVerifier()
 
     val onLoading = MutableLiveData(false)
-    val verificationState = MutableSharedFlow<Resource<Unit>>()
 
     private val _simInfoState: MutableStateFlow<List<FullSimInfoModel>> =
         MutableStateFlow(emptyList())
@@ -43,16 +35,13 @@ class RefreshViewModel : ViewModel(),
         coroutineScope = viewModelScope
     }
 
-    fun simsInfo() {
+    fun simsInfo(firstSimId: String?, secondSimId: String?) {
         viewModelScope.launch(Dispatchers.IO) {
             _simInfoState.emit(
                 settingsRepository.simInfo()
             )
         }
     }
-
-    fun firstSim(context: Context) = SimUtil.firstSim(context)
-    fun secondSim(context: Context) = SimUtil.secondSim(context)
 
     fun reset(simSlotID: Int, context: Context?) = viewModelScope.launch(Dispatchers.IO) {
         onLoading.postValue(true)
@@ -74,42 +63,15 @@ class RefreshViewModel : ViewModel(),
         SmartLog.e("Reset sim slot = $simSlotID")
         taskRepository.clearFor(simIndex = simSlotID)
         onLoading.postValue(false)
-        simsInfo()
+        simsInfo(
+            SimUtil.firstSim(context)?.iccId,
+            SimUtil.secondSim(context)?.iccId
+        )
     }
 
-
-    fun validatePhoneNumber(
-        phoneNumber: String,
-        simID: String,
-        simSlot: Int
-    ) =
-        viewModelScope.launch(Dispatchers.IO) {
-            settingsRepository.validateSimCard(
-                phoneNumber = phoneNumber,
-                simID = simID,
-                simSlot = simSlot
-
-            ).collectLatest {
-                if (it is Resource.Success) {
-                    if (simSlot == 0) {
-                        SmsBlockerDatabase.firstSimVerificationState.emit(VerificationState.PROCESSING)
-                    } else {
-                        SmsBlockerDatabase.secondSimVerificationState.emit(VerificationState.PROCESSING)
-                    }
-                }
-                verificationState.emit(it)
-            }
-        }
-
-    fun hideSnackbar() {
+    fun verifySimCard(phoneNumber: String = "", simId: String, simSlot: Int) {
         viewModelScope.launch {
-            _snackbarVisibility.emit(SnackbarVisibility.Gone)
-        }
-    }
-
-    fun showSnackbar() {
-        viewModelScope.launch {
-            _snackbarVisibility.emit(SnackbarVisibility.Visible)
+            simCardVerifier.verifySimCard(phoneNumber, simId, simSlot)
         }
     }
 }

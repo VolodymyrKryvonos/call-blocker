@@ -1,12 +1,12 @@
 package com.call_blocke.a_repository.model
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class LoginRequest(
-    @SerializedName("unique_id")
+    @Json(name = "unique_id")
     override val uniqueId: String,
     override val email: String,
     override val password: String,
-    @SerializedName("version_of_package")
+    @Json(name = "version_of_package")
     val version: String
 ): AuthRequest

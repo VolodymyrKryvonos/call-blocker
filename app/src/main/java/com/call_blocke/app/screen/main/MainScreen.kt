@@ -3,6 +3,7 @@ package com.call_blocke.app.screen.main
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
@@ -36,16 +37,12 @@ import com.call_blocke.app.Navigation
 import com.call_blocke.app.R
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
-import com.call_blocke.rest_work_imp.SimUtil
-import com.call_blocke.rest_work_imp.model.SimVerificationInfo
-import com.call_blocke.rest_work_imp.model.SimVerificationStatus
+import com.call_blocker.verification.domain.VerificationInfoStateHolder
+import com.example.common.SimUtil
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.rokobit.adstv.ui.*
 import com.rokobit.adstv.ui.element.*
-import com.rokobit.adstv.ui.mainFont
-import com.rokobit.adstv.ui.primaryColor
-import com.rokobit.adstv.ui.primaryDimens
-import com.rokobit.adstv.ui.secondaryColor
 import com.rokobit.adstvv_unit.loger.SmartLog
 
 
@@ -60,7 +57,7 @@ fun MainScreen(navController: NavHostController, viewMode: MainViewModel = viewM
     val context = LocalContext.current
     SwipeRefresh(
         state = rememberSwipeRefreshState(isLoading),
-        onRefresh = { viewMode.reloadSystemInfo() },
+        onRefresh = { viewMode.reloadSystemInfo(context) },
     ) {
         Box(
             modifier = Modifier
@@ -77,7 +74,7 @@ fun MainScreen(navController: NavHostController, viewMode: MainViewModel = viewM
                         .weight(1f)
                         .fillMaxWidth()
                 ) {
-                    Menu(navController = navController, mViewMode = viewMode)
+                    Menu(navController = navController, viewModel = viewMode)
                 }
 
                 Box(
@@ -174,7 +171,7 @@ fun Header(mViewMode: MainViewModel) =
         ) {
             androidx.compose.material.Text(
                 text = if (isServerOnline) "Status: connected" else "Status: disconnected",
-                color = if (isServerOnline) Color.Green else Color.Red,
+                color = if (isServerOnline) Color.Green else errorColor,
                 fontSize = 18.sp,
                 fontFamily = mainFont
             )
@@ -213,24 +210,29 @@ fun SentSmsInfo(mViewModel: MainViewModel) {
 @ExperimentalFoundationApi
 @ExperimentalMaterialApi
 @Composable
-fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
-    val isExecutorRunning: Boolean by mViewMode.taskExecutorIsRunning.collectAsState(initial = false)
+fun Menu(navController: NavHostController, viewModel: MainViewModel) {
+    val isExecutorRunning: Boolean by viewModel.taskExecutorIsRunning.collectAsState(initial = false)
     val context = LocalContext.current
-    val firstSimVerificationInfo = mViewMode.firstSimVerificationInfo.collectAsState()
-    val secondSimVerificationInfo = mViewMode.secondSimVerificationInfo.collectAsState()
+    val isNeedVerification =
+        VerificationInfoStateHolder.isSimCardsNeedVerification().collectAsState(
+            initial = false
+        )
+    Log.e("isNeedVerification", isNeedVerification.toString())
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                mViewMode.checkSimCards(context)
-                mViewMode.reloadSystemInfo()
-                mViewMode.simsInfo()
-                mViewMode.getProfile()
-                mViewMode.resetSimIfChanged(context)
+                viewModel.reloadSystemInfo(context)
+                viewModel.simsInfo(
+                    SimUtil.firstSim(context)?.iccId,
+                    SimUtil.secondSim(context)?.iccId
+                )
+                viewModel.getProfile()
+                viewModel.checkSimCards(context)
             }
             else -> {}
         }
     }
-    val sims by mViewMode.simInfoState.collectAsState(initial = null)
+    val sims by viewModel.simInfoState.collectAsState(initial = null)
     LazyVerticalGrid(
         cells = GridCells.Adaptive(140.dp),
         contentPadding = PaddingValues(primaryDimens / 2)
@@ -259,30 +261,26 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
                 backgroundColor = getMenuButtonBackground(
                     i,
                     sims ?: listOf(),
-                    context,
-                    firstSimVerificationInfo.value,
-                    secondSimVerificationInfo.value
-                ),
-                isEnable = isMenuButtonEnabled(i)
+                    isNeedVerification.value,
+                    context
+                )
             ) {
                 when (i) {
                     1 -> {
                         if (isExecutorRunning) {
                             SmartLog.e("User stop service")
-                            mViewMode.stopExecutor(context)
-                            mViewMode.notifyServerUserStopService()
+                            viewModel.stopExecutor(context)
+                            viewModel.notifyServerUserStopService()
                         } else {
                             SmartLog.e("User start service")
-                            mViewMode.runExecutor(context)
-                            mViewMode.checkSimCards(context)
-                            mViewMode.checkIsSimCardsShouldBeValidated()
+                            viewModel.runExecutor(context)
                         }
                     }
                     2 -> navController.navigate(Navigation.ResetSimScreen.destination)
                     3 -> navController.navigate(Navigation.SettingsScreen.destination)
                     4 -> navController.navigate(Navigation.TaskListScreen.destination)
                     5 -> navController.navigate(Navigation.SimInfoScreen.destination)
-                    else -> mViewMode.logOut(context = context)
+                    else -> viewModel.logOut(context = context)
                 }
             }
         }
@@ -290,21 +288,11 @@ fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
 }
 
 
-fun isMenuButtonEnabled(
-    index: Int
-): Boolean {
-    return when (index) {
-        1 -> !SmsBlockerDatabase.isSimChanged
-        else -> true
-    }
-}
-
 fun getMenuButtonBackground(
     index: Int,
     sims: List<FullSimInfoModel>,
-    context: Context,
-    firstSimVerificationInfo: SimVerificationInfo,
-    secondSimVerificationInfo: SimVerificationInfo
+    isNeedVerification: Boolean,
+    context: Context
 ): Color {
     val isAnySimOutOfSMS = sims.any { sim ->
         sim.simPerDay <= sim.simDelivered && SimUtil.isSimAllow(
@@ -318,13 +306,10 @@ fun getMenuButtonBackground(
             sim.simSlot
         )
     }
-    val isAnyCardInvalid =
-        firstSimVerificationInfo.status == SimVerificationStatus.INVALID ||
-                secondSimVerificationInfo.status == SimVerificationStatus.INVALID
     return when {
-        index == 2 && isAnySimOutOfSMS -> Color.Red
-        index == 3 && isSimSmsLimitUndefined -> Color.Red
-        index == 5 && isAnyCardInvalid -> Color.Red
+        index == 2 && isAnySimOutOfSMS -> errorColor
+        index == 3 && isSimSmsLimitUndefined -> errorColor
+        index == 5 && isNeedVerification -> errorColor
         else -> secondaryColor
     }
 }
@@ -334,7 +319,7 @@ fun getMenuButtonBackground(
 fun MenuItem(
     icon: ImageVector,
     title: String,
-    isEnable: Boolean,
+    isEnable: Boolean = true,
     backgroundColor: Color,
     onClick: () -> Unit
 ) {

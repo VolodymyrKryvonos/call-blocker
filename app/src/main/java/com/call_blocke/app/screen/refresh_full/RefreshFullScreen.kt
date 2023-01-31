@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.call_blocke.app.R
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.db.SmsBlockerDatabase
+import com.example.common.SimUtil
 import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
@@ -58,7 +59,7 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            mViewModel.firstSim(context)?.let {
+            SimUtil.firstSim(context)?.let {
                 SimSlotBtn(
                     simName = it.carrierName.toString(),
                     simChanged = SmsBlockerDatabase.firstSimChanged,
@@ -74,8 +75,7 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
             }
 
             Spacer(modifier = Modifier.width(primaryDimens))
-
-            mViewModel.secondSim(context)?.let {
+            SimUtil.secondSim(context)?.let {
                 SimSlotBtn(
                     simName = it.carrierName.toString(),
                     simChanged = SmsBlockerDatabase.secondSimChanged,
@@ -95,7 +95,7 @@ fun RefreshScreen(mViewModel: RefreshViewModel = viewModel()) = Column(
     OnLifecycleEvent { _, event ->
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
-                mViewModel.simsInfo()
+                mViewModel.simsInfo("", "")
             }
             else -> {}
         }

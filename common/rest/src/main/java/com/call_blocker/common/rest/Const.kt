@@ -1,4 +1,4 @@
-package com.call_blocke.a_repository
+package com.call_blocker.common.rest
 
 object Const {
 
@@ -6,7 +6,10 @@ object Const {
 
     const val domain = "free-tokens.info"
 
-    const val url = "https://$domain/api/v1"
+    const val sandboxDomain = "sandbox.free-tokens.info"
+
+
+    const val url = "https://$domain/api/v1/"
 
     const val protocolVersion = "1.0"
 

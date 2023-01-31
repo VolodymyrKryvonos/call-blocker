@@ -4,18 +4,16 @@
  * UA
  */
 
-package com.call_blocke.a_repository.unit
+package com.call_blocker.common.rest
 
-import com.call_blocke.a_repository.BuildConfig
-import com.call_blocke.a_repository.Const
-import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstvv_unit.loger.SmartLog
-import okhttp3.*
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import okhttp3.CacheControl
+import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import java.net.URI
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
 
 class ApiFactory {
@@ -27,7 +25,6 @@ class ApiFactory {
         builder?.connectTimeout(CONNECT_TIMEOUT.toLong(), TimeUnit.SECONDS)
         builder?.writeTimeout(WRITE_TIMEOUT.toLong(), TimeUnit.SECONDS)
         builder?.readTimeout(READ_TIMEOUT.toLong(), TimeUnit.SECONDS)
-        builder?.addInterceptor(HostSelectionInterceptor())
         builder?.addInterceptor { chain ->
             val original = chain.request()
             val requestBuilder = original.newBuilder()
@@ -70,26 +67,12 @@ class ApiFactory {
     }
 
     fun buildRetrofit(baseUrl: String): Retrofit {
+        val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
         return Retrofit.Builder()
             .baseUrl(baseUrl)
             .client(builder!!.build())
-            .addConverterFactory(GsonConverterFactory.create())
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
-    }
-
-    class HostSelectionInterceptor : Interceptor {
-        override fun intercept(chain: Interceptor.Chain): Response {
-            val host: String = SmsBlockerDatabase.profile?.url?:Const.url
-            var request: Request = chain.request()
-            val newHost = URI(host)
-            val newUrl = ("${newHost.scheme}://${newHost.host}${request.url.encodedPath}").toHttpUrlOrNull()
-            if (newUrl != null) {
-                request = request.newBuilder()
-                    .url(newUrl)
-                    .build()
-            }
-            return chain.proceed(request)
-        }
     }
 
     companion object {

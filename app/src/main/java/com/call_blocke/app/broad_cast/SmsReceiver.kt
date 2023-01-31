@@ -11,7 +11,7 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.VerificationState
 import com.call_blocke.repository.RepositoryImp
 import com.call_blocke.repository.RepositoryImp.replyRepository
-import com.call_blocke.rest_work_imp.model.Resource
+import com.example.common.Resource
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi

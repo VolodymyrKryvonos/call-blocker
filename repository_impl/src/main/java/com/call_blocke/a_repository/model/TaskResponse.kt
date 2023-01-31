@@ -1,13 +1,13 @@
 package com.call_blocke.a_repository.model
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class TaskResponse(
     val delay: Int = 1,
-    @SerializedName("sms")
+    @Json(name = "sms")
     val smsList: List<TaskElement>,
     val sim: String,
-    @SerializedName("sim_iccid")
+    @Json(name = "sim_iccid")
     val simIccId: String?
 )
 
@@ -17,8 +17,8 @@ data class SimDetail(
 )
 
 data class SimInfo(
-    @SerializedName("msisdn_1")
+    @Json(name = "msisdn_1")
     val first: SimDetail,
-    @SerializedName("msisdn_2")
+    @Json(name = "msisdn_2")
     val second: SimDetail
 )

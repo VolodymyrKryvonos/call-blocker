@@ -1,7 +1,9 @@
 package com.call_blocke.a_repository.repository
 
 import com.call_blocke.a_repository.rest.LogRest
+import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.LogRepository
+import com.call_blocker.common.rest.AppRest
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -13,9 +15,10 @@ import java.io.File
 
 class LogRepositoryImpl : LogRepository {
     private val logRest: LogRest
-        get() = ApiRepositoryHelper.createRest(
-            LogRest::class.java
-        )
+        get() = AppRest(
+            bearerToken = SmsBlockerDatabase.userToken ?: "",
+            service = LogRest::class.java
+        ).build()
 
     override suspend fun sendLogs(file: File, deviceId: String) {
         val fileToSend = File(file.parent, "fileToSend.html")

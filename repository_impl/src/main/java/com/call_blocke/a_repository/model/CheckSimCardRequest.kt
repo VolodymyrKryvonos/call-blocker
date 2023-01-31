@@ -1,19 +1,19 @@
 package com.call_blocke.a_repository.model
 
 import com.call_blocke.db.SmsBlockerDatabase
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class CheckSimCardRequest(
-    @SerializedName("sim_iccid")
+    @Json(name = "sim_iccid")
     val iccId: String,
-    @SerializedName("country_code")
+    @Json(name = "country_code")
     val countryCode: String,
-    @SerializedName("sim_slot")
+    @Json(name = "sim_slot")
     val simSlot: String,
-    @SerializedName("unique_id")
+    @Json(name = "unique_id")
     val uniqueId: String = SmsBlockerDatabase.deviceID,
-    @SerializedName("create_auto_verification_sms")
+    @Json(name = "create_auto_verification_sms")
     val createAutoVerificationSms: Boolean = false,
-    @SerializedName("msisdn")
+    @Json(name = "msisdn")
     val phoneNumber: String? = null,
 )

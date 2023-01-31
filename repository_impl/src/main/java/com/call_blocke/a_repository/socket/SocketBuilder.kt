@@ -2,13 +2,14 @@ package com.call_blocke.a_repository.socket
 
 import android.os.Handler
 import android.os.Looper
-import com.call_blocke.a_repository.Const.domain
-import com.call_blocke.a_repository.Const.socketUrl
-import com.call_blocke.a_repository.Pinger
 import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocker.common.rest.Const.domain
+import com.call_blocker.common.rest.Const.socketUrl
+import com.call_blocker.common.rest.Pinger
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
@@ -26,7 +27,7 @@ class SocketBuilder private constructor(
 
     private val reconnectHandler = Handler(Looper.getMainLooper())
 
-    val messageCollector = MutableStateFlow<String?>("")
+    val messageCollector = Channel<String?>()
 
     val connectionStatusFlow = MutableSharedFlow<Boolean>(0)
 
@@ -115,7 +116,7 @@ class SocketBuilder private constructor(
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
         launch(Dispatchers.IO) {
-            messageCollector.emit(text)
+            messageCollector.send(text)
         }
     }
 

@@ -1,10 +1,9 @@
 package com.call_blocke.a_repository.model
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class ApiResponse<DATA>(
-    val data: DATA,
-    val options: Options
+    val data: DATA
 )
 
 data class SocketMessage<DATA>(
@@ -14,6 +13,6 @@ data class SocketMessage<DATA>(
 )
 
 data class Options(
-    @SerializedName("date_time")
+    @Json(name = "date_time")
     val dateTime: String? = null
 )

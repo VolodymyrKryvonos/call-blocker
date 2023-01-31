@@ -1,4 +1,4 @@
-package com.call_blocke.rest_work_imp.model
+package com.example.common
 
 sealed class Resource<T>(val data: T? = null, val message: String? = null) {
     class Success<T>(data: T) : Resource<T>(data)

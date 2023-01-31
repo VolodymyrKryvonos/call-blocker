@@ -4,7 +4,6 @@ import android.content.Context
 import android.telephony.TelephonyManager
 import androidx.annotation.RequiresPermission
 import com.call_blocke.a_repository.BuildConfig
-import com.call_blocke.a_repository.Const
 import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.request.GetProfileRequest
 import com.call_blocke.a_repository.rest.SettingsRest
@@ -12,13 +11,16 @@ import com.call_blocke.db.AutoVerificationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocke.rest_work_imp.SettingsRepository
-import com.call_blocke.rest_work_imp.SimUtil
-import com.call_blocke.rest_work_imp.model.Resource
 import com.call_blocke.rest_work_imp.model.SimVerificationInfo
 import com.call_blocke.rest_work_imp.model.SimVerificationStatus
+import com.call_blocker.common.rest.AppRest
+import com.call_blocker.common.rest.Const
 import com.call_blocker.model.ConnectionStatus
+import com.call_blocker.model.Profile
 import com.example.common.ConnectionManager
 import com.example.common.CountryCodeExtractor
+import com.example.common.Resource
+import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.Flow
@@ -28,9 +30,10 @@ import kotlinx.coroutines.flow.flow
 class SettingsRepositoryImp : SettingsRepository() {
 
     private val settingsRest: SettingsRest
-        get() = ApiRepositoryHelper.createRest(
-            SettingsRest::class.java
-        )
+        get() = AppRest(
+            bearerToken = SmsBlockerDatabase.userToken ?: "",
+            service = SettingsRest::class.java
+        ).build()
 
     override suspend fun updateSmsPerDay(
         context: Context,
@@ -172,7 +175,7 @@ class SettingsRepositoryImp : SettingsRepository() {
         return emptyList()
     }
 
-    override suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>> = flow {
+    override suspend fun getProfile(): Flow<Resource<Profile>> = flow {
         emit(Resource.Loading<com.call_blocker.model.Profile>())
         try {
             val profile = settingsRest.getProfile(

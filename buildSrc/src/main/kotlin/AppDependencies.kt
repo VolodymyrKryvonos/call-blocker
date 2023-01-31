@@ -5,7 +5,6 @@ object AppDependencies {
     const val ktx = "androidx.core:core-ktx:${Version.ktx}"
     private const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Version.kotlin_coroutines}"
 
-    const val gson = "com.google.code.gson:gson:${Version.gson}"
 
     private const val security_crypto = "androidx.security:security-crypto:1.0.0"
     private const val security_identity_credential = "androidx.security:security-identity-credential:1.0.0-alpha02"
@@ -33,9 +32,12 @@ object AppDependencies {
 
     }
 
+    val moshi = listOf("com.squareup.moshi:moshi-kotlin:${Version.moshi}")
+
     val rest = arrayListOf<String>().apply {
         add("com.squareup.retrofit2:retrofit:2.9.0")
-        add("com.squareup.retrofit2:converter-gson:2.9.0")
+        add("com.squareup.retrofit2:converter-moshi:2.9.0")
+        addAll(moshi)
         add(okhttp)
         add("com.squareup.okhttp3:logging-interceptor:4.9.1")
     }

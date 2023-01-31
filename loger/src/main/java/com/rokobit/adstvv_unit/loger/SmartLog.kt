@@ -1,6 +1,5 @@
 package com.rokobit.adstvv_unit.loger
 
-import com.google.gson.Gson
 import timber.log.Timber
 
 object SmartLog {
@@ -15,7 +14,7 @@ object SmartLog {
         when (message) {
             is Int -> d(message.toString())
             is Float -> d(message.toString())
-            else -> d(Gson().toJson(message))
+            else -> d(message.toString())
         }
     }
 
@@ -27,7 +26,7 @@ object SmartLog {
         when (message) {
             is Int -> e(message.toString())
             is Float -> e(message.toString())
-            else -> e(Gson().toJson(message))
+            else -> e(message.toString())
         }
     }
 

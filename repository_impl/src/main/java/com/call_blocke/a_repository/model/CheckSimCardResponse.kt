@@ -2,13 +2,13 @@ package com.call_blocke.a_repository.model
 
 import com.call_blocke.rest_work_imp.model.SimVerificationInfo
 import com.call_blocke.rest_work_imp.model.SimVerificationStatus
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class CheckSimCardResponse(
     val status: Boolean,
-    @SerializedName("msisdn")
+    @Json(name = "msisdn")
     val number: String? = null,
-    @SerializedName("auto_verification")
+    @Json(name = "auto_verification")
     val autoVerification: Boolean? = false
 ) {
     fun toSimVerificationInfo() = SimVerificationInfo(

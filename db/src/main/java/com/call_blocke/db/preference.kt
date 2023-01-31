@@ -5,13 +5,16 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.call_blocker.model.Profile
-import com.google.gson.Gson
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 enum class AutoVerificationResult {
     NONE, FAILED, SUCCESS
 }
 
 class Preference(context: Context) {
+
+    private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
 
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
         "sms_send_app",
@@ -30,13 +33,14 @@ class Preference(context: Context) {
 
     var profile: Profile?
         get() = try {
-            Gson().fromJson(sharedPreferences.getString("Profile", ""), Profile::class.java)
+            moshi.adapter(Profile::class.java)
+                .fromJson(sharedPreferences.getString("Profile", "") ?: "")
         } catch (e: Exception) {
             null
         }
         set(value) {
             with(sharedPreferences.edit()) {
-                putString("Profile", Gson().toJson(value))
+                putString("Profile", moshi.adapter(Profile::class.java).toJson(value))
                 commit()
             }
         }
@@ -167,10 +171,9 @@ class Preference(context: Context) {
         get() {
             if (sharedPreferences.contains("system_detail"))
                 return try {
-                    Gson().fromJson(
-                        sharedPreferences.getString("system_detail", ""),
-                        SystemDetailEntity::class.java
-                    )
+                    moshi.adapter(SystemDetailEntity::class.java).fromJson(
+                        sharedPreferences.getString("system_detail", "") ?: ""
+                    ) ?: SystemDetailEntity()
                 } catch (e: Exception) {
                     SystemDetailEntity()
                 }
@@ -178,7 +181,10 @@ class Preference(context: Context) {
         }
         set(value) {
             with(sharedPreferences.edit()) {
-                putString("system_detail", Gson().toJson(value))
+                putString(
+                    "system_detail",
+                    moshi.adapter(SystemDetailEntity::class.java).toJson(value)
+                )
                 commit()
             }
         }

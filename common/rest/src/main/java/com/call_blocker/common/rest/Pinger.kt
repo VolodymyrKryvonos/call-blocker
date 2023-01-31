@@ -1,4 +1,4 @@
-package com.call_blocke.a_repository
+package com.call_blocker.common.rest
 
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace

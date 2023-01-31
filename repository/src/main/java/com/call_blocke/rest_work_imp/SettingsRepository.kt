@@ -7,10 +7,11 @@ import android.net.Uri
 import android.provider.BlockedNumberContract.BlockedNumbers
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.VerificationState
-import com.call_blocke.rest_work_imp.model.Resource
 import com.call_blocke.rest_work_imp.model.SimVerificationInfo
 import com.call_blocke.rest_work_imp.model.SimVerificationStatus
 import com.call_blocker.model.ConnectionStatus
+import com.call_blocker.model.Profile
+import com.example.common.Resource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -80,7 +81,7 @@ abstract class SettingsRepository {
         context.contentResolver.delete(uri, null, null)
     }
 
-    abstract suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>>
+    abstract suspend fun getProfile(): Flow<Resource<Profile>>
     abstract suspend fun checkConnection(): Resource<ConnectionStatus>
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
     abstract suspend fun checkSimCard(

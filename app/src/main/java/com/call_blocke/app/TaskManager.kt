@@ -13,17 +13,19 @@ import androidx.core.app.ActivityCompat
 import com.call_blocke.app.broad_cast.VerificationSms
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.app.worker_manager.SendingSMSWorker
-import com.call_blocke.db.AutoVerificationResult
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.TaskMethod
-import com.call_blocke.db.VerificationState
 import com.call_blocke.db.entity.PhoneNumber
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
 import com.call_blocke.repository.RepositoryImp
-import com.call_blocke.rest_work_imp.SimUtil
-import com.call_blocke.rest_work_imp.model.Resource
+import com.call_blocker.verification.domain.SimCardVerificationChecker
+import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
+import com.call_blocker.verification.domain.VerificationInfoStateHolder
+import com.call_blocker.verification.domain.VerificationStatus
 import com.example.common.ConnectionManager
+import com.example.common.Resource
+import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import com.squareup.moshi.Moshi
@@ -219,6 +221,12 @@ class TaskManager(
 
     private suspend fun sendStatus(status: Boolean, task: TaskEntity) {
         if (status) {
+            if (task.method == TaskMethod.VERIFY_PHONE_NUMBER || task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
+                val simCardVerificationChecker: SimCardVerificationChecker =
+                    SimCardVerificationCheckerImpl()
+                simCardVerificationChecker.coroutineScope = this
+                simCardVerificationChecker.waitForVerification(task.simSlot ?: -1, context)
+            }
             try {
                 taskRepository.taskOnDelivered(task)
             } catch (e: Exception) {
@@ -247,24 +255,21 @@ class TaskManager(
     private suspend fun processSendError(task: TaskEntity) {
         if (task.method == TaskMethod.VERIFY_PHONE_NUMBER) {
             NotificationService.showVerificationFailedNotification(context, task)
-            emitVerificationCompletion(task.simSlot)
+            updateVerificationState(task.simSlot)
         }
         if (task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
-            if (task.simSlot == 0) {
-                SmsBlockerDatabase.simFirstAutoVerificationResult = AutoVerificationResult.FAILED
-            } else {
-                SmsBlockerDatabase.simSecondAutoVerificationResult = AutoVerificationResult.FAILED
-            }
             NotificationService.showAutoVerificationFailedNotification(context)
+            updateVerificationState(task.simSlot)
+
         }
         taskRepository.taskOnError(task)
     }
 
-    private suspend fun emitVerificationCompletion(simSlot: Int?) {
-        if (simSlot == 0) {
-            SmsBlockerDatabase.firstSimVerificationState.emit(VerificationState.FAILED)
-        } else {
-            SmsBlockerDatabase.secondSimVerificationState.emit(VerificationState.FAILED)
+    private suspend fun updateVerificationState(simSlot: Int?) {
+        if (simSlot != null) {
+            VerificationInfoStateHolder.getStateHolderBySimSlotIndex(simSlot).apply {
+                emit(this.value.copy(status = VerificationStatus.Failed))
+            }
         }
     }
 
