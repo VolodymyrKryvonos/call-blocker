@@ -121,9 +121,9 @@ class SettingsRepositoryImp : SettingsRepository() {
                     firstSimId = firstSimId,
                     secondSimId = secondSimId
                 )
-            )
+            ).toSimInfoResponse()
 
-            data.data.simFirst?.let {
+            data.simFirst?.let {
                 sims.add(
                     FullSimInfoModel(
                         simDate = it.updatedAt,
@@ -134,7 +134,7 @@ class SettingsRepositoryImp : SettingsRepository() {
                 )
             }
 
-            data.data.simSecond?.let {
+            data.simSecond?.let {
                 sims.add(
                     FullSimInfoModel(
                         simDate = it.updatedAt,

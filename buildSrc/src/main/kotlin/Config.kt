@@ -5,7 +5,7 @@ object Config {
     const val versionCode = 1
     const val major = 2
     const val minor = 1
-    const val patch = 76
+    const val patch = 77
     const val versionName = "$major.$minor.$patch.sandbox"
 
 }

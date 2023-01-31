@@ -2,6 +2,7 @@ package com.call_blocke.a_repository.rest
 
 import com.call_blocke.a_repository.dto.ConnectionStatusDto
 import com.call_blocke.a_repository.dto.ProfileDto
+import com.call_blocke.a_repository.dto.SimInfoDto
 import com.call_blocke.a_repository.model.*
 import com.call_blocke.a_repository.request.GetProfileRequest
 import retrofit2.http.Body
@@ -19,7 +20,7 @@ interface SettingsRest {
     suspend fun resetSim(@Body model: RefreshDataForSimRequest)
 
     @POST("apps/get-sim-info")
-    suspend fun simInfo(@Body model: SimInfoRequest): ApiResponse<SimInfoResponse>
+    suspend fun simInfo(@Body model: SimInfoRequest): SimInfoDto
 
     @POST("apps/stop-service")
     suspend fun stopService(@Body model: SimpleBody = SimpleBody())

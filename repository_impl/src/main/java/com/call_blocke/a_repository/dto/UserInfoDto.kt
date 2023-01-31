@@ -14,9 +14,9 @@ data class UserInfoDto(
         @Json(name = "device")
         val device: Device,
         @Json(name = "firstSim")
-        val firstSim: FirstSim,
+        val firstSim: SimInfo,
         @Json(name = "secondSim")
-        val secondSim: SecondSim,
+        val secondSim: SimInfo,
         @Json(name = "user")
         val user: User
     ) {
@@ -39,28 +39,6 @@ data class UserInfoDto(
             val smsPerDay2: Int,
             @Json(name = "unique_id")
             val uniqueId: String
-        )
-
-        data class FirstSim(
-            @Json(name = "delivered")
-            val delivered: Int,
-            @Json(name = "sim_iccid")
-            val simIccid: String,
-            @Json(name = "sms_per_day")
-            val smsPerDay: Int,
-            @Json(name = "updated_at")
-            val updatedAt: String
-        )
-
-        data class SecondSim(
-            @Json(name = "delivered")
-            val delivered: Int,
-            @Json(name = "sim_iccid")
-            val simIccid: String,
-            @Json(name = "sms_per_day")
-            val smsPerDay: Int,
-            @Json(name = "updated_at")
-            val updatedAt: String
         )
 
         data class User(
