@@ -13,9 +13,9 @@ data class UserInfoDto(
     data class Data(
         @Json(name = "device")
         val device: Device,
-        @Json(name = "firstSim")
+        @Json(name = "first_sim")
         val firstSim: SimInfo,
-        @Json(name = "secondSim")
+        @Json(name = "second_sim")
         val secondSim: SimInfo,
         @Json(name = "user")
         val user: User
