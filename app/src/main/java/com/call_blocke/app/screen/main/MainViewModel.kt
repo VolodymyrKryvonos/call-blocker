@@ -62,18 +62,14 @@ class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
     val deviceID = userRepository.deviceID
 
     fun runExecutor(context: Context) {
-        SendingSMSWorker.start(context = context)
+
         viewModelScope.launch {
-            val forSimFirst =
-                if (SimUtil.isFirstSimAllow(context)) SmsBlockerDatabase.smsPerDaySimFirst else 0
-            val forSimSecond =
-                if (SimUtil.isSecondSimAllow(context)) SmsBlockerDatabase.smsPerDaySimSecond else 0
-            settingsRepository.setSmsPerDay(
-                context,
-                smsPerDaySimFirst = forSimFirst,
-                smsPerDaySimSecond = forSimSecond
+            RepositoryImp.settingsRepository.changeSimCard(
+                context
             )
         }
+
+        SendingSMSWorker.start(context = context)
     }
 
     fun stopExecutor(context: Context) {

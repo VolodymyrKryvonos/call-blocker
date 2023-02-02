@@ -21,6 +21,7 @@ import com.call_blocke.app.screen.SplashScreen
 import com.call_blocke.app.screen.SplashViewModel
 import com.call_blocke.app.screen.auth.AuthScreen
 import com.call_blocke.app.screen.auth.AuthViewModel
+import com.call_blocke.app.service.ChangeSimCardNotifierService
 import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstv.ui.Them
 import com.rokobit.adstv.ui.backgroundBrush
@@ -33,6 +34,13 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
 
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (SmsBlockerDatabase.isSimChange) {
+            ChangeSimCardNotifierService.startService(this)
+        }
     }
 
     @ExperimentalFoundationApi

@@ -149,6 +149,10 @@ object SmsBlockerDatabase {
         set(value) {
             preference?.secondSimChanged = value
         }
+
+    val isSimChange: Boolean
+        get() = secondSimChanged || firstSimChanged
+
     @SuppressLint("HardwareIds")
     fun init(context: Context) {
         if (isInitialized)

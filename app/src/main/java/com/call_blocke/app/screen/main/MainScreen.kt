@@ -189,20 +189,10 @@ fun Header(mViewMode: MainViewModel) =
 @Composable
 fun SentSmsInfo(mViewModel: MainViewModel) {
     val sims by mViewModel.simInfoState.collectAsState(initial = null)
-    val context = LocalContext.current
-    for ((index, fullSimInfoModel) in sims?.withIndex() ?: emptyList()) {
-        if (SimUtil.isFirstSimAllow(context) && index == 0) {
-            Row {
-                Text(text = "Sim 1: ")
-                Text(text = "${fullSimInfoModel.simDelivered} SMS of ${fullSimInfoModel.simPerDay} today")
-            }
-        }
-
-        if (SimUtil.isSecondSimAllow(context) && index == 1) {
-            Row {
-                Text(text = "Sim 2: ")
-                Text(text = "${fullSimInfoModel.simDelivered} SMS of ${fullSimInfoModel.simPerDay} today")
-            }
+    (sims ?: emptyList()).forEach { fullSimInfoModel ->
+        Row {
+            Text(text = "Sim ${fullSimInfoModel.simSlot + 1}: ")
+            Text(text = "${fullSimInfoModel.simDelivered} SMS of ${fullSimInfoModel.simPerDay} today")
         }
     }
 }
@@ -270,7 +260,6 @@ fun Menu(navController: NavHostController, viewModel: MainViewModel) {
                         if (isExecutorRunning) {
                             SmartLog.e("User stop service")
                             viewModel.stopExecutor(context)
-                            viewModel.notifyServerUserStopService()
                         } else {
                             SmartLog.e("User start service")
                             viewModel.runExecutor(context)

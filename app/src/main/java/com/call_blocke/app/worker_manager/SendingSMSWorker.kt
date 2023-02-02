@@ -93,7 +93,12 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
             WorkManager.getInstance(context).cancelAllWork()
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                 isRunning.emit(false)
-                RepositoryImp.taskRepository.resendReceived()
+                launch {
+                    RepositoryImp.taskRepository.resendReceived()
+                }
+                launch {
+                    RepositoryImp.settingsRepository.notifyServerUserStopService()
+                }
             }
         }
     }

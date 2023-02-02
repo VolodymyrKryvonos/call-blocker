@@ -22,7 +22,6 @@ enum class SimSlotState {
 }
 
 class SimSlotReceiver : BroadcastReceiver() {
-
     override fun onReceive(context: Context?, intent: Intent?) {
         try {
             SmartLog.d("SimSlotReceiver")
@@ -41,7 +40,6 @@ class SimSlotReceiver : BroadcastReceiver() {
     }
 
     private fun trackSimCardWasIdentified(context: Context?) {
-        SendingSMSWorker.stop(context = context ?: return)
         val firstSim = SimUtil.firstSim(context)
         val secondSim = SimUtil.secondSim(context)
         if (firstSim?.iccId != SmsBlockerDatabase.firstSimId) {
@@ -54,7 +52,7 @@ class SimSlotReceiver : BroadcastReceiver() {
             SmsBlockerDatabase.secondSimId = secondSim?.iccId
             SmsBlockerDatabase.secondSimChanged = true
         }
-        context.startService(Intent(context, ChangeSimCardNotifierService::class.java))
+        ChangeSimCardNotifierService.startService(context ?: return)
     }
 
     private fun trackSimCardWasEjected(context: Context?) {

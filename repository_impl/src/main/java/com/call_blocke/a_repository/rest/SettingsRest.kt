@@ -13,8 +13,6 @@ interface SettingsRest {
     @POST("users/sms-per-day")
     suspend fun setSmsPerDay(@Body model: SmsPerDayRequest)
 
-    @POST("users/black-list")
-    suspend fun blackList(@Body data: TasksRequest): ApiResponse<List<BlackListElement>>
 
     @POST("apps/reset-count-sim")
     suspend fun resetSim(@Body model: RefreshDataForSimRequest)

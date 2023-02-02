@@ -15,6 +15,7 @@ import com.call_blocker.common.rest.Const
 import com.call_blocker.common.rest.Const.domain
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
+import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -187,7 +188,8 @@ class TaskRepositoryImp : TaskRepository() {
                         TaskStatus.DELIVERED -> task.deliveredAt
                         TaskStatus.BUFFERED -> task.bufferedAt
                         else -> Date().time
-                    }
+                    },
+                    simIccid = task.simIccId
                 )
             )
 
@@ -201,7 +203,8 @@ class TaskRepositoryImp : TaskRepository() {
                         id = req.data.id,
                         status = req.data.status,
                         simId = req.data.simId,
-                        time = req.data.date
+                        time = req.data.date,
+                        simIccid = req.data.simIccid
                     )
                 )
             }
@@ -218,7 +221,8 @@ class TaskRepositoryImp : TaskRepository() {
                     id = it.id,
                     status = it.status,
                     simId = it.simId,
-                    date = it.time
+                    date = it.time,
+                    simIccid = it.simIccid
                 )
             )
         }
@@ -248,6 +252,8 @@ data class TaskStatusDataRequest(
     val status: String,
     val id: Int,
     val simId: String,
-    val date: Long
+    val date: Long,
+    @Json(name = "sim_iccid")
+    val simIccid: String
 )
 

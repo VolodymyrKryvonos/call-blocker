@@ -10,5 +10,6 @@ data class TaskStatusData(
     val id: Int,
     val status: String,
     val simId: String,
-    val time: Long
+    val time: Long,
+    val simIccid: String
 )

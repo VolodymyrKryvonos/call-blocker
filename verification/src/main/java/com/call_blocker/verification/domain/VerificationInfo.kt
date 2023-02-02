@@ -8,5 +8,6 @@ data class VerificationInfo(
 ) {
     fun isVerificationInProgress() = status == VerificationStatus.Processing
 
-    fun isNeedVerification() = status == VerificationStatus.Unverified
+    fun isNeedVerification() =
+        status == VerificationStatus.Unverified || status == VerificationStatus.Failed
 }

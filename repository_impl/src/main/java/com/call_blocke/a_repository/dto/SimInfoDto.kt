@@ -12,8 +12,8 @@ data class SimInfoDto(
     val secondSim: SimInfo,
 ) {
     fun toSimInfoResponse() = SimInfoResponse(
-        simFirst = firstSim.toSSimInfo(),
-        simSecond = secondSim.toSSimInfo(),
+        simFirst = if (firstSim.simIccid != null) firstSim.toSSimInfo() else null,
+        simSecond = if (secondSim.simIccid != null) secondSim.toSSimInfo() else null
     )
 }
 
@@ -21,7 +21,7 @@ data class SimInfo(
     @Json(name = "delivered")
     val delivered: Int,
     @Json(name = "iccid")
-    val simIccid: String,
+    val simIccid: String?,
     @Json(name = "sms_per_day")
     val smsPerDay: Int,
     @Json(name = "updated_at")

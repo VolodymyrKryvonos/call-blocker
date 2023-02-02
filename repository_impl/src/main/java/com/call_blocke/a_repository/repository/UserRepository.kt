@@ -12,6 +12,7 @@ import com.call_blocke.rest_work_imp.UserRepository
 import com.call_blocker.common.rest.AppRest
 import com.call_blocker.common.rest.Const
 import com.example.common.ConnectionManager
+import com.example.common.CountryCodeExtractor
 import com.example.common.Resource
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
@@ -69,7 +70,10 @@ class UserRepositoryImp : UserRepository() {
                 TasksRequest(
                     connectionType = ConnectionManager.getNetworkGeneration(),
                     firstSimId = firstSimId,
-                    secondSimId = secondSimId
+                    secondSimId = secondSimId,
+                    countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
+                        firstSimId ?: secondSimId
+                    )
                 )
             ).toUserInfo()
                 .let {

@@ -78,10 +78,6 @@ object NotificationService {
             .setContentIntent(pendingIntent)
             .setCategory(Notification.CATEGORY_EVENT)
             .setAutoCancel(true)
-            .setStyle(
-                NotificationCompat.BigTextStyle()
-                    .bigText(context.getString(R.string.your_verification_failed, task.sendTo))
-            )
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as
                     NotificationManager
@@ -110,6 +106,17 @@ object NotificationService {
         eventChannel.lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         notificationManager.createNotificationChannel(serviceChannel)
         notificationManager.createNotificationChannel(eventChannel)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun createChangeSimDetectedNotification(context: Context): Notification {
+        val notificationBuilder = Notification.Builder(context, SERVICE_NOTIFICATION_CHANNEL_ID)
+
+        return notificationBuilder.setContentTitle("SIM card change detected")
+            .setContentText("Updating...")
+            .setSmallIcon(R.drawable.app_logo)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .build()
     }
 
     fun createForegroundInfo(context: Context): ForegroundInfo {

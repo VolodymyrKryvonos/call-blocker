@@ -2,7 +2,6 @@ package com.call_blocke.app.screen.sim_info
 
 import android.content.Context
 import android.telephony.SubscriptionInfo
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -68,60 +67,29 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
         if (sims == null)
             CircularProgressIndicator()
         else {
-            for ((index, fullSimInfoModel) in sims!!.withIndex()) {
-
-                if (index == 0) {
-                    val verificationInfo =
-                        VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
-                            .collectAsState()
-                    Log.e("verificationInfo", verificationInfo.toString())
-                    SimUtil.firstSim(context = context)?.let {
-                        SimInfoCard(
-                            info = it,
-                            data = fullSimInfoModel,
-                            phoneNumber = verificationInfo.value.phoneNumber,
-                            isNeedVerification = verificationInfo.value.isNeedVerification(),
-                            isVerificationInProgress = verificationInfo.value.isVerificationInProgress()
-                        ) {
-                            verifySimCard(
-                                context,
-                                verificationInfo.value.isAutoVerificationEnabled,
-                                viewModel,
-                                it,
-                                openDialog,
-                                verifyingSim
-                            )
-                        }
+            sims!!.forEach { fullSimInfoModel ->
+                val verificationInfo =
+                    VerificationInfoStateHolder.getStateHolderBySimSlotIndex(fullSimInfoModel.simSlot)
+                        .collectAsState()
+                SimUtil.simInfo(context = context, fullSimInfoModel.simSlot)?.let {
+                    SimInfoCard(
+                        info = it,
+                        data = fullSimInfoModel,
+                        phoneNumber = verificationInfo.value.phoneNumber,
+                        isNeedVerification = verificationInfo.value.isNeedVerification(),
+                        isVerificationInProgress = verificationInfo.value.isVerificationInProgress()
+                    ) {
+                        verifySimCard(
+                            context,
+                            verificationInfo.value.isAutoVerificationEnabled,
+                            viewModel,
+                            it,
+                            openDialog,
+                            verifyingSim
+                        )
                     }
                 }
-
                 Spacer(modifier = Modifier.height(primaryDimens))
-
-                if (index == 1) {
-                    val verificationInfo =
-                        VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
-                            .collectAsState()
-                    Log.e("verificationInfo", verificationInfo.toString())
-                    SimUtil.secondSim(context = context)?.let {
-                        SimInfoCard(
-                            info = it,
-                            data = fullSimInfoModel,
-                            phoneNumber = verificationInfo.value.phoneNumber,
-                            isNeedVerification = verificationInfo.value.isNeedVerification(),
-                            isVerificationInProgress = verificationInfo.value.isVerificationInProgress()
-                        ) {
-                            verifySimCard(
-                                context,
-                                verificationInfo.value.isAutoVerificationEnabled,
-                                viewModel,
-                                it,
-                                openDialog,
-                                verifyingSim
-                            )
-                        }
-                    }
-                }
-
             }
         }
     }

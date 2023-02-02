@@ -13,5 +13,7 @@ data class TasksRequest(
     @Json(name = "first_sim_iccid")
     val firstSimId: String?,
     @Json(name = "second_sim_iccid")
-    val secondSimId: String?
+    val secondSimId: String?,
+    @Json(name = "country_code")
+    val countryCode: String
 )

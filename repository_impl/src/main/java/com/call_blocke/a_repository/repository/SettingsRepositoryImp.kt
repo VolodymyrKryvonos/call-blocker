@@ -13,7 +13,6 @@ import com.call_blocke.rest_work_imp.SettingsRepository
 import com.call_blocker.common.rest.AppRest
 import com.call_blocker.common.rest.Const
 import com.call_blocker.model.ConnectionStatus
-import com.call_blocker.model.NewLimits
 import com.call_blocker.model.Profile
 import com.example.common.ConnectionManager
 import com.example.common.CountryCodeExtractor
@@ -119,7 +118,10 @@ class SettingsRepositoryImp : SettingsRepository() {
             val data = settingsRest.simInfo(
                 SimInfoRequest(
                     firstSimId = firstSimId,
-                    secondSimId = secondSimId
+                    secondSimId = secondSimId,
+                    countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
+                        firstSimId ?: secondSimId
+                    )
                 )
             ).toSimInfoResponse()
 
@@ -209,31 +211,32 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
     override suspend fun changeSimCard(
-        firstSimId: String?,
-        secondSimId: String?,
-        firstSimOperator: String?,
-        secondSimOperator: String?,
-        countryCode: String
-    ): NewLimits? {
-        return try {
+        context: Context
+    ) {
+        try {
+            val firstSim = SimUtil.firstSim(context)
+            val secondSim = SimUtil.secondSim(context)
+            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            val countryCode =
+                CountryCodeExtractor.getCountryCode(
+                    SimUtil.getSIMInfo(context),
+                    tm
+                )
             val response = settingsRest.changeSimCard(
                 ChangeSimCardRequest(
-                    firstSimId = firstSimId,
-                    secondSimId = secondSimId,
-                    firstSimOperator = firstSimOperator,
-                    secondSimOperator = secondSimOperator,
+                    firstSimId = firstSim?.iccId,
+                    secondSimId = secondSim?.iccId,
+                    firstSimOperator = firstSim?.carrierName.toString(),
+                    secondSimOperator = secondSim?.carrierName.toString(),
                     countryCode = countryCode
                 )
             )
             if (response.status) {
-                NewLimits(
-                    firstSimLimit = response.firstSimLimit,
-                    secondSimLimit = response.secondSimLimit
-                )
-            } else null
+                SmsBlockerDatabase.smsPerDaySimFirst = response.firstSimLimit
+                SmsBlockerDatabase.smsPerDaySimSecond = response.secondSimLimit
+            }
         } catch (e: Exception) {
             SmartLog.e("Failed send change sim card request ${getStackTrace(e)}")
-            null
         }
     }
 }
