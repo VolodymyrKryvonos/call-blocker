@@ -18,7 +18,9 @@ class LogRepositoryImpl : LogRepository {
         )
 
     override suspend fun sendLogs(file: File, deviceId: String) {
-        val requestFile = file.asRequestBody("text/html".toMediaTypeOrNull())
+        val fileToSend = File(file.parent, "fileToSend.html")
+        file.copyTo(fileToSend)
+        val requestFile = fileToSend.asRequestBody("text/html".toMediaTypeOrNull())
         val body: MultipartBody.Part =
             MultipartBody.Part.createFormData("file", file.name, requestFile)
         try {

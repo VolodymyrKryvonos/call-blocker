@@ -26,7 +26,7 @@ class SocketBuilder private constructor(
 
     private val reconnectHandler = Handler(Looper.getMainLooper())
 
-    val messageCollector = MutableSharedFlow<String?>(0)
+    val messageCollector = MutableStateFlow<String?>("")
 
     val connectionStatusFlow = MutableSharedFlow<Boolean>(0)
 

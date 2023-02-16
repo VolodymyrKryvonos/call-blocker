@@ -2,7 +2,6 @@ package com.call_blocke.a_repository.repository
 
 import com.call_blocke.a_repository.Const.domain
 import com.call_blocke.a_repository.model.*
-import com.call_blocke.a_repository.model.TaskStatusRequest
 import com.call_blocke.a_repository.rest.TaskRest
 import com.call_blocke.a_repository.socket.SocketBuilder
 import com.call_blocke.db.SmsBlockerDatabase
@@ -19,10 +18,7 @@ import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.*
@@ -89,6 +85,9 @@ class TaskRepositoryImp : TaskRepository() {
         socketBuilder.connect()
         withContext(Dispatchers.IO) {
             socketBuilder.messageCollector.collect {
+                if (it.isNullOrEmpty()) {
+                    return@collect
+                }
                 async {
                     SmartLog.d("Receive Message $it")
                     toTaskMessage(it)?.let { taskMessage ->
@@ -140,7 +139,7 @@ class TaskRepositoryImp : TaskRepository() {
                             simIccId = parsedMsg.data.simIccId ?: ""
                         )
                     }
-                ).also { save(it.list.filter { taskEntity -> taskEntity.message != "GET_LOGS" }) }
+                ).also { save(it.list.filter { taskEntity -> taskEntity.method != TaskMethod.GET_LOGS }) }
             }
         } catch (e: Exception) {
             SmartLog.e(e)
