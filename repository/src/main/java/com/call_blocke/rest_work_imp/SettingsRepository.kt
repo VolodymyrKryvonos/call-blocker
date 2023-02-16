@@ -68,9 +68,18 @@ abstract class SettingsRepository {
     }
 
     abstract suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>>
-    abstract suspend fun checkConnection(): Resource<ConnectionStatus>
+    abstract suspend fun checkConnection(
+        firstSimId: String?,
+        secondSimId: String?
+    ): Resource<ConnectionStatus>
+
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
-    abstract suspend fun sendSignalStrengthInfo()
+    abstract suspend fun sendSignalStrengthInfo(
+        firstSimId: String?,
+        secondSimId: String?,
+        firstSimOperator: String?,
+        secondSimOperator: String?,
+    )
 
     abstract suspend fun changeSimCard(context: Context)
 

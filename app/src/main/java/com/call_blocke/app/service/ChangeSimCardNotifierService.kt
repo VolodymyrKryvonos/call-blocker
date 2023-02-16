@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
@@ -21,7 +20,6 @@ class ChangeSimCardNotifierService : Service(), CoroutineScope {
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
-
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -47,7 +45,6 @@ class ChangeSimCardNotifierService : Service(), CoroutineScope {
 
     companion object {
         fun startService(context: Context) {
-            Log.e("ChangeSimCardNotifierService", "startService")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(
                     Intent(

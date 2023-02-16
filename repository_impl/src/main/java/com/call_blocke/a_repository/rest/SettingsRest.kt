@@ -24,7 +24,7 @@ interface SettingsRest {
     suspend fun stopService(@Body model: SimpleBody = SimpleBody())
 
     @POST("apps/is-connected")
-    suspend fun checkConnection(@Body model: SimpleBody = SimpleBody()): ConnectionStatusDto
+    suspend fun checkConnection(@Body model: SimInfoRequest): ConnectionStatusDto
 
     @POST("apps/get-profile")
     suspend fun getProfile(@Body model: GetProfileRequest): ApiResponse<ProfileDto>

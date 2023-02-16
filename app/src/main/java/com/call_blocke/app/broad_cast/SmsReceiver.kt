@@ -9,7 +9,6 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp.replyRepository
 import com.call_blocker.verification.domain.SimCardVerifier
 import com.rokobit.adstvv_unit.loger.SmartLog
-import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -17,7 +16,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import java.io.IOException
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 
 class SmsReceiver : BroadcastReceiver() {
@@ -50,13 +50,26 @@ class SmsReceiver : BroadcastReceiver() {
 
     private suspend fun checkIsVerificationSms(sms: ReplyMessage): Boolean {
         SmartLog.e("checkIsVerificationSms $sms")
-        val verificationSms = try {
-            moshi.adapter(VerificationSms::class.java).fromJson(sms.smsText)
-        } catch (e: IOException) {
-            SmartLog.e(getStackTrace(e))
+
+        val regex = ":.(.*?)[,.]"
+        val pattern: Pattern = Pattern.compile(regex, Pattern.MULTILINE)
+        val matcher: Matcher = pattern.matcher(sms.smsText)
+        val verificationCode = if (matcher.find()) {
+            matcher.group(1)
+        } else {
             return false
         }
-        verificationSms ?: return false
+        val simSlot = if (matcher.find()) {
+            matcher.group(1)
+        } else {
+            return false
+        }
+        val iccid = if (matcher.find()) {
+            matcher.group(1)
+        } else {
+            return false
+        }
+        val verificationSms = VerificationSms(simSlot, iccid, verificationCode)
 
         SmartLog.e("verificationSms $verificationSms")
         val verifier = SimCardVerifier()

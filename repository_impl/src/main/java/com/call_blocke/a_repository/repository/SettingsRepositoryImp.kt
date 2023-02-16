@@ -176,9 +176,22 @@ class SettingsRepositoryImp : SettingsRepository() {
         }
     }
 
-    override suspend fun checkConnection(): Resource<ConnectionStatus> {
+    override suspend fun checkConnection(
+        firstSimId: String?,
+        secondSimId: String?
+    ): Resource<ConnectionStatus> {
         return try {
-            Resource.Success<ConnectionStatus>(settingsRest.checkConnection().toConnectionStatus())
+            Resource.Success<ConnectionStatus>(
+                settingsRest.checkConnection(
+                    SimInfoRequest(
+                        firstSimId = firstSimId,
+                        secondSimId = secondSimId,
+                        countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
+                            firstSimId ?: secondSimId
+                        )
+                    )
+                ).toConnectionStatus()
+            )
         } catch (e: Exception) {
             SmartLog.e("Failed check connection ${getStackTrace(e)}")
             Resource.Error<ConnectionStatus>("")
@@ -196,13 +209,25 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
-    override suspend fun sendSignalStrengthInfo() {
+    override suspend fun sendSignalStrengthInfo(
+        firstSimId: String?,
+        secondSimId: String?,
+        firstSimOperator: String?,
+        secondSimOperator: String?
+    ) {
         try {
             settingsRest.sendSignalStrengthInfo(
                 SignalStrengthRequest(
                     signalStrength = ConnectionManager.getSignalStrength()
                         ?: throw Exception("Signal strength is null"),
-                    signalGeneration = ConnectionManager.getNetworkGeneration()
+                    signalGeneration = ConnectionManager.getNetworkGeneration(),
+                    firstSimId = firstSimId,
+                    secondSimId = secondSimId,
+                    firstSimOperator = firstSimOperator,
+                    secondSimOperator = secondSimOperator,
+                    countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
+                        firstSimId ?: secondSimId
+                    )
                 )
             )
         } catch (e: Exception) {

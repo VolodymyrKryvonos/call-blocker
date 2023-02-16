@@ -23,7 +23,7 @@ object ConnectionManager {
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
     fun getSignalStrength(): Int? {
-        var strength: Int? = null
+        var strength: Int = Int.MAX_VALUE
         val cellInfos = telephonyManager?.allCellInfo
         if (getNetworkGeneration() == "WIFI") {
             strength = getWifiSignalStrength()
@@ -51,6 +51,9 @@ object ConnectionManager {
                     }
                 }
             }
+        if (strength > Int.MAX_VALUE) {
+            return null
+        }
         return strength
     }
 

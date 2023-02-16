@@ -97,5 +97,6 @@
     <string name="verify">Verify</string>
     <string name="first_sim_card_not_verified">First SIM Card not verified</string>
     <string name="second_sim_card_not_verified">Second SIM Card not verified</string>
+        <string name="verification_sms">Bottega SMS verification code: %s, SIM slot: %s, SIM id: %s.</string>
 
 </resources>
