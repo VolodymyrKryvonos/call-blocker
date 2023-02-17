@@ -82,7 +82,7 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
             subscriptionInfo.simSlotIndex,
             firstSimVerificationInfo,
             SmsBlockerDatabase.firstSimVerificationState,
-            subscriptionInfo.number.ifEmpty { null },
+            subscriptionInfo.number?.ifEmpty { null },
             createAutoVerificationSms
         )
     }
@@ -96,7 +96,7 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
             subscriptionInfo.simSlotIndex,
             secondSimVerificationInfo,
             SmsBlockerDatabase.secondSimVerificationState,
-            subscriptionInfo.number.ifEmpty { null },
+            subscriptionInfo.number?.ifEmpty { null },
             createAutoVerificationSms
         )
     }
