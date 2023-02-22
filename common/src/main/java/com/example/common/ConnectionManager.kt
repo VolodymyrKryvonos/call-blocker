@@ -25,7 +25,7 @@ object ConnectionManager {
     fun getSignalStrength(): Int? {
         var strength: Int? = null
         val cellInfos = telephonyManager?.allCellInfo
-        if (getNetworkGeneration() == "WIFI") {
+        if (getNetworkGeneration() == "Wi-Fi") {
             strength = getWifiSignalStrength()
         } else
             if (cellInfos != null) {

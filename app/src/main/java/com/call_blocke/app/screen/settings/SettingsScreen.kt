@@ -64,9 +64,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: SettingsViewMode
                 modifier = Modifier.height(10.dp),
                 color = Color.Transparent
             )
-
             Profile()
-
         }
 
         AnimatedVisibility(
@@ -260,7 +258,7 @@ fun SmsLimitFields(navController: NavHostController, viewModel: SettingsViewMode
     Button(
         title = stringResource(id = R.string.settings_set_sms_per_day_button),
         modifier = Modifier.fillMaxWidth(),
-        isEnable = !isFirstSimNeedVerification.value && !isSecondSimNeedVerification.value,
+        isEnable = !isFirstSimNeedVerification.value || !isSecondSimNeedVerification.value,
         fontSize = 16.sp,
         isProgress = viewModel.onLoading.observeAsState(false)
     ) {
