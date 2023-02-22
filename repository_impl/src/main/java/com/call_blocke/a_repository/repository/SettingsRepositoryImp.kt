@@ -86,14 +86,6 @@ class SettingsRepositoryImp : SettingsRepository() {
         }
     }
 
-    override suspend fun blackPhoneNumberList(): List<String> {
-        return settingsRest.blackList(
-            TasksRequest(connectionType = ConnectionManager.getNetworkGeneration())
-        ).data.map {
-            it.number
-        }
-    }
-
     override suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String) {
         try {
             if (simSlot == 0) {
@@ -277,13 +269,25 @@ class SettingsRepositoryImp : SettingsRepository() {
 
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
-    override suspend fun sendSignalStrengthInfo() {
+    override suspend fun sendSignalStrengthInfo(
+        firstSimId: String?,
+        secondSimId: String?,
+        firstSimOperator: String?,
+        secondSimOperator: String?
+    ) {
         try {
             settingsRest.sendSignalStrengthInfo(
                 SignalStrengthRequest(
                     signalStrength = ConnectionManager.getSignalStrength()
                         ?: throw Exception("Signal strength is null"),
-                    signalGeneration = ConnectionManager.getNetworkGeneration()
+                    signalGeneration = ConnectionManager.getNetworkGeneration(),
+                    firstSimId = firstSimId,
+                    secondSimId = secondSimId,
+                    firstSimOperator = firstSimOperator,
+                    secondSimOperator = secondSimOperator,
+                    countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
+                        firstSimId ?: secondSimId
+                    )
                 )
             )
         } catch (e: Exception) {

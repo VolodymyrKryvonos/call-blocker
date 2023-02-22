@@ -46,7 +46,6 @@ abstract class SettingsRepository {
         smsPerMonthSimSecond: Int
     )
 
-    protected abstract suspend fun blackPhoneNumberList(): List<String>
 
     abstract suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String = "")
     abstract suspend fun validateSimCard(
@@ -91,6 +90,13 @@ abstract class SettingsRepository {
         createAutoVerificationSms: Boolean = false
     ): Flow<SimVerificationInfo>
 
+    abstract suspend fun sendSignalStrengthInfo(
+        firstSimId: String?,
+        secondSimId: String?,
+        firstSimOperator: String?,
+        secondSimOperator: String?,
+    )
+
     abstract suspend fun confirmVerification(
         iccid: String,
         simSlot: String,
@@ -98,8 +104,6 @@ abstract class SettingsRepository {
         phoneNumber: String,
         uniqueId: String
     ): Flow<Resource<Unit>>
-
-    abstract suspend fun sendSignalStrengthInfo()
 
     suspend fun checkSim(
         simId: String,

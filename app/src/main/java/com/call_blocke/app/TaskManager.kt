@@ -128,7 +128,14 @@ class TaskManager(
                     SmsBlockerDatabase.profile?.delaySignalStrength?.toDuration(DurationUnit.SECONDS)
                 if (delay != null) {
                     delay(delay)
-                    RepositoryImp.settingsRepository.sendSignalStrengthInfo()
+                    val firstSim = SimUtil.firstSim(context)
+                    val secondSim = SimUtil.secondSim(context)
+                    RepositoryImp.settingsRepository.sendSignalStrengthInfo(
+                        firstSimId = firstSim?.iccId,
+                        secondSimId = secondSim?.iccId,
+                        firstSimOperator = firstSim?.carrierName?.toString(),
+                        secondSimOperator = secondSim?.carrierName?.toString(),
+                    )
                 }
             }
         }

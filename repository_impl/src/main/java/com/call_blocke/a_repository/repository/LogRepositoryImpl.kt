@@ -22,7 +22,7 @@ class LogRepositoryImpl : LogRepository {
 
     override suspend fun sendLogs(file: File, deviceId: String) {
         val fileToSend = File(file.parent, "fileToSend.html")
-        file.copyTo(fileToSend)
+        file.copyTo(fileToSend, true)
         val requestFile = fileToSend.asRequestBody("text/html".toMediaTypeOrNull())
         val body: MultipartBody.Part =
             MultipartBody.Part.createFormData("file", file.name, requestFile)
