@@ -181,6 +181,9 @@ object SmsBlockerDatabase {
         set(value) {
             preference?.secondSimChanged = value
         }
+    val isSimChange: Boolean
+        get() = secondSimChanged || firstSimChanged
+
 
     var firstSimSlotVerificationNumber: String
         get() = (preference

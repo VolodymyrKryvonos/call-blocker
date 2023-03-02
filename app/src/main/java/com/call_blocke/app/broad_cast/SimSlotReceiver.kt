@@ -3,11 +3,10 @@ package com.call_blocke.app.broad_cast
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.call_blocke.app.service.ChangeSimCardNotifierService
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
 import com.example.common.SimUtil
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 
@@ -35,7 +34,6 @@ class SimSlotReceiver : BroadcastReceiver() {
             }
         } catch (e: Exception) {
             SmartLog.e(getStackTrace(e))
-            Firebase.crashlytics.recordException(e)
         }
     }
 
@@ -53,6 +51,7 @@ class SimSlotReceiver : BroadcastReceiver() {
             SmsBlockerDatabase.secondSimId = secondSimId
             SmsBlockerDatabase.secondSimChanged = true
         }
+        ChangeSimCardNotifierService.startService(context ?: return)
     }
 
     private fun trackSimCardWasEjected(context: Context?) {

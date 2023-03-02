@@ -294,4 +294,34 @@ class SettingsRepositoryImp : SettingsRepository() {
             SmartLog.e("Failed send signal strength ${getStackTrace(e)}")
         }
     }
+
+    override suspend fun changeSimCard(
+        context: Context
+    ) {
+        try {
+            val firstSim = SimUtil.firstSim(context)
+            val secondSim = SimUtil.secondSim(context)
+            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+            val countryCode =
+                CountryCodeExtractor.getCountryCode(
+                    SimUtil.getSIMInfo(context),
+                    tm
+                )
+            val response = settingsRest.changeSimCard(
+                ChangeSimCardRequest(
+                    firstSimId = firstSim?.iccId,
+                    secondSimId = secondSim?.iccId,
+                    firstSimOperator = firstSim?.carrierName.toString(),
+                    secondSimOperator = secondSim?.carrierName.toString(),
+                    countryCode = countryCode
+                )
+            )
+            if (response.status) {
+                SmsBlockerDatabase.smsPerDaySimFirst = response.firstSimLimit
+                SmsBlockerDatabase.smsPerDaySimSecond = response.secondSimLimit
+            }
+        } catch (e: Exception) {
+            SmartLog.e("Failed send change sim card request ${getStackTrace(e)}")
+        }
+    }
 }

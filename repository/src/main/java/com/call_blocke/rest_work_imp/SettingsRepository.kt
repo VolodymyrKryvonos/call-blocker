@@ -105,6 +105,8 @@ abstract class SettingsRepository {
         uniqueId: String
     ): Flow<Resource<Unit>>
 
+    abstract suspend fun changeSimCard(context: Context)
+
     suspend fun checkSim(
         simId: String,
         simSlot: Int,

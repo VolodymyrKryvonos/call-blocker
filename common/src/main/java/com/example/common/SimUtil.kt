@@ -58,8 +58,8 @@ object SimUtil {
         }
     }
 
-    fun simSlotById(context: Context?, simId: String): Int? {
+    fun simSlotById(context: Context?, simId: String): Int {
         val simInfo = getSIMInfo(context)
-        return simInfo?.firstOrNull { it.iccId == simId }?.simSlotIndex
+        return simInfo?.firstOrNull { it.iccId.contains(simId) }?.simSlotIndex ?: -1
     }
 }

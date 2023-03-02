@@ -41,4 +41,7 @@ interface SettingsRest {
 
     @POST("apps/signal-strength")
     suspend fun sendSignalStrengthInfo(@Body signalStrengthBody: SignalStrengthRequest)
+
+    @POST("apps/change-sim")
+    suspend fun changeSimCard(@Body body: ChangeSimCardRequest): ChangSimCardResponse
 }
