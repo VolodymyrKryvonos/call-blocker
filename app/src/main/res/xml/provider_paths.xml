@@ -3,4 +3,9 @@
     <files-path
         name="Log"
         path="Log/" />
+    <external-path
+        name="external_files"
+        path="." />
+
+    <external-path name="media" path="."/>
 </paths>

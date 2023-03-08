@@ -55,7 +55,7 @@ fun SettingsScreen(navController: NavHostController, viewModel: SettingsViewMode
             Label(text = stringResource(id = R.string.settings_set_sms))
             SmsLimitFields(navController, viewModel)
             Divider(
-                modifier = Modifier.height(5.dp),
+                modifier = Modifier.height(15.dp),
                 color = Color.Transparent
             )
             LogsButtons(viewModel)
@@ -127,6 +127,19 @@ fun LogsButtons(viewModel: SettingsViewModel) {
         }
     )
     if (BuildConfig.DEBUG) {
+        Divider(
+            modifier = Modifier.height(5.dp),
+            color = Color.Transparent
+        )
+        Button(
+            title = "View logs",
+            modifier = Modifier.fillMaxWidth(),
+            isEnable = true,
+            fontSize = 16.sp,
+            onClick = {
+                viewLog(context)
+            }
+        )
         Divider(
             modifier = Modifier.height(5.dp),
             color = Color.Transparent
@@ -367,6 +380,21 @@ fun getLogsShareIntent(context: Context): Intent {
     return Intent.createChooser(sendIntent, null)
 }
 
+
+fun viewLog(context: Context) {
+    val directory = File(context.filesDir.absolutePath + "/Log")
+    val filesList = directory.listFiles() ?: return
+    val intent = Intent(Intent.ACTION_VIEW)
+    intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+    intent.setDataAndType(
+        FileProvider.getUriForFile(
+            context,
+            context.applicationContext.packageName + ".fileprovider",
+            filesList.last()
+        ), "text/html"
+    )
+    context.startActivity(intent)
+}
 private fun clearLogs(context: Context) {
     val directory = File(context.filesDir.absolutePath + "/Log")
     val filesList = directory.listFiles()
