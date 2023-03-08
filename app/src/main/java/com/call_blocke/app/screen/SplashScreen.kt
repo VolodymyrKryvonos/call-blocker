@@ -3,10 +3,21 @@ package com.call_blocke.app.screen
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.material.Button
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -112,7 +123,7 @@ fun Main(deapLink: String?) {
     }
     val isSimChanged by SmsBlockerDatabase
         .onSimChanged
-        .observeAsState(initial = SmsBlockerDatabase.isSimChanged)
+        .collectAsState(initial = SmsBlockerDatabase.isSimChanged)
 
 
     if (isSimChanged) {
@@ -126,7 +137,7 @@ fun Main(deapLink: String?) {
                         color = Color.White
                     )
                     Button(onClick = {
-                        SmsBlockerDatabase.onSimChanged.postValue(false)
+                        SmsBlockerDatabase.onSimChanged.tryEmit(false)
                         navController.navigate("refresh")
                     }) {
                         Text("OK")

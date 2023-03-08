@@ -59,12 +59,16 @@ class AuthViewModel : ViewModel() {
                 is Resource.Success -> {
                     _resetStatus.value = ResetState.Success
                 }
+
                 is Resource.Loading -> {
                     _resetStatus.value = ResetState.Loading
                 }
+
                 is Resource.Error -> {
                     _resetStatus.value = ResetState.Error(error = it.message ?: "")
                 }
+
+                Resource.None -> Unit
             }
         }.launchIn(viewModelScope)
     }

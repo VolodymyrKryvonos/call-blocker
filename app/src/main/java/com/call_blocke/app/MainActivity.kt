@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -60,7 +60,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     val isUserAuth by SmsBlockerDatabase
                         .userIsAuthLiveData
-                        .observeAsState(initial = SmsBlockerDatabase.userToken != null)
+                        .collectAsState(initial = SmsBlockerDatabase.userToken != null)
 
 
                     if (isUserAuth)

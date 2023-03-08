@@ -3,7 +3,6 @@ package com.call_blocke.db
 import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
-import androidx.lifecycle.MutableLiveData
 import androidx.room.Room
 import com.call_blocke.db.entity.*
 import com.call_blocker.model.Profile
@@ -46,9 +45,9 @@ object SmsBlockerDatabase {
 
     private var database: AppDatabase? = null
 
-    val userIsAuthLiveData = MutableLiveData(false)
+    val userIsAuthLiveData = MutableStateFlow(false)
 
-    val onSimChanged = MutableLiveData(false)
+    val onSimChanged = MutableStateFlow(false)
 
     var isInitialized: Boolean = false
 
@@ -63,7 +62,7 @@ object SmsBlockerDatabase {
         }
         set(value) {
             preference?.userToken = value
-            userIsAuthLiveData.postValue(value != null)
+            userIsAuthLiveData.tryEmit(value != null)
         }
 
     var profile: Profile?
@@ -219,7 +218,7 @@ object SmsBlockerDatabase {
             AppDatabase::class.java, "call_blocker_db"
         ).build()
 
-        userIsAuthLiveData.postValue(userToken != null)
+        userIsAuthLiveData.tryEmit(userToken != null)
         isInitialized = true
     }
 

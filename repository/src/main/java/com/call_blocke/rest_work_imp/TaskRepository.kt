@@ -7,7 +7,8 @@ import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import java.util.*
+import java.util.Calendar
+import java.util.TimeZone
 
 abstract class TaskRepository {
 
@@ -79,7 +80,7 @@ abstract class TaskRepository {
 
     suspend fun deleteReceivedMessages() = taskDao.deleteReceivedMessages()
 
-    fun taskList() = taskDao.taskList().asPagingSourceFactory()
+    fun taskList() = taskDao.taskList()
 
 
     abstract val connectionStatusFlow: Flow<Boolean>

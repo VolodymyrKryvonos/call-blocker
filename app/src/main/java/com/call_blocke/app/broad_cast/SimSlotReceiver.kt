@@ -51,7 +51,7 @@ class SimSlotReceiver : BroadcastReceiver() {
             SmsBlockerDatabase.secondSimId = secondSimId
             SmsBlockerDatabase.secondSimChanged = true
         }
-        ChangeSimCardNotifierService.startService(context ?: return)
+        ChangeSimCardNotifierService.startService(context)
     }
 
     private fun trackSimCardWasEjected(context: Context?) {

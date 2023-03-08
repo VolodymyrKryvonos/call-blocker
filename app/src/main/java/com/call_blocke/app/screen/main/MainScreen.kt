@@ -5,18 +5,37 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyVerticalGrid
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.Divider
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,8 +60,16 @@ import com.call_blocker.verification.domain.VerificationInfoStateHolder
 import com.example.common.SimUtil
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.rokobit.adstv.ui.*
-import com.rokobit.adstv.ui.element.*
+import com.rokobit.adstv.ui.element.AlertDialog
+import com.rokobit.adstv.ui.element.Button
+import com.rokobit.adstv.ui.element.Text
+import com.rokobit.adstv.ui.element.TextNormal
+import com.rokobit.adstv.ui.element.Title
+import com.rokobit.adstv.ui.errorColor
+import com.rokobit.adstv.ui.mainFont
+import com.rokobit.adstv.ui.primaryColor
+import com.rokobit.adstv.ui.primaryDimens
+import com.rokobit.adstv.ui.secondaryColor
 import com.rokobit.adstvv_unit.loger.SmartLog
 
 
@@ -229,12 +256,13 @@ fun Menu(navController: NavHostController, viewModel: MainViewModel) {
                 viewModel.getProfile()
                 viewModel.checkSimCards(context)
             }
+
             else -> {}
         }
     }
     val sims by viewModel.simInfoState.collectAsState(initial = null)
     LazyVerticalGrid(
-        cells = GridCells.Adaptive(140.dp),
+        columns = GridCells.Adaptive(140.dp),
         contentPadding = PaddingValues(primaryDimens / 2)
     ) {
         items(6) {
@@ -252,6 +280,7 @@ fun Menu(navController: NavHostController, viewModel: MainViewModel) {
                     1 -> if (isExecutorRunning)
                         stringResource(id = R.string.main_menu_stop_job)
                     else stringResource(id = R.string.main_menu_start_job)
+
                     2 -> stringResource(id = R.string.main_menu_refresh_full)
                     3 -> stringResource(id = R.string.main_menu_set_sms_per_day)
                     4 -> stringResource(id = R.string.main_menu_task_list)
@@ -276,6 +305,7 @@ fun Menu(navController: NavHostController, viewModel: MainViewModel) {
                             viewModel.runExecutor(context)
                         }
                     }
+
                     2 -> navController.navigate(Navigation.ResetSimScreen.destination)
                     3 -> navController.navigate(Navigation.SettingsScreen.destination)
                     4 -> navController.navigate(Navigation.TaskListScreen.destination)
