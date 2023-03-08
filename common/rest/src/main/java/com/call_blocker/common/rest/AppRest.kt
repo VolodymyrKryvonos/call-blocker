@@ -7,7 +7,7 @@
 package com.call_blocker.common.rest
 
 class AppRest<T>(
-    private val baseUrl: String,
+    private val baseUrl: String = Const.url,
     private val bearerToken: String,
     private val service: Class<T>
 ) {

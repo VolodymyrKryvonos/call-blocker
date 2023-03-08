@@ -94,7 +94,10 @@ class TaskRepositoryImp : TaskRepository() {
             }
         socketBuilder.connect()
         withContext(Dispatchers.IO) {
-            socketBuilder.messageCollector.collect {
+            socketBuilder.messageCollector.receiveAsFlow().collect {
+                if (it.isNullOrEmpty()) {
+                    return@collect
+                }
                 async {
                     SmartLog.d("Receive Message $it")
                     toTaskMessage(it)?.let { taskMessage ->
@@ -145,7 +148,7 @@ class TaskRepositoryImp : TaskRepository() {
                             simIccId = parsedMsg.data.simIccId ?: ""
                         )
                     }
-                ).also { save(it.list.filter { taskEntity -> taskEntity.message != "GET_LOGS" }) }
+                ).also { save(it.list.filter { taskEntity -> taskEntity.method != TaskMethod.GET_LOGS }) }
             }
         } catch (e: Exception) {
             SmartLog.e(e)
@@ -181,7 +184,7 @@ class TaskRepositoryImp : TaskRepository() {
                     simId = when (task.simSlot) {
                         1 -> "msisdn_2"
                         0 -> "msisdn_1"
-                        else -> "???"
+                        else -> "msisdn_1"
                     },
                     date = when (task.status) {
                         TaskStatus.PROCESS -> task.processAt

@@ -1,5 +1,6 @@
 package com.call_blocke.a_repository.request
 
+
 import com.squareup.moshi.Json
 
 data class GetProfileRequest(

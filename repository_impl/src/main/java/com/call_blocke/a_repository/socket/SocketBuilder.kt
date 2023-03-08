@@ -9,6 +9,7 @@ import com.call_blocker.common.rest.Pinger
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okhttp3.*
@@ -26,7 +27,7 @@ class SocketBuilder private constructor(
 
     private val reconnectHandler = Handler(Looper.getMainLooper())
 
-    val messageCollector = MutableSharedFlow<String?>(0)
+    val messageCollector = Channel<String?>()
 
     val connectionStatusFlow = MutableSharedFlow<Boolean>(0)
 
@@ -115,7 +116,7 @@ class SocketBuilder private constructor(
         super.onMessage(webSocket, text)
         SmartLog.d("onMessage $text")
         launch(Dispatchers.IO) {
-            messageCollector.emit(text)
+            messageCollector.send(text)
         }
     }
 

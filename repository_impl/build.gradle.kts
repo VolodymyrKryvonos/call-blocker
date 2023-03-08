@@ -3,7 +3,6 @@ import AppDependencies.implementation
 plugins {
     id("com.android.library")
     kotlin("android")
-    kotlin("kapt")
 }
 
 android {
@@ -12,7 +11,7 @@ android {
 
     defaultConfig {
         minSdkPreview = (Config.minSdkVersion)
-        targetSdk =  (Config.targetVersion.toInt())
+        targetSdk = (Config.targetVersion.toInt())
         buildConfigField("String", "versionName", "\"${Config.versionName}\"")
     }
 
@@ -27,14 +26,14 @@ android {
 }
 
 dependencies {
-    implementation (AppDependencies.base)
+    implementation(AppDependencies.base)
 
     implementation(project(":db"))
 
     implementation(AppDependencies.rest)
     implementation(project(":repository"))
 
-    implementation (project(":loger"))
+    implementation(project(":loger"))
     implementation(project(mapOf("path" to ":model")))
     implementation(project(mapOf("path" to ":common")))
     implementation(project(mapOf("path" to ":common:rest")))

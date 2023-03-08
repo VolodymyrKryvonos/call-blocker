@@ -27,7 +27,7 @@ class ChangeSimCardNotifierService : Service(), CoroutineScope {
         }
         notificationJob?.cancel()
         notificationJob = launch {
-            delay(10 * 1000)
+            delay(15 * 1000)
             RepositoryImp.settingsRepository.changeSimCard(
                 this@ChangeSimCardNotifierService
             )

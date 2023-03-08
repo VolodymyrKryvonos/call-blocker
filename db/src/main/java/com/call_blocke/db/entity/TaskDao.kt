@@ -1,11 +1,11 @@
 package com.call_blocke.db.entity
 
-import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy.REPLACE
+import androidx.room.OnConflictStrategy.Companion.REPLACE
 import androidx.room.Query
 import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskDao {
@@ -26,7 +26,7 @@ interface TaskDao {
     suspend fun toProcessList(): List<TaskEntity>
 
     @Query("select * from task order by bufferedAt desc")
-    fun taskList(): DataSource.Factory<Int, TaskEntity>
+    fun taskList(): Flow<List<TaskEntity>>
 
     @Query("select * from task where id = :id")
     suspend fun findByID(id: Int): TaskEntity?

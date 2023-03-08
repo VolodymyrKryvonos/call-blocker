@@ -1,7 +1,8 @@
+import AppDependencies.implementation
 plugins {
     id("com.android.library")
-    id("kotlin-android")
-    id("kotlin-kapt")
+    kotlin("android")
+    kotlin("kapt")
 }
 
 android {
@@ -28,12 +29,11 @@ android {
 }
 
 dependencies {
-    implementation (AppDependencies.base)
-    implementation project(AppDependencies.db)
+    implementation(AppDependencies.base)
+    implementation(project(AppDependencies.db))
 
-    implementation(AppDependencies.paged)
 
-    implementation (project(":loger"))
-    implementation (project(":model"))
-    implementation project(path: ':common')
+    implementation(project(":loger"))
+    implementation(project(":model"))
+    implementation(project(":common"))
 }

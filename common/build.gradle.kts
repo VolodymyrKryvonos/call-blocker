@@ -28,5 +28,4 @@ android {
 dependencies {
     implementation(AppDependencies.base)
     implementation(project(":loger"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
 }

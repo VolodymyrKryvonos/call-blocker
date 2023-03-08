@@ -1,7 +1,7 @@
 package com.call_blocke.a_repository.dto
 
-import com.squareup.moshi.Json
 
+import com.squareup.moshi.Json
 
 data class ConnectionStatusDto(
     @Json(name = "status")

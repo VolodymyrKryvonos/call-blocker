@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         minSdkPreview = (Config.minSdkVersion)
-        targetSdk =  (Config.targetVersion.toInt())
+        targetSdk = (Config.targetVersion.toInt())
     }
 
     compileOptions {
@@ -31,5 +31,5 @@ dependencies {
 
     implementation(project(":repository_impl"))
 
-    implementation (project(":loger"))
+    implementation(project(":loger"))
 }

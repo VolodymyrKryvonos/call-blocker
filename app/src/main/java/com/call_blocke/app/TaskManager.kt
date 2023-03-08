@@ -176,7 +176,13 @@ class TaskManager(
         val filesList = directory.listFiles()
         if (filesList != null) {
             for (file in filesList) {
-                file?.let { RepositoryImp.logRepository.sendLogs(it, SmsBlockerDatabase.deviceID) }
+                if (!file.path.contains("fileToSend"))
+                    file?.let {
+                        RepositoryImp.logRepository.sendLogs(
+                            it,
+                            SmsBlockerDatabase.deviceID
+                        )
+                    }
             }
         }
     }

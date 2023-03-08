@@ -8,6 +8,10 @@ import com.call_blocker.model.Profile
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
+enum class AutoVerificationResult {
+    NONE, FAILED, SUCCESS
+}
+
 class Preference(context: Context) {
 
     private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
@@ -59,6 +63,14 @@ class Preference(context: Context) {
             }
         }
 
+    var isSimChanged: Boolean
+        get() = sharedPreferences.getBoolean("isSimChanged", false)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putBoolean("isSimChanged", value)
+                commit()
+            }
+        }
 
     var ipType: String
         get() {
