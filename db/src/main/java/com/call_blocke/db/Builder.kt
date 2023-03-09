@@ -6,6 +6,7 @@ import android.provider.Settings
 import androidx.room.Room
 import com.call_blocke.db.entity.*
 import com.call_blocker.model.Profile
+import kotlinx.coroutines.flow.MutableStateFlow
 
 object SmsBlockerDatabase {
 
@@ -148,8 +149,6 @@ object SmsBlockerDatabase {
         set(value) {
             preference?.secondSimChanged = value
         }
-    val isSimChange: Boolean
-        get() = secondSimChanged || firstSimChanged
 
 
     val isSimChange: Boolean

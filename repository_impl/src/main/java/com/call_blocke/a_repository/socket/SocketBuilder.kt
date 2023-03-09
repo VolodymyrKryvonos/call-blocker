@@ -8,11 +8,19 @@ import com.call_blocker.common.rest.Const.socketUrl
 import com.call_blocker.common.rest.Pinger
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import okhttp3.*
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
@@ -52,7 +60,7 @@ class SocketBuilder private constructor(
                     String.format(
                         socketUrl,
                         profile?.socketIp ?: ip,
-                        profile?.socketPort ?: 8090
+                        profile?.socketPort ?: 8092
                     )
                 }?token=$userToken&unique_id=$uuid"
             )

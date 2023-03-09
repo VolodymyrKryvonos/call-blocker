@@ -13,6 +13,7 @@ import com.call_blocke.rest_work_imp.TaskRepository
 import com.call_blocker.common.rest.AppRest
 import com.call_blocker.common.rest.Const
 import com.call_blocker.common.rest.Const.domain
+import com.call_blocker.common.rest.Const.sandboxDomain
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import com.squareup.moshi.Json
@@ -26,9 +27,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 class TaskRepositoryImp : TaskRepository() {
 
@@ -44,7 +47,7 @@ class TaskRepositoryImp : TaskRepository() {
             .setUUid(SmsBlockerDatabase.deviceID)
             .setIP(
                 when (preference?.ipType) {
-                    "Production" -> domain
+                    "Production" -> sandboxDomain
                     else -> preference?.customIp ?: ""
                 }
             )

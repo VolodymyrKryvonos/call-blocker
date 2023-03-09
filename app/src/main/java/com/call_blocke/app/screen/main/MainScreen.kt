@@ -227,8 +227,8 @@ fun SentSmsInfo(mViewModel: MainViewModel) {
 @ExperimentalFoundationApi
 @ExperimentalMaterialApi
 @Composable
-fun Menu(navController: NavHostController, mViewMode: MainViewModel) {
-    val isExecutorRunning: Boolean by mViewMode.taskExecutorIsRunning.collectAsState(initial = false)
+fun Menu(navController: NavHostController, viewModel: MainViewModel) {
+    val isExecutorRunning: Boolean by viewModel.taskExecutorIsRunning.collectAsState(initial = false)
     val context = LocalContext.current
     val isNeedVerification =
         VerificationInfoStateHolder.isSimCardsNeedVerification().collectAsState(
