@@ -52,19 +52,19 @@ android {
                 }
             }
         }
-        create("asar") {
-            resValue("string", "app_name", "ASAR")
-            applicationVariants.all {
-                if (name.contains("asar")) {
-                    outputs.forEach { output ->
-                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                            output.outputFileName =
-                                "asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
-                        }
-                    }
-                }
-            }
-        }
+//        create("asar") {
+//            resValue("string", "app_name", "ASAR")
+//            applicationVariants.all {
+//                if (name.contains("asar")) {
+//                    outputs.forEach { output ->
+//                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+//                            output.outputFileName =
+//                                "asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
     compileOptions {
