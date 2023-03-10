@@ -24,6 +24,8 @@ object AppDependencies {
         // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
         add( "androidx.compose.foundation:foundation:${Version.compose}")
         // Material Design
+        add("androidx.compose.ui:ui-tooling-preview:${Version.compose}")
+
         add( "androidx.compose.material:material:${Version.compose}")
 
         add("com.google.accompanist:accompanist-swiperefresh:0.14.0")

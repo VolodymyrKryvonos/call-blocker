@@ -98,5 +98,24 @@
     <string name="first_sim_card_not_verified">First SIM Card not verified</string>
     <string name="second_sim_card_not_verified">Second SIM Card not verified</string>
     <string name="verification_sms">Bottega SMS verification code: %s, SIM slot: %s, SIM id: %s.</string>
+    <string name="status">Status</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="amount">Amount</string>
+    <string name="leftToSend">Left to send</string>
+    <string name="undelivered">Undelivered</string>
+    <string name="delivered">Delivered</string>
+    <string name="sim_card_info">SIM Card Info</string>
+    <string name="simLimitIsFull">SMS limit is full</string>
+    <string name="operator">Operator:</string>
+    <string name="imsi">IMSI:</string>
+    <string name="connectedOn">Connected on:</string>
+    <string name="somCardId">Sim card ID:</string>
+    <string name="reset">Reset</string>
+    <string name="sentSMSToday">Sent SMS Today</string>
+    <string name="apply">Apply</string>
+    <string name="clearLogs">Clear logs</string>
+    <string name="sendLogs">Send logs</string>
+    <string name="viewLogs">View logs</string>
 
 </resources>
