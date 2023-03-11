@@ -87,7 +87,7 @@ class TaskRepositoryImp : TaskRepository() {
         }
     }
 
-    override val connectionStatusFlow: Flow<Boolean> by lazy { socketBuilder.connectionStatusFlow }
+    override val connectionStatusFlow: StateFlow<Boolean> by lazy { socketBuilder.connectionStatusFlow }
 
     override suspend fun taskMessage(): Flow<TaskMessage> = channelFlow {
         socketBuilder.ip =

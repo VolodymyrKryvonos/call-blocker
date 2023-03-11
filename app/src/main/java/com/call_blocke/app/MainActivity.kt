@@ -1,6 +1,5 @@
 package com.call_blocke.app
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,12 +28,6 @@ import com.rokobit.adstv.ui.backgroundBrush
 class MainActivity : ComponentActivity() {
 
     private val splashViewModel: SplashViewModel by viewModels()
-
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-
-    }
 
     override fun onResume() {
         super.onResume()

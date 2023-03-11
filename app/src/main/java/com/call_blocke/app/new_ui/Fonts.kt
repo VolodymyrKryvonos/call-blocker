@@ -24,6 +24,12 @@ val simInfoDataStyle = TextStyle(
     lineHeight = 16.sp
 )
 
+val tabFont = TextStyle(
+    fontFamily = roboto500,
+    fontSize = 12.sp,
+    lineHeight = 16.sp
+)
+
 val Typography = Typography(
     h1 = TextStyle(
         fontFamily = roboto500,

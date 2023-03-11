@@ -117,5 +117,13 @@
     <string name="clearLogs">Clear logs</string>
     <string name="sendLogs">Send logs</string>
     <string name="viewLogs">View logs</string>
+    <string name="home">Home</string>
+    <string name="sim">Sim</string>
+    <string name="task">Task</string>
+    <string name="settings">Settings</string>
+    <string name="simCardNotVerified">SIM Card not verified</string>
+    <string name="simWithPlaceHolder">Sim %d</string>
+    <string name="notDetermined">"not determined "</string>
+    <string name="noSimDetected">No SIM cards were detected. Please check the availability of SIM cards</string>
 
 </resources>

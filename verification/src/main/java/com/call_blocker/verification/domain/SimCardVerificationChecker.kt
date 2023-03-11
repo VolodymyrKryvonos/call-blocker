@@ -5,8 +5,14 @@ import android.telephony.SubscriptionInfo
 import com.call_blocker.verification.data.VerificationRepository
 import com.example.common.Resource
 import com.example.common.SimUtil
-import kotlinx.coroutines.*
+import com.rokobit.adstvv_unit.loger.SmartLog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 interface SimCardVerificationChecker {
@@ -38,7 +44,7 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
             get() = SupervisorJob()
     }
 
-    private var waitForVerificationJob: Job? = null
+    private var waitForVerificationJobs = mutableMapOf<Int, Job>()
 
     override fun checkSimCards(context: Context) {
         coroutineScope.launch(Dispatchers.IO) outerBlock@{
@@ -75,13 +81,15 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
                                 phoneNumber = it.data?.number
                             )
                         )
+                        SmartLog.e("checkSimCard $index, stateHolder: $stateHolder")
+                        SmartLog.e("checkSimCard $index, response: ${it.data}")
                         if (newStatus == VerificationStatus.Verified) {
-                            waitForVerificationJob?.cancel()
+                            SmartLog.e("checkSimCard $index, verified")
+                            waitForVerificationJobs[index]?.cancel()
                         }
                     }
                     else -> Unit
                 }
-                VerificationInfoStateHolder.checkIsAutoVerificationEnabled()
             }
         }
     }
@@ -110,13 +118,16 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
     }
 
     override fun waitForVerification(index: Int, context: Context) {
-        waitForVerificationJob = coroutineScope.launch(Dispatchers.IO) {
+        SmartLog.e("waitForVerification $index")
+        waitForVerificationJobs[index] = coroutineScope.launch(Dispatchers.IO) {
             val simInfo = SimUtil.simInfo(context, index) ?: return@launch
             repeat(5) {
+                SmartLog.e("waitForVerification $index iteration = $it")
                 delay(30 * 1000)
                 checkSimCard(index, simInfo)
             }
             val stateHolder = VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
+            SmartLog.e("waitForVerification $index Failed")
             stateHolder.emit(stateHolder.value.copy(status = VerificationStatus.Failed))
         }
     }

@@ -83,7 +83,7 @@ abstract class TaskRepository {
     fun taskList() = taskDao.taskList()
 
 
-    abstract val connectionStatusFlow: Flow<Boolean>
+    abstract val connectionStatusFlow: StateFlow<Boolean>
 
     abstract suspend fun sendTaskStatus(taskID: Int)
 

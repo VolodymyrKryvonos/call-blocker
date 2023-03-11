@@ -21,25 +21,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
-import com.call_blocke.app.new_ui.Them
 import com.call_blocke.app.new_ui.buttonBackground
 import com.call_blocke.app.new_ui.buttonTextColor
 import com.call_blocke.app.new_ui.dividerColor
 import com.call_blocke.app.new_ui.textColor
 import java.io.File
-
-@Preview
-@Composable
-private fun previewSettings() {
-    Them {
-        SettingsScreen()
-    }
-}
 
 @Composable
 fun SettingsScreen() {

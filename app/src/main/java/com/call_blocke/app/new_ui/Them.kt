@@ -1,5 +1,6 @@
 package com.call_blocke.app.new_ui
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
@@ -19,6 +20,8 @@ val error = Color(0xFFF44336)
 val buttonTextColor = Color(0xFFFFFFFF)
 val spacerColor = Color(0xFFFFFFFF)
 val dividerColor = Color(0xFFE7E0EC)
+val disabledButton = Color(0x1F1C1B1F)
+val disabledTextColor = Color(0xFF1C1B1F)
 
 @Composable
 fun Them(content: @Composable () -> Unit) = MaterialTheme(
@@ -37,3 +40,5 @@ fun Them(content: @Composable () -> Unit) = MaterialTheme(
     ),
     content = content,
 )
+
+val buttonShape = RoundedCornerShape(100f)

@@ -1,7 +1,9 @@
-package com.call_blocke.app.new_ui.screens
+package com.call_blocke.app.new_ui.screens.sim_card_info_screen
 
+import android.telephony.SubscriptionInfo
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,48 +24,57 @@ import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
 import com.call_blocke.app.R
-import com.call_blocke.app.new_ui.Them
 import com.call_blocke.app.new_ui.buttonBackground
 import com.call_blocke.app.new_ui.buttonTextColor
+import com.call_blocke.app.new_ui.disabledButton
 import com.call_blocke.app.new_ui.roboto700
+import com.call_blocke.app.new_ui.screens.home_screen.Container
 import com.call_blocke.app.new_ui.simInfoCaptionStyle
 import com.call_blocke.app.new_ui.simInfoDataStyle
+import com.call_blocke.app.new_ui.tabTextColor
 import com.call_blocke.app.new_ui.widgets.TextField
+import com.call_blocke.app.screen.main.OnLifecycleEvent
 
 data class SimTab(
     val id: Int,
     val name: String,
     @DrawableRes
     val iconId: Int? = null,
-    val simInfo: Unit = Unit
+    val simInfo: SimInfoState
 )
 
-@Preview
 @Composable
-fun preview() {
-    Them {
-        SimCardInfoScreen()
+fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int) {
+    var currentTab: Int by remember {
+        mutableStateOf(simSlot)
     }
-}
+    val state = viewModel.state
+    val tabs = getTabList(state)
+    val context = LocalContext.current
+    OnLifecycleEvent { _, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> {
+                viewModel.simsInfo(context)
+            }
 
-@Composable
-fun SimCardInfoScreen() {
-    val tabIndex = remember { mutableStateOf(0) }
-    //TODO create list from subscription info
-    val tabs = listOf(
-        SimTab(0, "Sim 1", iconId = R.drawable.ic_sim_card),
-        SimTab(1, "Sim 2", iconId = R.drawable.ic_sim_card)
-    )
+            else -> {}
+        }
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -82,11 +93,16 @@ fun SimCardInfoScreen() {
             }
 
             1 -> {
-                SimCardInfoTab(tabs.first())
+                SimCardInfoTab(
+                    tabs.first().simInfo,
+                    onNewLimitsSet = { dayLimit, monthLimit -> },
+                    onResetClicked = {},
+                    onVerifyClicked = {}
+                )
             }
 
             else -> {
-                TabRow(selectedTabIndex = tabIndex.value) {
+                TabRow(selectedTabIndex = currentTab, contentColor = tabTextColor) {
                     tabs.forEachIndexed { index, tab ->
                         if (tab.iconId != null) {
                             LeadingIconTab(text = { Text(tab.name) },
@@ -96,52 +112,136 @@ fun SimCardInfoScreen() {
                                         contentDescription = ""
                                     )
                                 },
-                                selected = tabIndex.value == index,
-                                onClick = { tabIndex.value = index }
+                                selected = currentTab == index,
+                                onClick = { currentTab = index }
                             )
                         } else {
                             Tab(text = { Text(tab.name) },
-                                selected = tabIndex.value == index,
-                                onClick = { tabIndex.value = index }
+                                selected = currentTab == index,
+                                onClick = { currentTab = index }
                             )
                         }
 
                     }
                 }
-                SimCardInfoTab(tabs[tabIndex.value])
+                Spacer(modifier = Modifier.height(10.dp))
+                SimCardInfoTab(tabs[currentTab].simInfo,
+                    onNewLimitsSet = { dayLimit, monthLimit -> },
+                    onResetClicked = {
+                        viewModel.resetSim(
+                            tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
+                            context
+                        )
+                    },
+                    onVerifyClicked = {
+                        viewModel.verifySimCard(
+                            tabs[currentTab].simInfo.simSubInfo.iccId,
+                            tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
+                            context
+                        )
+                    })
             }
         }
     }
 }
 
 @Composable
-private fun NoSimDetected() {
-    TODO("Not yet implemented")
-}
-
-@Composable
-private fun SimCardInfoTab(simInfo: SimTab) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .padding(22.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        Spacer(modifier = Modifier.height(20.dp))
-        SimCardNotVerified(simInfo.id)
-        Spacer(modifier = Modifier.height(20.dp))
-        SimCardOutOfSms()
-        Spacer(modifier = Modifier.height(20.dp))
-        SimCardInfo()
-        Spacer(modifier = Modifier.height(20.dp))
-        SentSmsToday(10, 100)
-        Spacer(modifier = Modifier.height(20.dp))
-        LimitFields()
+fun getTabList(state: SimCardInfoScreenState): List<SimTab> {
+    return mutableListOf<SimTab>().apply {
+        if (state.firstSimSubInfo != null)
+            add(
+                SimTab(
+                    0, stringResource(id = R.string.simWithPlaceHolder, 1),
+                    if (state.firstSimDayLimit > state.deliveredFirstSim && !state.firstSimVerificationState.isNeedVerification()) {
+                        R.drawable.ic_sim_card
+                    } else {
+                        R.drawable.ic_sim_card_alert
+                    },
+                    SimInfoState(
+                        delivered = state.deliveredFirstSim,
+                        limit = state.firstSimDayLimit,
+                        simSubInfo = state.firstSimSubInfo,
+                        simVerificationState = state.firstSimVerificationState,
+                        connectedOn = state.firstSimConnectedOn
+                    )
+                )
+            )
+        if (state.secondSimSubInfo != null) {
+            add(
+                SimTab(
+                    0, stringResource(id = R.string.simWithPlaceHolder, 2),
+                    if (state.secondSimDayLimit > state.deliveredSecondSim && !state.secondSimVerificationState.isNeedVerification()) {
+                        R.drawable.ic_sim_card
+                    } else {
+                        R.drawable.ic_sim_card_alert
+                    },
+                    SimInfoState(
+                        delivered = state.deliveredSecondSim,
+                        limit = state.secondSimDayLimit,
+                        simSubInfo = state.secondSimSubInfo,
+                        simVerificationState = state.secondSimVerificationState,
+                        connectedOn = state.secondSimConnectedOn
+                    )
+                )
+            )
+        }
     }
 }
 
 @Composable
-private fun SimCardNotVerified(simId: Int) {
+private fun NoSimDetected() {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 10.dp)
+    ) {
+        Text(
+            text = stringResource(id = R.string.noSimDetected),
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.h4,
+            modifier = Modifier.align(Alignment.Center)
+        )
+    }
+}
+
+@Composable
+private fun SimCardInfoTab(
+    simInfo: SimInfoState,
+    onResetClicked: () -> Unit,
+    onVerifyClicked: () -> Unit,
+    onNewLimitsSet: (Int, Int) -> Unit
+) {
+    Column(
+        Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(22.dp)
+    ) {
+        Spacer(modifier = Modifier.height(10.dp))
+        if (simInfo.simVerificationState.isNeedVerification()) {
+            SimCardNotVerified(simInfo.simSubInfo.simSlotIndex, onVerifyClicked)
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+        if (simInfo.delivered >= simInfo.limit) {
+            SimCardOutOfSms(onResetClicked)
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+        SimCardInfo(
+            simInfo.simSubInfo,
+            phoneNumber = simInfo.simVerificationState.phoneNumber,
+            connectedOn = simInfo.connectedOn
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        SentSmsToday(simInfo.delivered, simInfo.limit)
+        if (!simInfo.simVerificationState.isNeedVerification()) {
+            Spacer(modifier = Modifier.height(20.dp))
+            LimitFields(onNewLimitsSet)
+        }
+    }
+}
+
+@Composable
+private fun SimCardNotVerified(simId: Int, onVerifyClicked: () -> Unit) {
     Container {
         Column(
             Modifier
@@ -165,7 +265,7 @@ private fun SimCardNotVerified(simId: Int) {
             }
             Spacer(modifier = Modifier.height(20.dp))
             Button(
-                onClick = { /*TODO*/ },
+                onClick = onVerifyClicked,
                 shape = RoundedCornerShape(100f),
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
@@ -182,7 +282,7 @@ private fun SimCardNotVerified(simId: Int) {
 
 
 @Composable
-private fun SimCardOutOfSms() {
+private fun SimCardOutOfSms(onResetClicked: () -> Unit) {
     Container {
         Column(
             Modifier
@@ -205,7 +305,7 @@ private fun SimCardOutOfSms() {
             }
             Spacer(modifier = Modifier.height(20.dp))
             Button(
-                onClick = { /*TODO*/ },
+                onClick = onResetClicked,
                 shape = RoundedCornerShape(100f),
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
@@ -221,7 +321,7 @@ private fun SimCardOutOfSms() {
 }
 
 @Composable
-private fun SimCardInfo() {
+private fun SimCardInfo(simSubInfo: SubscriptionInfo, phoneNumber: String?, connectedOn: String) {
     Container {
         Column(
             Modifier
@@ -230,14 +330,25 @@ private fun SimCardInfo() {
         ) {
 
             Row {
-                SimInfoDataWithCaption(stringResource(id = R.string.operator), "life:)")
+                SimInfoDataWithCaption(
+                    stringResource(id = R.string.operator),
+                    simSubInfo.carrierName.toString()
+                )
                 Spacer(modifier = Modifier.weight(1f))
-                SimInfoDataWithCaption(stringResource(id = R.string.imsi), "not determined")
+                SimInfoDataWithCaption(
+                    stringResource(id = R.string.imsi),
+                    phoneNumber ?: stringResource(
+                        id = R.string.notDetermined
+                    )
+                )
+
+            }
+            if (connectedOn.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                SimInfoDataWithCaption(stringResource(id = R.string.connectedOn), connectedOn)
             }
             Spacer(modifier = Modifier.height(10.dp))
-            SimInfoDataWithCaption(stringResource(id = R.string.connectedOn), "2023-01-24 16:36:34")
-            Spacer(modifier = Modifier.height(10.dp))
-            SimInfoDataWithCaption(stringResource(id = R.string.somCardId), "89380062300205763930")
+            SimInfoDataWithCaption(stringResource(id = R.string.somCardId), simSubInfo.iccId)
         }
     }
 }
@@ -272,7 +383,7 @@ private fun SentSmsToday(sent: Int, limit: Int) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun LimitFields() {
+private fun LimitFields(onNewLimitsSet: (Int, Int) -> Unit) {
     Column(
         Modifier
             .fillMaxWidth(),
@@ -284,19 +395,24 @@ private fun LimitFields() {
         ) {
             TextField(
                 modifier = Modifier.weight(1f),
-                hint = stringResource(id = R.string.sms_count_per_day)
+                hint = stringResource(id = R.string.sms_count_per_day),
+                keyboardType = KeyboardType.Decimal
             )
             Spacer(modifier = Modifier.width(20.dp))
             TextField(
                 modifier = Modifier.weight(1f),
-                hint = stringResource(id = R.string.sms_count_per_month)
+                hint = stringResource(id = R.string.sms_count_per_month),
+                keyboardType = KeyboardType.Decimal
             )
         }
         Spacer(modifier = Modifier.height(20.dp))
         Button(
-            onClick = { },
+            onClick = { onNewLimitsSet(0, 0) },
             shape = RoundedCornerShape(100f),
-            colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
+            colors = ButtonDefaults.buttonColors(
+                backgroundColor = buttonBackground,
+                disabledBackgroundColor = disabledButton
+            )
         ) {
             Text(
                 modifier = Modifier.padding(horizontal = 6.dp),

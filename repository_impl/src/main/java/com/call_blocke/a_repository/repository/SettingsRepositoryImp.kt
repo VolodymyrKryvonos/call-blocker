@@ -1,7 +1,6 @@
 package com.call_blocke.a_repository.repository
 
 import android.content.Context
-import android.telephony.TelephonyManager
 import androidx.annotation.RequiresPermission
 import com.call_blocke.a_repository.BuildConfig
 import com.call_blocke.a_repository.model.*
@@ -57,8 +56,7 @@ class SettingsRepositoryImp : SettingsRepository() {
                 secondSim.carrierName.ifEmpty { "unknown" }
             }
 
-            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-            val countryCode = CountryCodeExtractor.getCountryCode(simInfo, tm)
+            val countryCode = CountryCodeExtractor.getCountryCode(simInfo)
             SmartLog.e("CountryCode = $countryCode")
             settingsRest.setSmsPerDay(
                 SmsPerDayRequest(
@@ -241,11 +239,9 @@ class SettingsRepositoryImp : SettingsRepository() {
         try {
             val firstSim = SimUtil.firstSim(context)
             val secondSim = SimUtil.secondSim(context)
-            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
             val countryCode =
                 CountryCodeExtractor.getCountryCode(
                     SimUtil.getSIMInfo(context),
-                    tm
                 )
             val response = settingsRest.changeSimCard(
                 ChangeSimCardRequest(

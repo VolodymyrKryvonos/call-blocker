@@ -91,7 +91,9 @@ class UserRepositoryImp : UserRepository() {
                 leftCount = data.details.leftCount,
                 deliveredCount = data.details.deliveredCount,
                 undeliveredCount = data.details.undeliveredCount,
-                amount = data.calculation
+                amount = data.calculation,
+                firstName = data.name ?: "",
+                lastName = data.lastName ?: ""
             )
         } catch (e: Exception) {
             SystemDetailEntity()

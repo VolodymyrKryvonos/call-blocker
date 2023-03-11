@@ -25,7 +25,7 @@ import com.rokobit.adstv.ui.element.autofill
 fun TextField(
     modifier: Modifier = Modifier,
     hint: String = "",
-    isError: Boolean = true,
+    isError: Boolean = false,
     isEnable: Boolean = true,
     value: MutableState<String> = remember {
         mutableStateOf("")
