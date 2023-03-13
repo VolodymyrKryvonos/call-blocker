@@ -1,7 +1,6 @@
 package com.example.common
 
 import android.telephony.SubscriptionInfo
-import android.telephony.TelephonyManager
 import android.util.Log
 
 object CountryCodeExtractor {
@@ -474,11 +473,9 @@ object CountryCodeExtractor {
         "zw" to "263"
     )
 
-    fun getCountryCode(simInfo: List<SubscriptionInfo>?, tm: TelephonyManager): String {
+    fun getCountryCode(simInfo: List<SubscriptionInfo>?): String {
         return simInfo?.firstOrNull()?.countryIso?.ifEmpty {
-            tm.networkCountryIso?.ifEmpty {
-                getCountryCodeFromIccId(simInfo.firstOrNull()?.iccId)
-            }
+            getCountryCodeFromIccId(simInfo.firstOrNull()?.iccId)
         } ?: getCountryCodeFromIccId(simInfo?.firstOrNull()?.iccId)
     }
 

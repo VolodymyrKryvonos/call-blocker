@@ -4,7 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocker.common.rest.Const.domain
-import com.call_blocker.common.rest.Const.sandboxDomain
+import com.call_blocker.common.rest.Const.port
 import com.call_blocker.common.rest.Const.socketUrl
 import com.call_blocker.common.rest.Pinger
 import com.rokobit.adstvv_unit.loger.SmartLog
@@ -49,19 +49,15 @@ class SocketBuilder private constructor(
     private var isOn = false
 
     fun connect() {
-        if (ip.isEmpty()) {
-            ip = domain
-        }
-        val profile = SmsBlockerDatabase.profile
-        SmartLog.d("onConnect $sandboxDomain")
+        SmartLog.d("onConnect $ip")
         isOn = true
         val url = Request.Builder()
             .url(
                 "${
                     String.format(
                         socketUrl,
-                        sandboxDomain,
-                        8091
+                        ip,
+                        port
                     )
                 }?token=$userToken&unique_id=$uuid"
             )
