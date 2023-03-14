@@ -13,8 +13,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.Divider
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,12 +35,14 @@ import com.rokobit.adstv.ui.element.Title
 import com.rokobit.adstv.ui.primaryDimens
 
 @Composable
-private fun IntroItem(mViewModel: SplashViewModel,
-                      title: String,
-                      label: String,
-                      desc: String,
-                      btnTitle: String,
-                      onClick: () -> Unit)  = Column(
+private fun IntroItem(
+    mViewModel: SplashViewModel,
+    title: String,
+    label: String,
+    desc: String,
+    btnTitle: String,
+    onClick: () -> Unit
+) = Column(
     modifier = Modifier.fillMaxSize(),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center
@@ -72,7 +78,8 @@ fun IntroScreen(mViewModel: SplashViewModel) {
             if (!isPermissionsGranted)
                 Permissions(mViewModel = mViewModel)
             else
-                AppAsDefault(mViewModel = mViewModel)
+                if (!isAppDefault)
+                    AppAsDefault(mViewModel = mViewModel)
         }
     }
 
@@ -142,7 +149,12 @@ private fun AppAsDefault(mViewModel: SplashViewModel) {
 
             val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_SMS)
             requestAppAsDefaultLauncher.launch(intent)
-            context.startActivity(Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT).putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, context.packageName))
+            context.startActivity(
+                Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT).putExtra(
+                    Telephony.Sms.Intents.EXTRA_PACKAGE_NAME,
+                    context.packageName
+                )
+            )
         } else {
             requestAppAsDefaultLauncher.launch(
                 Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT)

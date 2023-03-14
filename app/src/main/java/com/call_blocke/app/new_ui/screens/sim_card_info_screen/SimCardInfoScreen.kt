@@ -49,9 +49,9 @@ import com.call_blocke.app.new_ui.simInfoDataStyle
 import com.call_blocke.app.new_ui.tabTextColor
 import com.call_blocke.app.new_ui.widgets.TextField
 import com.call_blocke.app.screen.main.OnLifecycleEvent
+import com.rokobit.adstvv_unit.loger.SmartLog
 
 data class SimTab(
-    val id: Int,
     val name: String,
     @DrawableRes
     val iconId: Int? = null,
@@ -59,7 +59,7 @@ data class SimTab(
 )
 
 @Composable
-fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int) {
+fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int = 0) {
     var currentTab: Int by remember {
         mutableStateOf(simSlot)
     }
@@ -87,21 +87,10 @@ fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int) {
             style = MaterialTheme.typography.h2
         )
         Spacer(modifier = Modifier.height(22.dp))
-        when (tabs.size) {
-            0 -> {
-                NoSimDetected()
-            }
-
-            1 -> {
-                SimCardInfoTab(
-                    tabs.first().simInfo,
-                    onNewLimitsSet = { dayLimit, monthLimit -> },
-                    onResetClicked = {},
-                    onVerifyClicked = {}
-                )
-            }
-
-            else -> {
+        if (tabs.isEmpty()) {
+            NoSimDetected()
+        } else {
+            if (tabs.size > 1) {
                 TabRow(selectedTabIndex = currentTab, contentColor = tabTextColor) {
                     tabs.forEachIndexed { index, tab ->
                         if (tab.iconId != null) {
@@ -124,23 +113,30 @@ fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int) {
 
                     }
                 }
-                Spacer(modifier = Modifier.height(10.dp))
-                SimCardInfoTab(tabs[currentTab].simInfo,
-                    onNewLimitsSet = { dayLimit, monthLimit -> },
-                    onResetClicked = {
-                        viewModel.resetSim(
-                            tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
-                            context
-                        )
-                    },
-                    onVerifyClicked = {
-                        viewModel.verifySimCard(
-                            tabs[currentTab].simInfo.simSubInfo.iccId,
-                            tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
-                            context
-                        )
-                    })
             }
+            Spacer(modifier = Modifier.height(10.dp))
+            SimCardInfoTab(tabs[currentTab].simInfo,
+                onNewLimitsSet = { dayLimit, monthLimit ->
+                    viewModel.setNewLimitForSim(
+                        context,
+                        tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
+                        dayLimit,
+                        monthLimit
+                    )
+                },
+                onResetClicked = {
+                    viewModel.resetSim(
+                        tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
+                        context
+                    )
+                },
+                onVerifyClicked = {
+                    viewModel.verifySimCard(
+                        tabs[currentTab].simInfo.simSubInfo.iccId,
+                        tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
+                        context
+                    )
+                })
         }
     }
 }
@@ -151,7 +147,7 @@ fun getTabList(state: SimCardInfoScreenState): List<SimTab> {
         if (state.firstSimSubInfo != null)
             add(
                 SimTab(
-                    0, stringResource(id = R.string.simWithPlaceHolder, 1),
+                    stringResource(id = R.string.simWithPlaceHolder, 1),
                     if (state.firstSimDayLimit > state.deliveredFirstSim && !state.firstSimVerificationState.isNeedVerification()) {
                         R.drawable.ic_sim_card
                     } else {
@@ -169,7 +165,7 @@ fun getTabList(state: SimCardInfoScreenState): List<SimTab> {
         if (state.secondSimSubInfo != null) {
             add(
                 SimTab(
-                    0, stringResource(id = R.string.simWithPlaceHolder, 2),
+                    stringResource(id = R.string.simWithPlaceHolder, 2),
                     if (state.secondSimDayLimit > state.deliveredSecondSim && !state.secondSimVerificationState.isNeedVerification()) {
                         R.drawable.ic_sim_card
                     } else {
@@ -185,6 +181,7 @@ fun getTabList(state: SimCardInfoScreenState): List<SimTab> {
                 )
             )
         }
+        SmartLog.e("GetTabList $this")
     }
 }
 
@@ -233,10 +230,8 @@ private fun SimCardInfoTab(
         )
         Spacer(modifier = Modifier.height(20.dp))
         SentSmsToday(simInfo.delivered, simInfo.limit)
-        if (!simInfo.simVerificationState.isNeedVerification()) {
-            Spacer(modifier = Modifier.height(20.dp))
-            LimitFields(onNewLimitsSet)
-        }
+        Spacer(modifier = Modifier.height(20.dp))
+        LimitFields(onNewLimitsSet)
     }
 }
 
@@ -384,6 +379,18 @@ private fun SentSmsToday(sent: Int, limit: Int) {
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun LimitFields(onNewLimitsSet: (Int, Int) -> Unit) {
+    var dayLimit: Int by remember {
+        mutableStateOf(0)
+    }
+    var isDayLimitError by remember {
+        mutableStateOf(false)
+    }
+    var monthLimit: Int by remember {
+        mutableStateOf(0)
+    }
+    var isMonthLimitError by remember {
+        mutableStateOf(false)
+    }
     Column(
         Modifier
             .fillMaxWidth(),
@@ -396,23 +403,42 @@ private fun LimitFields(onNewLimitsSet: (Int, Int) -> Unit) {
             TextField(
                 modifier = Modifier.weight(1f),
                 hint = stringResource(id = R.string.sms_count_per_day),
-                keyboardType = KeyboardType.Decimal
+                keyboardType = KeyboardType.Decimal,
+                isError = isDayLimitError,
+                value = if (dayLimit == 0) "" else dayLimit.toString(),
+                onValueChange = {
+                    dayLimit = run {
+                        val limit = it.toIntOrNull()
+                        isDayLimitError = limit == null
+                        if ((limit ?: 0) > 1000) 1000 else limit ?: 0
+                    }
+                }
             )
             Spacer(modifier = Modifier.width(20.dp))
             TextField(
                 modifier = Modifier.weight(1f),
                 hint = stringResource(id = R.string.sms_count_per_month),
-                keyboardType = KeyboardType.Decimal
+                keyboardType = KeyboardType.Decimal,
+                isError = isMonthLimitError,
+                value = if (monthLimit == 0) "" else monthLimit.toString(),
+                onValueChange = {
+                    monthLimit = run {
+                        val limit = it.toIntOrNull()
+                        isMonthLimitError = limit == null
+                        if ((limit ?: 0) > 5000) 5000 else limit ?: 0
+                    }
+                }
             )
         }
         Spacer(modifier = Modifier.height(20.dp))
         Button(
-            onClick = { onNewLimitsSet(0, 0) },
+            onClick = { onNewLimitsSet(dayLimit, monthLimit) },
             shape = RoundedCornerShape(100f),
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = buttonBackground,
                 disabledBackgroundColor = disabledButton
-            )
+            ),
+            enabled = !isDayLimitError && !isMonthLimitError
         ) {
             Text(
                 modifier = Modifier.padding(horizontal = 6.dp),

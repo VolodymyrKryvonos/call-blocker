@@ -15,6 +15,7 @@ import androidx.core.net.toUri
 import androidx.work.ForegroundInfo
 import com.call_blocke.app.MainActivity
 import com.call_blocke.app.R
+import com.call_blocke.app.new_ui.HolderActivity
 import com.call_blocke.db.entity.TaskEntity
 
 object NotificationService {
@@ -121,7 +122,7 @@ object NotificationService {
 
     fun createForegroundInfo(context: Context): ForegroundInfo {
         val pendingIntent: PendingIntent =
-            Intent(context, MainActivity::class.java).let { notificationIntent ->
+            Intent(context, HolderActivity::class.java).let { notificationIntent ->
                 PendingIntent.getActivity(
                     context,
                     0,

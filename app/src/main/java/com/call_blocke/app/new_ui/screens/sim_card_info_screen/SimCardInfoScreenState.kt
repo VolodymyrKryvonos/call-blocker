@@ -8,6 +8,8 @@ data class SimCardInfoScreenState(
     val deliveredSecondSim: Int = 0,
     val firstSimDayLimit: Int = 0,
     val secondSimDayLimit: Int = 0,
+    val firstSimMonthLimit: Int = 0,
+    val secondSimMonthLimit: Int = 0,
     val firstSimSubInfo: SubscriptionInfo? = null,
     val secondSimSubInfo: SubscriptionInfo? = null,
     val firstSimConnectedOn: String = "",

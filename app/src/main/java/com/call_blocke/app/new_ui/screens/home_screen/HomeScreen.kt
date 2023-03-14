@@ -57,7 +57,6 @@ import com.call_blocke.app.new_ui.uniqueIdTextColor
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocker.verification.domain.VerificationInfo
-import com.call_blocker.verification.domain.VerificationStatus
 import com.example.common.SimUtil
 
 @Composable
@@ -125,7 +124,11 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                             )
                         },
                         onClick = {
-                            navController.navigate(Routes.BottomNavigation.SimInfoScreen.destination)
+                            navController.navigate(
+                                Routes.BottomNavigation.SimInfoScreen.getDestinationWithSimId(
+                                    0
+                                )
+                            )
                         }
                     )
                 }
@@ -141,11 +144,15 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                         },
                         onVerifyClick = {
                             viewModel.verifySimCard(
-                                SimUtil.firstSim(context)?.iccId ?: "", 1, context
+                                SimUtil.secondSim(context)?.iccId ?: "", 1, context
                             )
                         },
                         onClick = {
-                            navController.navigate(Routes.BottomNavigation.SimInfoScreen.destination)
+                            navController.navigate(
+                                Routes.BottomNavigation.SimInfoScreen.getDestinationWithSimId(
+                                    1
+                                )
+                            )
                         }
                     )
                 }
@@ -253,7 +260,7 @@ fun VerificationSimInfo(
                 onClick = onVerifyClick,
                 colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground),
                 shape = buttonShape,
-                enabled = verificationState.status == VerificationStatus.Unverified
+                enabled = verificationState.isNeedVerification()
             ) {
 
                 Text(

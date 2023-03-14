@@ -7,9 +7,6 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.AutofillType
@@ -27,24 +24,22 @@ fun TextField(
     hint: String = "",
     isError: Boolean = false,
     isEnable: Boolean = true,
-    value: MutableState<String> = remember {
-        mutableStateOf("")
-    },
+    value: String = "",
     autofillTypes: List<AutofillType> = emptyList(),
     onValueChange: (String) -> Unit = {
-        value.value = it
+
     },
     keyboardType: KeyboardType = KeyboardType.Text,
     singleLine: Boolean = true
 ) {
     val shape = RoundedCornerShape(10f)
     OutlinedTextField(
-        value = value.value,
+        value = value,
         onValueChange = onValueChange,
         modifier = modifier.autofill(
             autofillTypes = autofillTypes,
             onFill = {
-                value.value = it
+
             }
         ),
         keyboardOptions = KeyboardOptions(

@@ -25,7 +25,9 @@ sealed class Routes(val destination: String, val arguments: List<NamedNavArgumen
                 type = NavType.IntType
                 defaultValue = 0
             })
-        )
+        ) {
+            fun getDestinationWithSimId(simId: Int) = "Sim Info Screen?SimSlot=$simId"
+        }
 
         object SettingsScreen :
             BottomNavigation("Settings Screen", R.string.settings, R.drawable.ic_settings)

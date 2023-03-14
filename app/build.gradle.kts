@@ -46,7 +46,7 @@ android {
                     outputs.forEach { output ->
                         if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
                             output.outputFileName =
-                                "bottega-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                                "new_ui_bottega-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
                         }
                     }
                 }
@@ -59,7 +59,7 @@ android {
                     outputs.forEach { output ->
                         if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
                             output.outputFileName =
-                                "asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                                "new_ui_asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
                         }
                     }
                 }

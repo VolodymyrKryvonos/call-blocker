@@ -81,10 +81,7 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
                                 phoneNumber = it.data?.number
                             )
                         )
-                        SmartLog.e("checkSimCard $index, stateHolder: $stateHolder")
-                        SmartLog.e("checkSimCard $index, response: ${it.data}")
                         if (newStatus == VerificationStatus.Verified) {
-                            SmartLog.e("checkSimCard $index, verified")
                             waitForVerificationJobs[index]?.cancel()
                         }
                     }
