@@ -12,11 +12,15 @@ import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.example.common.Resource
-import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerificationCheckerImpl() {
@@ -46,10 +50,10 @@ class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
         MutableStateFlow(emptyList())
     val simInfoState = _simInfoState.asStateFlow()
 
-    fun simsInfo(firstSimId: String?, secondSimId: String?) {
+    fun simsInfo(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             _simInfoState.emit(
-                settingsRepository.simInfo(firstSimId, secondSimId)
+                settingsRepository.simInfo(context)
             )
         }
     }
@@ -81,8 +85,7 @@ class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
             isLoading.postValue(true)
 
             val systemDetail = userRepository.systemDetail(
-                SimUtil.firstSim(context)?.iccId,
-                SimUtil.secondSim(context)?.iccId
+                context
             )
 
             isLoading.postValue(false)
@@ -98,13 +101,10 @@ class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
 
     fun resetSimIfChanged(context: Context) {
         if (SmsBlockerDatabase.firstSimChanged) {
-            val simInfo = SimUtil.simInfo(context, 0)
             viewModelScope.launch {
                 try {
                     settingsRepository.refreshDataForSim(
-                        0,
-                        simInfo?.iccId ?: "",
-                        simInfo?.number ?: ""
+                        0, context
                     )
                 } catch (e: Exception) {
                     SmartLog.e("Auto reset failed sim1 ${getStackTrace(e)}")
@@ -112,13 +112,10 @@ class MainViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
             }
         }
         if (SmsBlockerDatabase.secondSimChanged) {
-            val simInfo = SimUtil.simInfo(context, 1)
             viewModelScope.launch {
                 try {
                     settingsRepository.refreshDataForSim(
-                        1,
-                        simInfo?.iccId ?: "",
-                        simInfo?.number ?: ""
+                        1, context
                     )
                 } catch (e: Exception) {
                     SmartLog.e("Auto reset failed sim2 ${getStackTrace(e)}")

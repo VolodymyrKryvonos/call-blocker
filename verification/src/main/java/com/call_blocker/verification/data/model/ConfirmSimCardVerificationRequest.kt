@@ -10,8 +10,6 @@ data class ConfirmSimCardVerificationRequest(
     val iccId: String,
     @Json(name = "msisdn")
     val phoneNumber: String,
-    @Json(name = "sim_slot")
-    val simSlot: String,
     @Json(name = "verification_code")
     val verificationCode: String
 )

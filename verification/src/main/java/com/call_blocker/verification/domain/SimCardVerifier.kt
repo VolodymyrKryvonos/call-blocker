@@ -1,20 +1,21 @@
 package com.call_blocker.verification.domain
 
+import android.content.Context
 import com.call_blocker.verification.data.VerificationRepository
 import com.example.common.Resource
+import com.example.common.SimUtil
+import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.flow.collectLatest
 
 class SimCardVerifier {
     private val verificationRepository: VerificationRepository = VerificationRepositoryImpl()
 
     suspend fun verifySimCard(
-        phoneNumber: String,
-        simID: String,
+        context: Context,
         simSlot: Int
     ) {
         verificationRepository.verifySimCard(
-            phoneNumber,
-            simID,
+            context,
             simSlot
         ).collectLatest {
             val stateHolder = VerificationInfoStateHolder.getStateHolderBySimSlotIndex(simSlot)
@@ -22,7 +23,7 @@ class SimCardVerifier {
                 stateHolder.emit(
                     VerificationInfo(
                         status = VerificationStatus.Processing,
-                        simId = simID
+                        simId = SimUtil.simInfo(context, simSlot)?.iccId ?: ""
                     )
                 )
             }
@@ -32,25 +33,15 @@ class SimCardVerifier {
 
     suspend fun confirmVerification(
         simID: String,
-        simSlot: Int,
         verificationCode: String,
         phoneNumber: String
     ) {
         verificationRepository.confirmVerification(
             simID,
-            simSlot,
             verificationCode,
             phoneNumber
         ).collectLatest {
-            val stateHolder = VerificationInfoStateHolder.getStateHolderBySimSlotIndex(simSlot)
-            if (it is Resource.Success) {
-                stateHolder.emit(
-                    VerificationInfo(
-                        status = VerificationStatus.Processing,
-                        simId = simID
-                    )
-                )
-            }
+            SmartLog.e("Confirm verification state, $it")
         }
     }
 }

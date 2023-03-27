@@ -56,7 +56,7 @@ class SettingsRepositoryImp : SettingsRepository() {
                 secondSim.carrierName.ifEmpty { "unknown" }
             }
 
-            val countryCode = CountryCodeExtractor.getCountryCode(simInfo)
+            val countryCode = CountryCodeExtractor.getCountryCode(context)
             SmartLog.e("CountryCode = $countryCode")
             settingsRest.setSmsPerDay(
                 SmsPerDayRequest(
@@ -82,22 +82,23 @@ class SettingsRepositoryImp : SettingsRepository() {
         }
     }
 
-    override suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String) {
+    override suspend fun refreshDataForSim(simSlot: Int, context: Context) {
         try {
             if (simSlot == 0) {
                 SmsBlockerDatabase.firstSimChanged = false
             } else {
                 SmsBlockerDatabase.secondSimChanged = false
             }
-            val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(iccid)
+            val countryCode = CountryCodeExtractor.getCountryCode(context)
+            val simInfo = SimUtil.simInfo(context, simSlot)
             settingsRest.resetSim(
                 RefreshDataForSimRequest(
                     simName = if (simSlot == 0)
                         "msisdn_1"
                     else
                         "msisdn_2",
-                    simICCID = iccid,
-                    simNumber = number,
+                    simICCID = simInfo?.iccId ?: "",
+                    simNumber = simInfo?.number ?: "",
                     countryCode = countryCode
                 )
             )
@@ -108,17 +109,16 @@ class SettingsRepositoryImp : SettingsRepository() {
 
 
     override suspend fun simInfo(
-        firstSimId: String?,
-        secondSimId: String?
+        context: Context
     ): List<FullSimInfoModel> {
         try {
             val sims = arrayListOf<FullSimInfoModel>()
             val data = settingsRest.simInfo(
                 SimInfoRequest(
-                    firstSimId = firstSimId,
-                    secondSimId = secondSimId,
-                    countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
-                        firstSimId ?: secondSimId
+                    firstSimId = SimUtil.firstSim(context)?.iccId,
+                    secondSimId = SimUtil.secondSim(context)?.iccId,
+                    countryCode = CountryCodeExtractor.getCountryCode(
+                        context
                     )
                 )
             ).toSimInfoResponse()
@@ -175,17 +175,16 @@ class SettingsRepositoryImp : SettingsRepository() {
     }
 
     override suspend fun checkConnection(
-        firstSimId: String?,
-        secondSimId: String?
+        context: Context
     ): Resource<ConnectionStatus> {
         return try {
             Resource.Success<ConnectionStatus>(
                 settingsRest.checkConnection(
                     SimInfoRequest(
-                        firstSimId = firstSimId,
-                        secondSimId = secondSimId,
-                        countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
-                            firstSimId ?: secondSimId
+                        firstSimId = SimUtil.firstSim(context)?.iccId,
+                        secondSimId = SimUtil.secondSim(context)?.iccId,
+                        countryCode = CountryCodeExtractor.getCountryCode(
+                            context
                         )
                     )
                 ).toConnectionStatus()
@@ -208,23 +207,21 @@ class SettingsRepositoryImp : SettingsRepository() {
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
     override suspend fun sendSignalStrengthInfo(
-        firstSimId: String?,
-        secondSimId: String?,
-        firstSimOperator: String?,
-        secondSimOperator: String?
+        context: Context
     ) {
         try {
+            val firstSim = SimUtil.firstSim(context)
+            val secondSim = SimUtil.secondSim(context)
             settingsRest.sendSignalStrengthInfo(
                 SignalStrengthRequest(
-                    signalStrength = ConnectionManager.getSignalStrength()
-                        ?: throw Exception("Signal strength is null"),
+                    signalStrength = ConnectionManager.getSignalStrength(),
                     signalGeneration = ConnectionManager.getNetworkGeneration(),
-                    firstSimId = firstSimId,
-                    secondSimId = secondSimId,
-                    firstSimOperator = firstSimOperator,
-                    secondSimOperator = secondSimOperator,
-                    countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
-                        firstSimId ?: secondSimId
+                    firstSimId = firstSim?.iccId,
+                    secondSimId = secondSim?.iccId,
+                    firstSimOperator = firstSim?.carrierName?.toString(),
+                    secondSimOperator = secondSim?.carrierName?.toString(),
+                    countryCode = CountryCodeExtractor.getCountryCode(
+                        context
                     )
                 )
             )
@@ -239,10 +236,7 @@ class SettingsRepositoryImp : SettingsRepository() {
         try {
             val firstSim = SimUtil.firstSim(context)
             val secondSim = SimUtil.secondSim(context)
-            val countryCode =
-                CountryCodeExtractor.getCountryCode(
-                    SimUtil.getSIMInfo(context)
-                )
+            val countryCode = CountryCodeExtractor.getCountryCode(context)
             val response = settingsRest.changeSimCard(
                 ChangeSimCardRequest(
                     firstSimId = firstSim?.iccId,

@@ -1,12 +1,16 @@
 package com.call_blocker.verification.domain
 
 import android.content.Context
-import android.telephony.SubscriptionInfo
 import com.call_blocker.verification.data.VerificationRepository
 import com.example.common.Resource
 import com.example.common.SimUtil
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 interface SimCardVerificationChecker {
@@ -19,11 +23,11 @@ interface SimCardVerificationChecker {
     )
 
     suspend fun checkFirstSim(
-        subscriptionInfo: SubscriptionInfo
+        context: Context
     )
 
     suspend fun checkSecondSim(
-        subscriptionInfo: SubscriptionInfo
+        context: Context
     )
 
     fun checkSimCardByIndex(index: Int, context: Context)
@@ -43,23 +47,19 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
     override fun checkSimCards(context: Context) {
         coroutineScope.launch(Dispatchers.IO) outerBlock@{
             launch {
-                val simCard = SimUtil.firstSim(context) ?: return@launch
-                checkFirstSim(simCard)
+                checkFirstSim(context)
             }
             launch {
-                val simCard = SimUtil.secondSim(context) ?: return@launch
-                checkSecondSim(simCard)
+                checkSecondSim(context)
             }
         }
     }
 
-    private fun checkSimCard(index: Int, subscriptionInfo: SubscriptionInfo) {
+    private fun checkSimCard(index: Int, context: Context) {
         coroutineScope.launch {
             val stateHolder = VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
             verificationRepository.checkSimCard(
-                subscriptionInfo.iccId,
-                subscriptionInfo.simSlotIndex,
-                subscriptionInfo.number?.ifEmpty { null }
+                context, index
             ).collectLatest {
                 when (it) {
                     is Resource.Success -> {
@@ -70,7 +70,7 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
                         stateHolder.emit(
                             stateHolder.value.copy(
                                 status = newStatus,
-                                simId = subscriptionInfo.iccId,
+                                simId = SimUtil.simInfo(context, index)?.iccId ?: "",
                                 isAutoVerificationEnabled = it.data?.autoVerification == true,
                                 phoneNumber = it.data?.number
                             )
@@ -87,34 +87,32 @@ class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
     }
 
     override suspend fun checkFirstSim(
-        subscriptionInfo: SubscriptionInfo
+        context: Context
     ) {
-        checkSimCard(0, subscriptionInfo)
+        checkSimCard(0, context)
     }
 
     override suspend fun checkSecondSim(
-        subscriptionInfo: SubscriptionInfo
+        context: Context
     ) {
-        checkSimCard(1, subscriptionInfo)
+        checkSimCard(1, context)
     }
 
     override fun checkSimCardByIndex(index: Int, context: Context) {
-        val sim = SimUtil.simInfo(context, index) ?: return
         coroutineScope.launch {
             if (index == 0) {
-                checkFirstSim(sim)
+                checkFirstSim(context)
             } else {
-                checkSecondSim(sim)
+                checkSecondSim(context)
             }
         }
     }
 
     override fun waitForVerification(index: Int, context: Context) {
         waitForVerificationJob = coroutineScope.launch(Dispatchers.IO) {
-            val simInfo = SimUtil.simInfo(context, index) ?: return@launch
             repeat(5) {
                 delay(30 * 1000)
-                checkSimCard(index, simInfo)
+                checkSimCard(index, context)
             }
             val stateHolder = VerificationInfoStateHolder.getStateHolderBySimSlotIndex(index)
             stateHolder.emit(stateHolder.value.copy(status = VerificationStatus.Failed))

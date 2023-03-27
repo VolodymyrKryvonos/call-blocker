@@ -40,8 +40,8 @@ abstract class SettingsRepository {
         smsPerMonthSimSecond: Int
     )
 
-    abstract suspend fun refreshDataForSim(simSlot: Int, iccid: String, number: String = "")
-    abstract suspend fun simInfo(firstSimId: String?, secondSimId: String?): List<FullSimInfoModel>
+    abstract suspend fun refreshDataForSim(simSlot: Int, context: Context)
+    abstract suspend fun simInfo(context: Context): List<FullSimInfoModel>
 
     fun blackList(context: Context): List<String> {
         val c: Cursor =
@@ -69,16 +69,12 @@ abstract class SettingsRepository {
 
     abstract suspend fun getProfile(): Flow<Resource<com.call_blocker.model.Profile>>
     abstract suspend fun checkConnection(
-        firstSimId: String?,
-        secondSimId: String?
+        context: Context
     ): Resource<ConnectionStatus>
 
     abstract suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
     abstract suspend fun sendSignalStrengthInfo(
-        firstSimId: String?,
-        secondSimId: String?,
-        firstSimOperator: String?,
-        secondSimOperator: String?,
+        context: Context
     )
 
     abstract suspend fun changeSimCard(context: Context)

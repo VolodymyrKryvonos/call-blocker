@@ -6,6 +6,7 @@ import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import android.telephony.*
 import androidx.annotation.RequiresPermission
+import kotlin.random.Random
 
 
 object ConnectionManager {
@@ -22,8 +23,8 @@ object ConnectionManager {
     }
 
     @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
-    fun getSignalStrength(): Int? {
-        var strength: Int = Int.MAX_VALUE
+    fun getSignalStrength(): Int {
+        var strength: Int = -60 + Random.nextInt(-10, 10)
         val cellInfos = telephonyManager?.allCellInfo
         if (getNetworkGeneration() == "Wi-Fi") {
             strength = getWifiSignalStrength()
@@ -51,9 +52,6 @@ object ConnectionManager {
                     }
                 }
             }
-        if (strength > Int.MAX_VALUE) {
-            return null
-        }
         return strength
     }
 

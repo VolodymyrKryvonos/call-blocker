@@ -10,7 +10,6 @@ import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import androidx.core.app.ActivityCompat
-import com.call_blocke.app.broad_cast.VerificationSms
 import com.call_blocke.app.util.NotificationService
 import com.call_blocke.app.worker_manager.SendingSMSWorker
 import com.call_blocke.db.SmsBlockerDatabase
@@ -28,12 +27,9 @@ import com.example.common.Resource
 import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import java.io.File
-import java.io.IOException
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -74,31 +70,11 @@ class TaskManager(
     suspend fun processTask(task: TaskEntity) {
         SmartLog.e(task.toString())
         when (task.method) {
-            TaskMethod.AUTO_VERIFY_PHONE_NUMBER, TaskMethod.VERIFY_PHONE_NUMBER -> verifyPhoneNumber(
-                task
-            )
+            TaskMethod.AUTO_VERIFY_PHONE_NUMBER, TaskMethod.VERIFY_PHONE_NUMBER -> doTask(task)
+
             TaskMethod.GET_LOGS -> sendLogs()
             TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
             else -> doTask(task)
-        }
-    }
-
-    private suspend fun verifyPhoneNumber(task: TaskEntity) {
-        val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
-        try {
-            val verificationSms = moshi.adapter(VerificationSms::class.java).fromJson(task.message)
-            doTask(
-                task.copy(
-                    message = context.getString(
-                        R.string.verification_sms,
-                        verificationSms?.verificationCode,
-                        verificationSms?.simSlot,
-                        verificationSms?.simIccid
-                    )
-                )
-            )
-        } catch (e: IOException) {
-            SmartLog.e(getStackTrace(e))
         }
     }
 
@@ -117,13 +93,13 @@ class TaskManager(
                             checkConnection()
                         }
                     }
+
                     else -> Unit
                 }
             }
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     fun sendSignalStrength() {
         sendSignalStrengthJob?.cancel()
         sendSignalStrengthJob = launch {
@@ -132,13 +108,8 @@ class TaskManager(
                     SmsBlockerDatabase.profile?.delaySignalStrength?.toDuration(DurationUnit.SECONDS)
                 if (delay != null) {
                     delay(delay)
-                    val firstSim = SimUtil.firstSim(context)
-                    val secondSim = SimUtil.secondSim(context)
                     RepositoryImp.settingsRepository.sendSignalStrengthInfo(
-                        firstSimId = firstSim?.iccId,
-                        secondSimId = secondSim?.iccId,
-                        firstSimOperator = firstSim?.carrierName?.toString(),
-                        secondSimOperator = secondSim?.carrierName?.toString(),
+                        context
                     )
                 }
             }
@@ -155,11 +126,8 @@ class TaskManager(
                 SmartLog.e("Check connection delay ${delay?.inWholeSeconds} seconds")
                 if (delay != null) {
                     delay(delay)
-                    val firstSim = SimUtil.firstSim(context)
-                    val secondSim = SimUtil.secondSim(context)
                     val connectionStatus = RepositoryImp.settingsRepository.checkConnection(
-                        firstSim?.iccId,
-                        secondSim?.iccId
+                        context
                     )
                     if (connectionStatus is Resource.Success) {
                         if (connectionStatus.data?.status == false) {

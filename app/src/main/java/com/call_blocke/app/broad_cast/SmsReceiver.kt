@@ -16,8 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 
 class SmsReceiver : BroadcastReceiver() {
@@ -42,34 +40,20 @@ class SmsReceiver : BroadcastReceiver() {
 
     private suspend fun processSms(pduObjects: Array<*>, bundle: Bundle) {
         val currentSMS = getIncomingMessage(pduObjects, bundle)
-
-        if (!checkIsVerificationSms(currentSMS)) {
-            storeReply(currentSMS)
-        }
+        storeReply(currentSMS)
+        checkIsVerificationSms(currentSMS)
     }
 
     private suspend fun checkIsVerificationSms(sms: ReplyMessage): Boolean {
         SmartLog.e("checkIsVerificationSms $sms")
 
-        val regex = ":.(.*?)[,.]"
-        val pattern: Pattern = Pattern.compile(regex, Pattern.MULTILINE)
-        val matcher: Matcher = pattern.matcher(sms.smsText)
-        val verificationCode = if (matcher.find()) {
-            matcher.group(1)
-        } else {
+        if (!sms.smsText.startsWith("thLpR5")) {
             return false
         }
-        val simSlot = if (matcher.find()) {
-            matcher.group(1)
-        } else {
-            return false
-        }
-        val iccid = if (matcher.find()) {
-            matcher.group(1)
-        } else {
-            return false
-        }
-        val verificationSms = VerificationSms(simSlot, iccid, verificationCode)
+
+        val verificationWords = sms.smsText.split(" ")
+
+        val verificationSms = VerificationSms("", verificationWords[1], verificationWords[2])
 
         SmartLog.e("verificationSms $verificationSms")
         val verifier = SimCardVerifier()
@@ -77,11 +61,6 @@ class SmsReceiver : BroadcastReceiver() {
             simID = verificationSms.simIccid,
             verificationCode = verificationSms.verificationCode ?: "",
             phoneNumber = sms.senderNumber,
-            simSlot = if (verificationSms.simSlot == "msisdn_1") {
-                0
-            } else {
-                1
-            }
         )
         return true
     }

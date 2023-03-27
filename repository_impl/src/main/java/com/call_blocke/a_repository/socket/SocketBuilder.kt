@@ -202,7 +202,7 @@ class SocketBuilder private constructor(
             return SocketBuilder(
                 userToken = userToken!!,
                 uuid = uuid!!,
-                ip = ip ?: domain
+                ip = domain
             )
         }
 
