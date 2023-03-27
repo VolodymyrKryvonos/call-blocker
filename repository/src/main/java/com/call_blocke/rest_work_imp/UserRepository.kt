@@ -1,5 +1,6 @@
 package com.call_blocke.rest_work_imp
 
+import android.content.Context
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.db.entity.SystemDetailEntity
 import com.example.common.Resource
@@ -33,8 +34,7 @@ abstract class UserRepository {
     ): String
 
     protected abstract suspend fun loadSystemDetail(
-        firstSimId: String?,
-        secondSimId: String?
+        context: Context
     ): SystemDetailEntity
 
     /**
@@ -88,12 +88,10 @@ abstract class UserRepository {
     }
 
     suspend fun systemDetail(
-        firstSimId: String?,
-        secondSimId: String?
+        context: Context
     ): SystemDetailEntity {
         SmsBlockerDatabase.systemDetail = loadSystemDetail(
-            firstSimId,
-            secondSimId
+            context
         )
         return SmsBlockerDatabase.systemDetail
     }

@@ -1,5 +1,6 @@
 package com.call_blocke.a_repository.repository
 
+import android.content.Context
 import android.os.Build
 import com.call_blocke.a_repository.model.LoginRequest
 import com.call_blocke.a_repository.model.RegisterRequest
@@ -14,6 +15,7 @@ import com.call_blocker.common.rest.Const
 import com.example.common.ConnectionManager
 import com.example.common.CountryCodeExtractor
 import com.example.common.Resource
+import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.flow
@@ -62,17 +64,16 @@ class UserRepositoryImp : UserRepository() {
     }
 
     override suspend fun loadSystemDetail(
-        firstSimId: String?,
-        secondSimId: String?
+        context: Context
     ): SystemDetailEntity {
         val data = try {
             userRest.userInfo(
                 TasksRequest(
                     connectionType = ConnectionManager.getNetworkGeneration(),
-                    firstSimId = firstSimId,
-                    secondSimId = secondSimId,
-                    countryCode = CountryCodeExtractor.getCountryCodeFromIccId(
-                        firstSimId ?: secondSimId
+                    firstSimId = SimUtil.firstSim(context)?.iccId,
+                    secondSimId = SimUtil.secondSim(context)?.iccId,
+                    countryCode = CountryCodeExtractor.getCountryCode(
+                        context
                     )
                 )
             ).toUserInfo()

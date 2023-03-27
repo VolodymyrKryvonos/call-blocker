@@ -1,5 +1,6 @@
 package com.call_blocker.verification.domain
 
+import android.content.Context
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocker.common.rest.AppRest
 import com.call_blocker.common.rest.Const
@@ -11,6 +12,7 @@ import com.call_blocker.verification.data.model.ConfirmSimCardVerificationReques
 import com.call_blocker.verification.data.model.VerifySimCardRequest
 import com.example.common.CountryCodeExtractor
 import com.example.common.Resource
+import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.Flow
@@ -21,19 +23,18 @@ class VerificationRepositoryImpl : VerificationRepository {
         AppRest(Const.url, SmsBlockerDatabase.userToken ?: "", VerificationApi::class.java).build()
 
     override fun checkSimCard(
-        iccId: String,
+        context: Context,
         simSlot: Int,
-        phoneNumber: String?
     ) = flow {
         try {
             emit(Resource.Loading())
-            val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(iccId)
+            val countryCode = CountryCodeExtractor.getCountryCode(context)
             val response = verificationApi.checkSimCard(
                 CheckSimCardRequest(
-                    iccId,
+                    SimUtil.simInfo(context, simSlot)?.iccId ?: "",
                     countryCode,
                     "msisdn_${simSlot + 1}",
-                    phoneNumber = phoneNumber
+                    phoneNumber = SimUtil.simInfo(context, simSlot)?.number
                 )
             )
             emit(Resource.Success(response))
@@ -45,7 +46,6 @@ class VerificationRepositoryImpl : VerificationRepository {
 
     override fun confirmVerification(
         iccid: String,
-        simSlot: Int,
         verificationCode: String,
         phoneNumber: String
     ): Flow<Resource<Unit>> = flow {
@@ -54,7 +54,6 @@ class VerificationRepositoryImpl : VerificationRepository {
             verificationApi.confirmSimCardVerification(
                 ConfirmSimCardVerificationRequest(
                     iccId = iccid,
-                    simSlot = "msisdn_${simSlot + 1}",
                     verificationCode = verificationCode,
                     phoneNumber = phoneNumber
                 )
@@ -68,14 +67,15 @@ class VerificationRepositoryImpl : VerificationRepository {
     }
 
     override fun verifySimCard(
-        phoneNumber: String,
-        simID: String,
+        context: Context,
         simSlot: Int
     ): Flow<Resource<Unit>> =
         flow {
             try {
+                val simID = SimUtil.simInfo(context, simSlot)?.iccId ?: ""
+                val phoneNumber = SimUtil.simInfo(context, simSlot)?.number ?: ""
                 emit(Resource.Loading())
-                val countryCode = CountryCodeExtractor.getCountryCodeFromIccId(simID)
+                val countryCode = CountryCodeExtractor.getCountryCode(context)
                 if (phoneNumber.isEmpty()) {
                     verificationApi.startAutoVerification(
                         AutoVerificationRequest(

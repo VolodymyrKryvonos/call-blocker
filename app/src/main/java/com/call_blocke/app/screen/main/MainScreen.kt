@@ -240,8 +240,7 @@ fun Menu(navController: NavHostController, viewModel: MainViewModel) {
             Lifecycle.Event.ON_RESUME -> {
                 viewModel.reloadSystemInfo(context)
                 viewModel.simsInfo(
-                    SimUtil.firstSim(context)?.iccId,
-                    SimUtil.secondSim(context)?.iccId
+                    context
                 )
                 viewModel.getProfile()
                 viewModel.checkSimCards(context)

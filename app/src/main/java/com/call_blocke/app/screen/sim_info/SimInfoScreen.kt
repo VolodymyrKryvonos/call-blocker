@@ -46,8 +46,7 @@ fun SimInfoScreen(viewModel: RefreshViewModel = viewModel()) = Box(
         when (event) {
             Lifecycle.Event.ON_RESUME -> {
                 viewModel.simsInfo(
-                    SimUtil.firstSim(context)?.iccId,
-                    SimUtil.secondSim(context)?.iccId
+                    context
                 )
                 viewModel.checkSimCards(context)
             }
@@ -119,7 +118,7 @@ private fun verifySimCard(
     }
     if (isAutoVerificationEnabled) {
         viewModel.verifySimCard(
-            simId = subscriptionInfo.iccId,
+            context,
             simSlot = subscriptionInfo.simSlotIndex
         )
     } else {
@@ -143,7 +142,7 @@ private fun VerifyNumberDialog(
     var isCorrectNumber by remember {
         mutableStateOf(false)
     }
-
+    val context = LocalContext.current
     AlertDialog(
         modifier = modifier,
         title = stringResource(id = R.string.verifyPhoneNumber),
@@ -169,8 +168,7 @@ private fun VerifyNumberDialog(
             ) {
                 if (isCorrectNumber) {
                     viewModel.verifySimCard(
-                        phoneNumber.value,
-                        subscriptionInfo.iccId,
+                        context,
                         subscriptionInfo.simSlotIndex
                     )
                     keyboardController?.hide()

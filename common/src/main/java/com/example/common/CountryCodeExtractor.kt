@@ -1,7 +1,9 @@
 package com.example.common
 
-import android.telephony.SubscriptionInfo
+import android.content.Context
+import android.telephony.TelephonyManager
 import android.util.Log
+import com.rokobit.adstvv_unit.loger.SmartLog
 
 object CountryCodeExtractor {
     private val isoCodeMap = mapOf(
@@ -473,13 +475,18 @@ object CountryCodeExtractor {
         "zw" to "263"
     )
 
-    fun getCountryCode(simInfo: List<SubscriptionInfo>?): String {
+    fun getCountryCode(context: Context): String {
+        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val simInfo = SimUtil.getSIMInfo(context)
+        SmartLog.e("Network operator ${tm.networkOperator}")
         return simInfo?.firstOrNull()?.countryIso?.ifEmpty {
-            getCountryCodeFromIccId(simInfo.firstOrNull()?.iccId)
+            tm.networkCountryIso?.ifEmpty {
+                getCountryCodeFromIccId(simInfo.firstOrNull()?.iccId)
+            }
         } ?: getCountryCodeFromIccId(simInfo?.firstOrNull()?.iccId)
     }
 
-    fun getCountryCodeFromIccId(iccId: String?): String {
+    private fun getCountryCodeFromIccId(iccId: String?): String {
         if (iccId == null)
             return "default"
         val iccIdWithoutDefaultDigit = iccId.substring(2)

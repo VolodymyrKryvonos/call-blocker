@@ -13,7 +13,6 @@ import com.call_blocke.rest_work_imp.TaskRepository
 import com.call_blocker.common.rest.AppRest
 import com.call_blocker.common.rest.Const
 import com.call_blocker.common.rest.Const.domain
-import com.call_blocker.common.rest.Const.sandboxDomain
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import com.squareup.moshi.Json
@@ -45,12 +44,7 @@ class TaskRepositoryImp : TaskRepository() {
             .Builder
             .setUserToken(SmsBlockerDatabase.userToken ?: "jhfhjlbdhjlf")
             .setUUid(SmsBlockerDatabase.deviceID)
-            .setIP(
-                when (preference?.ipType) {
-                    "Production" -> sandboxDomain
-                    else -> preference?.customIp ?: ""
-                }
-            )
+            .setIP(domain)
             .build()
     }
 
@@ -90,11 +84,6 @@ class TaskRepositoryImp : TaskRepository() {
     override val connectionStatusFlow: StateFlow<Boolean> by lazy { socketBuilder.connectionStatusFlow }
 
     override suspend fun taskMessage(): Flow<TaskMessage> = channelFlow {
-        socketBuilder.ip =
-            when (preference?.ipType) {
-                "Production" -> domain
-                else -> preference?.customIp ?: ""
-            }
         socketBuilder.connect()
         withContext(Dispatchers.IO) {
             socketBuilder.messageCollector.receiveAsFlow().collect {

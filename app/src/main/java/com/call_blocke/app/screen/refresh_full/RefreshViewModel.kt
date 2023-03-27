@@ -10,7 +10,6 @@ import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.call_blocker.verification.domain.SimCardVerifier
-import com.example.common.SimUtil
 import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,22 +34,19 @@ class RefreshViewModel : ViewModel(),
         coroutineScope = viewModelScope
     }
 
-    fun simsInfo(firstSimId: String?, secondSimId: String?) {
+    fun simsInfo(context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             _simInfoState.emit(
-                settingsRepository.simInfo(firstSimId, secondSimId)
+                settingsRepository.simInfo(context)
             )
         }
     }
 
-    fun reset(simSlotID: Int, context: Context?) = viewModelScope.launch(Dispatchers.IO) {
+    fun reset(simSlotID: Int, context: Context) = viewModelScope.launch(Dispatchers.IO) {
         onLoading.postValue(true)
         try {
-            val simInfo = SimUtil.simInfo(context, simSlotID)
             settingsRepository.refreshDataForSim(
-                simSlot = simSlotID,
-                simInfo?.iccId ?: "",
-                simInfo?.number ?: ""
+                simSlot = simSlotID, context
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -64,14 +60,13 @@ class RefreshViewModel : ViewModel(),
         taskRepository.clearFor(simIndex = simSlotID)
         onLoading.postValue(false)
         simsInfo(
-            SimUtil.firstSim(context)?.iccId,
-            SimUtil.secondSim(context)?.iccId
+            context
         )
     }
 
-    fun verifySimCard(phoneNumber: String = "", simId: String, simSlot: Int) {
+    fun verifySimCard(context: Context, simSlot: Int) {
         viewModelScope.launch {
-            simCardVerifier.verifySimCard(phoneNumber, simId, simSlot)
+            simCardVerifier.verifySimCard(context, simSlot)
         }
     }
 }
