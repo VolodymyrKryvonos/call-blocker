@@ -101,8 +101,7 @@ class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
     private suspend fun getSystemDetails(context: Context) {
         state = state.copy(isLoading = true)
         val systemDetail = userRepository.systemDetail(
-            SimUtil.firstSim(context)?.iccId,
-            SimUtil.secondSim(context)?.iccId
+            context
         )
         state = state.copy(
             firstName = systemDetail.firstName,
@@ -117,8 +116,7 @@ class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
 
     private suspend fun simsInfo(context: Context) {
         val response = settingsRepository.simInfo(
-            SimUtil.firstSim(context)?.iccId,
-            SimUtil.secondSim(context)?.iccId
+            context
         )
         var deliveredFirstSim = 0
         var deliveredSecondSim = 0
@@ -150,7 +148,7 @@ class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
             while (!state.isConnected) {
                 delay(1000)
             }
-            simCardVerifier.verifySimCard(phoneNumber, simId, simSlot)
+            simCardVerifier.verifySimCard(context, simSlot)
         }
     }
 
@@ -164,9 +162,7 @@ class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
         try {
             val simInfo = SimUtil.simInfo(context, simSlotID)
             settingsRepository.refreshDataForSim(
-                simSlot = simSlotID,
-                simInfo?.iccId ?: "",
-                simInfo?.number ?: ""
+                simSlot = simSlotID, context = context
             )
 
         } catch (e: Exception) {

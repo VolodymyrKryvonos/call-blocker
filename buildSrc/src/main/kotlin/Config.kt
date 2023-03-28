@@ -4,8 +4,8 @@ object Config {
     const val targetVersion = "33"
     const val versionCode = 1
     const val major = 2
-    const val minor = 1
-    const val patch = 91
+    const val minor = 2
+    const val patch = 1
     const val versionName = "$major.$minor.$patch"
 
 }

@@ -122,8 +122,27 @@
     <string name="task">Task</string>
     <string name="settings">Settings</string>
     <string name="simCardNotVerified">SIM Card not verified</string>
-    <string name="simWithPlaceHolder">Sim %d</string>
+    <string name="simWithPlaceHolder">SIM %d</string>
     <string name="notDetermined">"not determined "</string>
     <string name="noSimDetected">No SIM cards were detected. Please check the availability of SIM cards</string>
+    <string name="current_balance">Current balance</string>
+    <string name="sms">sms\n</string>
+    <string name="limit_for_today">Limit for today</string>
+    <string name="tasks">Tasks</string>
+    <string name="smsId">SMS ID</string>
+    <string name="statusColon">Status:</string>
+    <string name="bufferedDate">Buffered in app at:</string>
+    <string name="proceedDate">Proceed at:</string>
+    <string name="deliveredDate">Delivered at:</string>
+    <string name="buffered">Buffered</string>
+    <string name="processing">Processing</string>
+    <string name="signIn">Sign in</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="or">or</string>
+    <string name="createAccount">Create account</string>
+    <string name="confirmPassword">Confirm password</string>
+    <string name="signUp">Sign up</string>
+    <string name="invalidValue">Invalid value</string>
 
 </resources>

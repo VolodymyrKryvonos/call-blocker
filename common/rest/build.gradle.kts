@@ -29,4 +29,5 @@ dependencies {
     implementation(AppDependencies.base)
     implementation(AppDependencies.rest)
     implementation(project(":loger"))
+    implementation(project(":db"))
 }

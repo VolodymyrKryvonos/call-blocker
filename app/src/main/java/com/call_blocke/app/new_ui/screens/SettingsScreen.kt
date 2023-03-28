@@ -4,13 +4,16 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -19,16 +22,21 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.app.new_ui.buttonBackground
 import com.call_blocke.app.new_ui.buttonTextColor
+import com.call_blocke.app.new_ui.darkGrey
 import com.call_blocke.app.new_ui.dividerColor
-import com.call_blocke.app.new_ui.textColor
+import com.call_blocke.app.new_ui.itemBackground
+import com.call_blocke.app.new_ui.medium24Sp
+import com.rokobit.adstv.ui.primaryDimens
 import java.io.File
 
 @Composable
@@ -37,28 +45,42 @@ fun SettingsScreen() {
     Column(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colors.background)
+            .background(MaterialTheme.colors.background),
     ) {
-        Spacer(modifier = Modifier.height(22.dp))
-        Text(
-            modifier = Modifier.padding(start = 20.dp),
-            text = stringResource(id = R.string.sim_card_info),
-            style = MaterialTheme.typography.h2
-        )
-        Spacer(modifier = Modifier.height(22.dp))
+        Box(
+            Modifier
+                .background(itemBackground)
+                .fillMaxWidth()
+                .padding(vertical = 22.dp)
+        ) {
+            Text(
+                modifier = Modifier.align(Alignment.Center),
+                text = stringResource(id = R.string.settings),
+                style = MaterialTheme.typography.h2,
+            )
+        }
         Spacer(
             modifier = Modifier
                 .height(1.dp)
                 .fillMaxWidth()
                 .background(dividerColor)
         )
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(60.dp))
         Column(
             Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 25.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                imageVector = ImageVector.vectorResource(R.drawable.app_logo),
+                contentDescription = null,
+                modifier = Modifier.requiredSize(
+                    size = primaryDimens * 4
+                )
+            )
+            Text(text = stringResource(id = R.string.app_name), style = medium24Sp)
+            Spacer(modifier = Modifier.weight(1f))
             Button(
                 onClick = {
                     viewLog(context)
@@ -105,10 +127,11 @@ fun SettingsScreen() {
             Spacer(modifier = Modifier.height(30.dp))
 
             Text(
-                text = "version ${BuildConfig.VERSION_NAME}",
+                text = "v ${BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.h5,
-                color = textColor
+                color = darkGrey
             )
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }

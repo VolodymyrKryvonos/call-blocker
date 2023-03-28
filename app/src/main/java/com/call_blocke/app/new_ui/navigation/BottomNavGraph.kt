@@ -9,13 +9,15 @@ import com.call_blocke.app.new_ui.screens.home_screen.HomeScreen
 import com.call_blocke.app.new_ui.screens.home_screen.HomeViewModel
 import com.call_blocke.app.new_ui.screens.sim_card_info_screen.SimCardInfoScreen
 import com.call_blocke.app.new_ui.screens.sim_card_info_screen.SimCardViewModel
-import com.call_blocke.app.screen.task_list.TaskListScreen
+import com.call_blocke.app.new_ui.screens.task_screen.TaskScreen
+import com.call_blocke.app.new_ui.screens.task_screen.TasksViewModel
 
 @Composable
 fun BottomNavGraph(
     navController: NavHostController,
     homeViewModel: HomeViewModel,
-    simCardViewModel: SimCardViewModel
+    simCardViewModel: SimCardViewModel,
+    tasksViewModel: TasksViewModel
 ) {
     NavHost(
         navController = navController,
@@ -34,7 +36,7 @@ fun BottomNavGraph(
             SettingsScreen()
         }
         composable(route = Routes.BottomNavigation.TaskListScreen.destination) {
-            TaskListScreen()
+            TaskScreen(tasksViewModel)
         }
     }
 }

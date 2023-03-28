@@ -134,6 +134,8 @@ class TaskManager(
                             RepositoryImp.taskRepository.reconnect()
                         }
                     }
+                } else {
+                    delay(60000)
                 }
             }
         }

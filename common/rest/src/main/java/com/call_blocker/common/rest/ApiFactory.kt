@@ -6,15 +6,21 @@
 
 package com.call_blocker.common.rest
 
+import com.call_blocke.db.SmsBlockerDatabase
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.CacheControl
+import okhttp3.Interceptor
+import okhttp3.Interceptor.*
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.io.IOException
 import java.util.concurrent.TimeUnit
+
 
 class ApiFactory {
 
@@ -39,6 +45,7 @@ class ApiFactory {
 
             chain.proceed(request)
         }
+        builder?.addInterceptor(UnauthorizedInterceptor())
 
         val logging = if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor().apply {
@@ -81,5 +88,16 @@ class ApiFactory {
         const val CONNECT_TIMEOUT = DEFAULT_TIMEOUT
         const val WRITE_TIMEOUT = DEFAULT_TIMEOUT
         const val READ_TIMEOUT = DEFAULT_TIMEOUT
+    }
+}
+
+internal class UnauthorizedInterceptor : Interceptor {
+    @Throws(IOException::class)
+    override fun intercept(chain: Chain): Response {
+        val response: Response = chain.proceed(chain.request())
+        if (response.code == 401) {
+            SmsBlockerDatabase.userToken = null
+        }
+        return response
     }
 }

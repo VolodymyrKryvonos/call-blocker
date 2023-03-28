@@ -12,6 +12,23 @@ val roboto400 = FontFamily(fonts = arrayListOf(Font(R.font.roboto_regular, FontW
 val roboto500 = FontFamily(fonts = arrayListOf(Font(R.font.roboto_medium, FontWeight.Medium)))
 val roboto700 = FontFamily(fonts = arrayListOf(Font(R.font.roboto_medium, FontWeight.Bold)))
 
+val bold14Sp = TextStyle(
+    fontFamily = roboto700,
+    fontSize = 14.sp,
+    lineHeight = 16.sp
+)
+val bold16Sp = TextStyle(
+    fontFamily = roboto700,
+    fontSize = 16.sp,
+    lineHeight = 18.sp
+)
+val medium24Sp = TextStyle(
+    fontFamily = roboto500,
+    fontSize = 24.sp,
+    lineHeight = 28.sp
+)
+
+
 val simInfoCaptionStyle = TextStyle(
     fontFamily = roboto400,
     fontSize = 14.sp,
@@ -37,7 +54,7 @@ val Typography = Typography(
         lineHeight = 32.sp
     ),
     h2 = TextStyle(
-        fontFamily = roboto500,
+        fontFamily = roboto400,
         fontSize = 24.sp,
         lineHeight = 28.sp
     ),

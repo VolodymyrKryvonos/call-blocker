@@ -1,0 +1,60 @@
+package com.call_blocke.app.new_ui.screens.login_screen
+
+import android.util.Patterns
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.call_blocke.app.BuildConfig
+import com.call_blocke.repository.RepositoryImp
+import kotlinx.coroutines.launch
+
+class AuthorizationViewModel : ViewModel() {
+    var isSignUp: Boolean by mutableStateOf(false)
+    var email: String by mutableStateOf("")
+    var emailError by mutableStateOf(false)
+    var password: String by mutableStateOf("")
+    var passwordError by mutableStateOf(false)
+    var confirmPassword: String by mutableStateOf("")
+    var confirmPasswordError by mutableStateOf(false)
+    var isLoading by mutableStateOf(false)
+
+    private val userRepository = RepositoryImp.userRepository
+
+
+    fun isEmailValid() {
+        emailError = email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
+
+    fun signIn(packageName: String) {
+        viewModelScope.launch {
+            isLoading = true
+            validatePassword()
+            var isSignedIn = false
+            if (isSignUp) {
+                if (!passwordError && !confirmPasswordError) {
+                    isSignedIn = userRepository.register(
+                        email, password, packageName, BuildConfig.VERSION_NAME
+                    )
+                }
+            } else {
+                if (!passwordError) {
+                    isSignedIn = userRepository.login(
+                        email, password, BuildConfig.VERSION_NAME
+                    )
+                }
+            }
+            passwordError = !isSignedIn
+            isLoading = false
+        }
+
+    }
+
+    private fun validatePassword() {
+        passwordError = password.length < 3 || password.length > 30
+        if (isSignUp) {
+            confirmPasswordError = password != confirmPassword
+        }
+    }
+}

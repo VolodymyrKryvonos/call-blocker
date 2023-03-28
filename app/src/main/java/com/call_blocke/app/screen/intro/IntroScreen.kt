@@ -11,8 +11,14 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Divider
+import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -25,10 +31,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import com.call_blocke.app.R
+import com.call_blocke.app.new_ui.buttonBackground
+import com.call_blocke.app.new_ui.buttonTextColor
+import com.call_blocke.app.new_ui.disabledButton
 import com.call_blocke.app.screen.PERMISSIONS_REQUIRED
 import com.call_blocke.app.screen.SplashViewModel
-import com.rokobit.adstv.ui.element.Button
 import com.rokobit.adstv.ui.element.Label
 import com.rokobit.adstv.ui.element.Text
 import com.rokobit.adstv.ui.element.Title
@@ -57,7 +66,24 @@ private fun IntroItem(
 
     Divider(Modifier.height(primaryDimens * 2), color = Color.Transparent)
 
-    Button(title = btnTitle, onClick = onClick)
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(100f),
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = buttonBackground,
+            disabledBackgroundColor = disabledButton
+        ),
+        modifier = Modifier
+            .fillMaxWidth(0.8f)
+    ) {
+
+        androidx.compose.material.Text(
+            modifier = Modifier.padding(horizontal = 6.dp),
+            text = btnTitle,
+            style = MaterialTheme.typography.h5,
+            color = buttonTextColor
+        )
+    }
 }
 
 @Composable

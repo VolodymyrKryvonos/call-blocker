@@ -57,8 +57,7 @@ class SimCardViewModel : ViewModel(),
                 secondSimSubInfo = SimUtil.secondSim(context)
             )
             val response = settingsRepository.simInfo(
-                state.firstSimSubInfo?.iccId,
-                state.secondSimSubInfo?.iccId,
+                context
             )
             var deliveredFirstSim = 0
             var deliveredSecondSim = 0
@@ -98,17 +97,15 @@ class SimCardViewModel : ViewModel(),
             while (!taskRepository.connectionStatusFlow.value) {
                 delay(1000)
             }
-            simCardVerifier.verifySimCard(phoneNumber, simId, simSlot)
+            simCardVerifier.verifySimCard(context, simSlot)
         }
     }
 
     fun resetSim(simSlotID: Int, context: Context) = viewModelScope.launch(Dispatchers.IO) {
         try {
-            val simInfo = SimUtil.simInfo(context, simSlotID)
             settingsRepository.refreshDataForSim(
                 simSlot = simSlotID,
-                simInfo?.iccId ?: "",
-                simInfo?.number ?: ""
+                context = context
             )
         } catch (e: Exception) {
             e.printStackTrace()

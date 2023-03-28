@@ -7,7 +7,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -33,7 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -46,10 +43,13 @@ import androidx.navigation.compose.rememberNavController
 import com.call_blocke.app.new_ui.navigation.BottomNavGraph
 import com.call_blocke.app.new_ui.navigation.Routes
 import com.call_blocke.app.new_ui.screens.home_screen.HomeViewModel
+import com.call_blocke.app.new_ui.screens.login_screen.AuthorizationViewModel
+import com.call_blocke.app.new_ui.screens.login_screen.LoginScreen
 import com.call_blocke.app.new_ui.screens.sim_card_info_screen.SimCardViewModel
+import com.call_blocke.app.new_ui.screens.task_screen.TasksViewModel
+import com.call_blocke.app.new_ui.widgets.IconWithBackground
 import com.call_blocke.app.screen.Banner
 import com.call_blocke.app.screen.SplashViewModel
-import com.call_blocke.app.screen.auth.AuthScreen
 import com.call_blocke.app.screen.auth.AuthViewModel
 import com.call_blocke.app.screen.intro.IntroScreen
 import com.call_blocke.db.SmsBlockerDatabase
@@ -60,10 +60,11 @@ class HolderActivity : ComponentActivity() {
     private val authViewModel: AuthViewModel by viewModels()
     private val simCardViewModel: SimCardViewModel by viewModels()
     private val splashViewModel: SplashViewModel by viewModels()
+    private val tasksViewModel: TasksViewModel by viewModels()
+    private val authorizationViewModel: AuthorizationViewModel by viewModels()
 
     @OptIn(
         ExperimentalAnimationApi::class, ExperimentalComposeUiApi::class,
-        ExperimentalMaterialApi::class, ExperimentalFoundationApi::class
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,7 +77,9 @@ class HolderActivity : ComponentActivity() {
             val isAppDefault by splashViewModel.isAppDefault.observeAsState(initial = null)
             val navController: NavHostController = rememberNavController()
             if (!isUserAuthorized) {
-                AuthScreen(authViewModel)
+                Them {
+                    LoginScreen(authorizationViewModel)
+                }
             } else {
                 if (isPermissionsGranted == true && isAppDefault == true)
                     Scaffold(bottomBar = { Them { BottomBar(navController = navController) } }) { padding ->
@@ -85,7 +88,8 @@ class HolderActivity : ComponentActivity() {
                                 BottomNavGraph(
                                     navController,
                                     homeViewModel = homeViewModel,
-                                    simCardViewModel = simCardViewModel
+                                    simCardViewModel = simCardViewModel,
+                                    tasksViewModel = tasksViewModel
                                 )
                             }
                         }
@@ -113,7 +117,8 @@ class HolderActivity : ComponentActivity() {
         val indexOfSelectedTab = routes.indexOfFirst { it.destination == currentDestination?.route }
         Box {
             BottomNavigation(
-                backgroundColor = MaterialTheme.colors.onBackground
+                backgroundColor = MaterialTheme.colors.onBackground,
+                contentColor = primary
             ) {
                 routes.forEach { route ->
                     AddItem(
@@ -160,7 +165,7 @@ class HolderActivity : ComponentActivity() {
                         0f
                     ),
                     size = Size(width = tabWidthWithPadding * drawingProgress, size.height),
-                    color = Color.Black,
+                    color = primary,
                     cornerRadius = CornerRadius(100f, 100f)
                 )
             }
@@ -174,6 +179,9 @@ class HolderActivity : ComponentActivity() {
         currentDestination: NavDestination?,
         navController: NavHostController
     ) {
+        val isSelected = currentDestination?.hierarchy?.any {
+            it.route == route.destination
+        } == true
         BottomNavigationItem(
             label = {
                 Text(
@@ -183,15 +191,24 @@ class HolderActivity : ComponentActivity() {
                 )
             },
             icon = {
-                Icon(
-                    painterResource(id = route.iconId),
-                    contentDescription = "Navigation Icon",
-                    tint = tabIconColor
-                )
+                if (isSelected) {
+                    IconWithBackground(
+                        iconDrawable = route.iconId,
+                        contentDescription = "Navigation Icon",
+                        tint = tabIconColor,
+                        background = lightBlue,
+                        paddingVertical = 0.dp,
+                        paddingHorizontal = 14.dp
+                    )
+                } else {
+                    Icon(
+                        painterResource(id = route.iconId),
+                        contentDescription = "Navigation Icon",
+                        tint = tabIconColor
+                    )
+                }
             },
-            selected = currentDestination?.hierarchy?.any {
-                it.route == route.destination
-            } == true,
+            selected = isSelected,
             onClick = {
                 if (route.destination != navController.currentDestination?.route) {
                     navController.navigate(route.destination) {
@@ -202,5 +219,4 @@ class HolderActivity : ComponentActivity() {
             },
         )
     }
-
 }

@@ -3,6 +3,7 @@ package com.call_blocke.app.new_ui.screens.home_screen
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -43,17 +44,26 @@ import androidx.navigation.NavHostController
 import com.call_blocke.app.BuildConfig
 import com.call_blocke.app.R
 import com.call_blocke.app.new_ui.Them
-import com.call_blocke.app.new_ui.buttonBackground
+import com.call_blocke.app.new_ui.backgroundConnected
+import com.call_blocke.app.new_ui.backgroundError
 import com.call_blocke.app.new_ui.buttonShape
 import com.call_blocke.app.new_ui.buttonTextColor
+import com.call_blocke.app.new_ui.darkGrey
+import com.call_blocke.app.new_ui.gray3
+import com.call_blocke.app.new_ui.gray6
 import com.call_blocke.app.new_ui.headerBackground
+import com.call_blocke.app.new_ui.itemStroke
+import com.call_blocke.app.new_ui.lightBlue
 import com.call_blocke.app.new_ui.navigation.Routes
+import com.call_blocke.app.new_ui.primary
 import com.call_blocke.app.new_ui.roboto700
 import com.call_blocke.app.new_ui.spacerColor
 import com.call_blocke.app.new_ui.tabIconColor
 import com.call_blocke.app.new_ui.textColor
-import com.call_blocke.app.new_ui.turnOnButtonBackground
+import com.call_blocke.app.new_ui.tintConnected
+import com.call_blocke.app.new_ui.tintError
 import com.call_blocke.app.new_ui.uniqueIdTextColor
+import com.call_blocke.app.new_ui.widgets.IconWithBackground
 import com.call_blocke.app.screen.main.OnLifecycleEvent
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocker.verification.domain.VerificationInfo
@@ -108,8 +118,7 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                 )
                 if (state.isFirstSimAvailable) {
                     Spacer(modifier = Modifier.height(20.dp))
-                    SimInfo(
-                        0,
+                    SimInfo(0,
                         state.deliveredFirstSim,
                         state.firstSimDayLimit,
                         state.firstSimVerificationState,
@@ -118,9 +127,7 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                         },
                         onVerifyClick = {
                             viewModel.verifySimCard(
-                                SimUtil.firstSim(context)?.iccId ?: "",
-                                0,
-                                context
+                                SimUtil.firstSim(context)?.iccId ?: "", 0, context
                             )
                         },
                         onClick = {
@@ -129,13 +136,11 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                                     0
                                 )
                             )
-                        }
-                    )
+                        })
                 }
                 if (state.isSecondSimAvailable) {
                     Spacer(modifier = Modifier.height(20.dp))
-                    SimInfo(
-                        1,
+                    SimInfo(1,
                         state.deliveredSecondSim,
                         state.secondSimDayLimit,
                         state.secondSimVerificationState,
@@ -153,8 +158,7 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                                     1
                                 )
                             )
-                        }
-                    )
+                        })
                 }
             }
         }
@@ -192,33 +196,59 @@ fun OutOfSms(simSlot: Int, sent: Int, limit: Int, onResetClick: () -> Unit) {
             .padding(vertical = 16.dp, horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_sim_card),
-            contentDescription = "Sim card"
+        IconWithBackground(
+            iconDrawable = R.drawable.ic_sim_card_alert,
+            contentDescription = "Sim card",
+            tint = tintError,
+            background = backgroundError
         )
         Spacer(modifier = Modifier.width(5.dp))
-        Column(Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = stringResource(id = R.string.simWithPlaceHolder, simSlot + 1),
-                style = MaterialTheme.typography.h5
+                style = MaterialTheme.typography.h5,
+                maxLines = 1
             )
             Text(
                 text = stringResource(id = R.string.simLimitIsFull),
                 style = MaterialTheme.typography.body2,
-                color = uniqueIdTextColor
+                color = darkGrey,
+                maxLines = 2
             )
         }
-        Text(text = "$sent / $limit", style = MaterialTheme.typography.h4)
-        Spacer(modifier = Modifier.width(10.dp))
+        Column(
+            Modifier
+                .width(IntrinsicSize.Min)
+                .padding(horizontal = 5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(Modifier.padding(horizontal = 15.dp), verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = "$sent",
+                    style = MaterialTheme.typography.h2,
+                    fontFamily = roboto700,
+                    color = tintError
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = "sms", style = MaterialTheme.typography.body2, color = tintError)
+            }
+            Box(
+                modifier = Modifier
+                    .height(1.dp)
+                    .background(gray6)
+                    .fillMaxWidth()
+            )
+            Text(text = "of $limit", style = MaterialTheme.typography.h5)
+        }
         Button(
             onClick = onResetClick,
-            colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground),
+            colors = ButtonDefaults.buttonColors(backgroundColor = primary),
             shape = buttonShape
         ) {
             Text(
                 text = stringResource(id = R.string.reset),
                 style = MaterialTheme.typography.h5,
-                color = buttonTextColor,
+                color = buttonTextColor, maxLines = 1
             )
         }
     }
@@ -226,9 +256,7 @@ fun OutOfSms(simSlot: Int, sent: Int, limit: Int, onResetClick: () -> Unit) {
 
 @Composable
 fun VerificationSimInfo(
-    simSlot: Int,
-    verificationState: VerificationInfo,
-    onVerifyClick: () -> Unit
+    simSlot: Int, verificationState: VerificationInfo, onVerifyClick: () -> Unit
 ) {
     Row(
         Modifier
@@ -236,29 +264,35 @@ fun VerificationSimInfo(
             .padding(vertical = 16.dp, horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_sim_card_alert),
-            contentDescription = "Sim card"
+        IconWithBackground(
+            iconDrawable = R.drawable.ic_sim_card_alert,
+            contentDescription = "Sim card",
+            tint = tintError,
+            background = backgroundError
         )
         Spacer(modifier = Modifier.width(5.dp))
-        Column(Modifier.weight(1f)) {
+        Column(
+            Modifier
+                .height(IntrinsicSize.Min)
+        ) {
             Text(
                 text = stringResource(id = R.string.simWithPlaceHolder, simSlot + 1),
-                style = MaterialTheme.typography.h5,
+                style = MaterialTheme.typography.h5
             )
             Text(
                 text = stringResource(id = R.string.simCardNotVerified),
                 style = MaterialTheme.typography.body2,
-                color = uniqueIdTextColor
+                color = darkGrey
             )
         }
+        Spacer(modifier = Modifier.weight(1f))
 
         if (verificationState.isVerificationInProgress()) {
             CircularProgressIndicator()
         } else {
             Button(
                 onClick = onVerifyClick,
-                colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground),
+                colors = ButtonDefaults.buttonColors(backgroundColor = primary),
                 shape = buttonShape,
                 enabled = verificationState.isNeedVerification()
             ) {
@@ -275,10 +309,7 @@ fun VerificationSimInfo(
 
 @Composable
 fun SimInfo(
-    simSlot: Int,
-    sent: Int,
-    limit: Int,
-    onClick: () -> Unit
+    simSlot: Int, sent: Int, limit: Int, onClick: () -> Unit
 ) {
     Row(
         Modifier
@@ -286,24 +317,52 @@ fun SimInfo(
             .padding(vertical = 16.dp, horizontal = 18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(id = R.drawable.ic_sim_card),
-            contentDescription = "Sim card"
+        IconWithBackground(
+            iconDrawable = if (simSlot == 0) R.drawable.ic_sim_01 else R.drawable.ic_sim_02,
+            contentDescription = "Sim card",
+            tint = primary
         )
         Spacer(modifier = Modifier.width(5.dp))
-        Text(
-            text = stringResource(id = R.string.simWithPlaceHolder, simSlot + 1),
-            style = MaterialTheme.typography.h5,
-            modifier = Modifier.weight(1f)
-        )
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(text = "$sent/", style = MaterialTheme.typography.h2, fontFamily = roboto700)
-            Text(text = "$limit", style = MaterialTheme.typography.h4)
+        Column(
+            Modifier
+                .height(IntrinsicSize.Min)
+        ) {
+            Text(
+                text = stringResource(id = R.string.simWithPlaceHolder, simSlot + 1),
+                style = MaterialTheme.typography.h5
+            )
+            Text(
+                text = stringResource(id = R.string.limit_for_today),
+                style = MaterialTheme.typography.body2,
+                color = darkGrey
+            )
+        }
+        Spacer(modifier = Modifier.weight(1f))
+        Column(
+            Modifier.width(IntrinsicSize.Min),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(Modifier.padding(horizontal = 15.dp), verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = "$sent",
+                    style = MaterialTheme.typography.h2,
+                    fontFamily = roboto700,
+                    color = primary
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = "sms", style = MaterialTheme.typography.body2, color = primary)
+            }
+            Box(
+                modifier = Modifier
+                    .height(1.dp)
+                    .background(gray6)
+                    .fillMaxWidth()
+            )
+            Text(text = "of $limit", style = MaterialTheme.typography.h5)
         }
         IconButton(onClick = onClick) {
             Icon(
-                painter = painterResource(id = R.drawable.ic_arrow_forward),
-                contentDescription = ""
+                painter = painterResource(id = R.drawable.ic_arrow_forward), contentDescription = ""
             )
         }
     }
@@ -312,17 +371,27 @@ fun SimInfo(
 
 @Composable
 private fun SmsInfoComponent(
-    componentName: String,
-    @DrawableRes
-    iconId: Int,
-    count: Int = 0
+    componentName: String, @DrawableRes iconId: Int, count: Int = 0
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Icon(painter = painterResource(id = iconId), contentDescription = componentName)
+        IconWithBackground(
+            iconDrawable = iconId,
+            tint = primary,
+            contentDescription = componentName
+        )
         Spacer(modifier = Modifier.height(12.dp))
         Text(text = componentName, style = MaterialTheme.typography.h5)
         Spacer(modifier = Modifier.height(12.dp))
-        Text(text = "$count", style = MaterialTheme.typography.h1)
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                text = "$count",
+                style = MaterialTheme.typography.h1,
+                fontFamily = roboto700,
+                color = primary
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(text = "sms", style = MaterialTheme.typography.body2, color = primary)
+        }
     }
 }
 
@@ -375,31 +444,37 @@ private fun WalletInfo(amount: Float) {
             Modifier
                 .fillMaxWidth()
                 .padding(vertical = 16.dp, horizontal = 26.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconWithBackground(
+                iconDrawable = R.drawable.ic_account_balance_wallet,
+                background = lightBlue,
+                tint = primary
+            )
+            Spacer(modifier = Modifier.width(10.dp))
             Column {
-                Icon(
-                    painter = painterResource(
-                        id = R.drawable.ic_account_balance_wallet
-                    ),
-                    contentDescription = "Amount"
+                Text(
+                    text = stringResource(id = R.string.amount), style = MaterialTheme.typography.h5
                 )
                 Text(
-                    text = stringResource(id = R.string.amount),
-                    style = MaterialTheme.typography.h5
+                    text = stringResource(id = R.string.current_balance),
+                    style = MaterialTheme.typography.body2,
+                    color = darkGrey
                 )
             }
+            Spacer(modifier = Modifier.weight(1f))
             Row(verticalAlignment = Alignment.Bottom) {
                 val doubleAsString: String = java.lang.String.valueOf(amount)
                 val indexOfDecimal = doubleAsString.indexOf(".")
                 Text(
                     text = "${doubleAsString.substring(0, indexOfDecimal)}.",
-                    style = MaterialTheme.typography.h1
+                    style = MaterialTheme.typography.h1,
+                    color = primary
                 )
                 Text(
                     text = "${doubleAsString.substring(indexOfDecimal + 1)} $",
-                    style = MaterialTheme.typography.h4
+                    style = MaterialTheme.typography.h4,
+                    color = primary
                 )
             }
         }
@@ -408,52 +483,49 @@ private fun WalletInfo(amount: Float) {
 
 @Composable
 private fun ConnectionState(
-    isConnected: Boolean,
-    isRunning: Boolean,
-    onStartStopClick: () -> Unit
+    isConnected: Boolean, isRunning: Boolean, onStartStopClick: () -> Unit
 ) {
     Container(Modifier.padding(vertical = 10.dp, horizontal = 12.dp)) {
         Row(
             Modifier
                 .fillMaxWidth()
                 .padding(start = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+
+            IconWithBackground(
+                iconDrawable = if (isConnected) R.drawable.ic_connected else R.drawable.ic_disconnected,
+                contentDescription = "Connection state",
+                tint = if (isConnected) tintConnected else tintError,
+                background = if (isConnected) backgroundConnected else backgroundError
+            )
+            Spacer(modifier = Modifier.width(12.dp))
             Column {
-                Icon(
-                    painter = painterResource(
-                        id = if (isConnected)
-                            R.drawable.ic_connected else R.drawable.ic_disconnected
-                    ),
-                    contentDescription = "Connection state"
-                )
                 Text(
                     text = stringResource(id = R.string.status),
-                    style = MaterialTheme.typography.h5
+                    style = MaterialTheme.typography.body2,
+                    color = darkGrey
+                )
+                Text(
+                    text = stringResource(
+                        id = if (isConnected) R.string.connected else R.string.disconnected
+                    ), style = MaterialTheme.typography.h3
                 )
             }
 
-            Text(
-                text = stringResource(
-                    id = if (isConnected)
-                        R.string.connected else R.string.disconnected
-                ),
-                style = MaterialTheme.typography.h3
-            )
+            Spacer(modifier = Modifier.weight(1f))
 
             Button(
                 onClick = onStartStopClick,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.size(64.dp),
-                colors = ButtonDefaults.buttonColors(backgroundColor = turnOnButtonBackground)
+                colors = ButtonDefaults.buttonColors(backgroundColor = lightBlue)
             ) {
                 Icon(
+                    tint = primary,
                     painter = painterResource(
-                        id = if (isRunning)
-                            R.drawable.ic_stop else R.drawable.ic_play_arrow
-                    ),
-                    contentDescription = ""
+                        id = if (isRunning) R.drawable.ic_stop else R.drawable.ic_play_arrow
+                    ), contentDescription = ""
                 )
             }
         }
@@ -473,9 +545,7 @@ fun Header(userName: String, initials: String, onLogoutClicked: () -> Unit) {
         Column(Modifier.weight(1f)) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = userName,
-                style = MaterialTheme.typography.h4,
-                color = textColor
+                text = userName, style = MaterialTheme.typography.h4, color = textColor
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
@@ -486,9 +556,9 @@ fun Header(userName: String, initials: String, onLogoutClicked: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(5.dp))
             Text(
-                text = "version ${BuildConfig.VERSION_NAME}",
-                style = MaterialTheme.typography.h5,
-                color = textColor
+                text = "v ${BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.body2,
+                color = gray3
             )
         }
         IconButton(modifier = Modifier.padding(top = 12.dp), onClick = onLogoutClicked) {
@@ -525,15 +595,14 @@ fun ProfilePicture(name: String) {
 
 @Composable
 fun Container(
-    modifier: Modifier = Modifier,
-    content: @Composable BoxScope.() -> Unit
-) =
-    Box(
-        Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(color = MaterialTheme.colors.onBackground)
-            .fillMaxWidth()
-            .then(modifier)
-    ) {
-        content()
-    }
+    modifier: Modifier = Modifier, content: @Composable BoxScope.() -> Unit
+) = Box(
+    Modifier
+        .clip(RoundedCornerShape(16.dp))
+        .border(1.dp, itemStroke, shape = RoundedCornerShape(16.dp))
+        .background(color = MaterialTheme.colors.onBackground)
+        .fillMaxWidth()
+        .then(modifier)
+) {
+    content()
+}
