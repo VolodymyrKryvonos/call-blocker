@@ -144,5 +144,6 @@
     <string name="confirmPassword">Confirm password</string>
     <string name="signUp">Sign up</string>
     <string name="invalidValue">Invalid value</string>
+    <string name="enable_ussd">Enable ussd commands</string>
 
 </resources>

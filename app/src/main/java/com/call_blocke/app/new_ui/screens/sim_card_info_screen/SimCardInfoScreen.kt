@@ -148,7 +148,8 @@ fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int = 0) {
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            SimCardInfoTab(tabs[currentTab].simInfo,
+            SimCardInfoTab(
+                tabs[currentTab].simInfo,
                 onNewLimitsSet = { dayLimit, monthLimit ->
                     viewModel.setNewLimitForSim(
                         context,

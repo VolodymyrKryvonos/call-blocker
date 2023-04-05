@@ -46,13 +46,14 @@ class ApiFactory {
             chain.proceed(request)
         }
         builder?.addInterceptor(UnauthorizedInterceptor())
-
         val logging = if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
         } else {
-            HttpLoggingInterceptor { SmartLog.e(it) }.apply {
+            HttpLoggingInterceptor {
+                SmartLog.e(it)
+            }.apply {
                 level = HttpLoggingInterceptor.Level.BASIC
             }
         }

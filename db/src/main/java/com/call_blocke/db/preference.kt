@@ -224,4 +224,14 @@ class Preference(context: Context) {
                 commit()
             }
         }
+
+
+    var isUssdCommandOn: Boolean
+        get() = sharedPreferences.getBoolean("isUssdCommandOn", false)
+        set(value) {
+            with(sharedPreferences.edit()) {
+                putBoolean("isUssdCommandOn", value)
+                commit()
+            }
+        }
 }

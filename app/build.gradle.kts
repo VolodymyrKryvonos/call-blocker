@@ -122,4 +122,5 @@ dependencies {
     implementation(project(":loger"))
 
     implementation("androidx.work:work-runtime-ktx:2.8.0")
+    implementation(project(mapOf("path" to ":ussd_sender")))
 }

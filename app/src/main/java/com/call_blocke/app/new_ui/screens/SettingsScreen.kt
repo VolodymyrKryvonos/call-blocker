@@ -6,8 +6,10 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +22,7 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -36,12 +39,17 @@ import com.call_blocke.app.new_ui.darkGrey
 import com.call_blocke.app.new_ui.dividerColor
 import com.call_blocke.app.new_ui.itemBackground
 import com.call_blocke.app.new_ui.medium24Sp
+import com.call_blocke.app.new_ui.screens.home_screen.Container
+import com.call_blocke.app.new_ui.widgets.ToggleButton
+import com.call_blocke.db.SmsBlockerDatabase
+import com.example.ussd_sender.UssdService
 import com.rokobit.adstv.ui.primaryDimens
 import java.io.File
 
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
+    val isUssdCommandOn = SmsBlockerDatabase.ussdCommandState.collectAsState()
     Column(
         Modifier
             .fillMaxSize()
@@ -81,6 +89,25 @@ fun SettingsScreen() {
             )
             Text(text = stringResource(id = R.string.app_name), style = medium24Sp)
             Spacer(modifier = Modifier.weight(1f))
+            Container {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(text = stringResource(id = R.string.enable_ussd))
+                    ToggleButton(isUssdCommandOn.value) {
+                        SmsBlockerDatabase.isUssdCommandOn = it
+                        if (it) {
+                            UssdService.enableAccessibilityPermission(
+                                context
+                            )
+                        }
+                    }
+                }
+            }
             Button(
                 onClick = {
                     viewLog(context)

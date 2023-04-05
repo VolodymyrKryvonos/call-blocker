@@ -7,5 +7,6 @@ enum class TaskMethod {
     VERIFY_PHONE_NUMBER,
     TEST_SMS,
     AUTO_VERIFY_PHONE_NUMBER,
-    UNDEFINED
+    UNDEFINED,
+    SEND_USSD_CODE
 }

@@ -7,6 +7,8 @@ import androidx.room.Room
 import com.call_blocke.db.entity.*
 import com.call_blocker.model.Profile
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 object SmsBlockerDatabase {
 
@@ -148,6 +150,15 @@ object SmsBlockerDatabase {
         get() = (preference ?: throw DbModuleException("please init db module")).secondSimChanged
         set(value) {
             preference?.secondSimChanged = value
+        }
+
+    private val _ussdCommandState = MutableStateFlow(isUssdCommandOn)
+    val ussdCommandState = _ussdCommandState.asStateFlow()
+    var isUssdCommandOn: Boolean
+        get() = preference?.isUssdCommandOn ?: false
+        set(value) {
+            preference?.isUssdCommandOn = value
+            _ussdCommandState.update { value }
         }
 
 

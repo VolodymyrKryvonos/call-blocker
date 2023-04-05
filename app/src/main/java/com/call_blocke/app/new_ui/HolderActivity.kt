@@ -50,14 +50,12 @@ import com.call_blocke.app.new_ui.screens.task_screen.TasksViewModel
 import com.call_blocke.app.new_ui.widgets.IconWithBackground
 import com.call_blocke.app.screen.Banner
 import com.call_blocke.app.screen.SplashViewModel
-import com.call_blocke.app.screen.auth.AuthViewModel
 import com.call_blocke.app.screen.intro.IntroScreen
 import com.call_blocke.db.SmsBlockerDatabase
 import kotlinx.coroutines.delay
 
 class HolderActivity : ComponentActivity() {
     private val homeViewModel: HomeViewModel by viewModels()
-    private val authViewModel: AuthViewModel by viewModels()
     private val simCardViewModel: SimCardViewModel by viewModels()
     private val splashViewModel: SplashViewModel by viewModels()
     private val tasksViewModel: TasksViewModel by viewModels()

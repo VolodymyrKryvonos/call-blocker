@@ -13,7 +13,7 @@ import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.call_blocker.verification.domain.SimCardVerifier
 import com.call_blocker.verification.domain.VerificationInfoStateHolder
 import com.example.common.SimUtil
-import com.rokobit.adstvv_unit.loger.SmartLog
+import com.example.ussd_sender.UssdService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -27,6 +27,7 @@ class SimCardViewModel : ViewModel(),
     private val taskRepository = RepositoryImp.taskRepository
     private val settingsRepository = RepositoryImp.settingsRepository
 
+    private val ussdService = UssdService()
     init {
         coroutineScope = viewModelScope
         viewModelScope.launch {
@@ -45,13 +46,6 @@ class SimCardViewModel : ViewModel(),
 
     fun simsInfo(context: Context) {
         viewModelScope.launch {
-            SmartLog.e(
-                "simsInfo firstSimSubInfo = ${SimUtil.firstSim(context)} secondSimSubInfo = ${
-                    SimUtil.secondSim(
-                        context
-                    )
-                }"
-            )
             state = state.copy(
                 firstSimSubInfo = SimUtil.firstSim(context),
                 secondSimSubInfo = SimUtil.secondSim(context)
