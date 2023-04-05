@@ -5,43 +5,23 @@ import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -58,13 +38,10 @@ import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.rest_work_imp.FullSimInfoModel
 import com.call_blocker.verification.domain.VerificationInfoStateHolder
 import com.example.common.SimUtil
+import com.example.ussd_sender.UssdService
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.rokobit.adstv.ui.element.AlertDialog
-import com.rokobit.adstv.ui.element.Button
-import com.rokobit.adstv.ui.element.Text
-import com.rokobit.adstv.ui.element.TextNormal
-import com.rokobit.adstv.ui.element.Title
+import com.rokobit.adstv.ui.element.*
 import com.rokobit.adstv.ui.errorColor
 import com.rokobit.adstv.ui.mainFont
 import com.rokobit.adstv.ui.primaryColor
@@ -95,7 +72,9 @@ fun MainScreen(navController: NavHostController, viewMode: MainViewModel = viewM
                     .fillMaxSize()
             ) {
                 Header(viewMode)
-
+                Box(modifier = Modifier.padding(horizontal = primaryDimens / 2)) {
+                    UssdSetting()
+                }
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -168,6 +147,52 @@ fun MainScreen(navController: NavHostController, viewMode: MainViewModel = viewM
 
 
 @Composable
+fun UssdSetting() {
+    val context = LocalContext.current
+    val isUssdCommandOn = SmsBlockerDatabase.ussdCommandState.collectAsState()
+    Card(
+        modifier = Modifier
+            .padding(5.dp),
+        shape = RoundedCornerShape(15),
+        backgroundColor = secondaryColor,
+        elevation = 6.dp
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(text = stringResource(id = R.string.enable_ussd))
+            ToggleButton(isUssdCommandOn.value) {
+                SmsBlockerDatabase.isUssdCommandOn = it
+                if (it) {
+                    UssdService.enableAccessibilityPermission(
+                        context
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ToggleButton(
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    IconToggleButton(checked = isChecked, onCheckedChange = {
+        onCheckedChange(it)
+    }) {
+        val icon =
+            painterResource(id = if (isChecked) R.drawable.toggle_on else R.drawable.toggle_off)
+        Image(icon, contentDescription = "Localized description")
+    }
+}
+
+
+@Composable
 fun OnLifecycleEvent(onEvent: (owner: LifecycleOwner, event: Lifecycle.Event) -> Unit) {
     val eventHandler = rememberUpdatedState(onEvent)
     val lifecycleOwner = rememberUpdatedState(LocalLifecycleOwner.current)
@@ -205,7 +230,7 @@ fun Header(mViewMode: MainViewModel) =
 
         }
 
-        Text(text = stringResource(id = R.string.main_header_amount) + " " + systemInfo.amount + " €")
+//        Text(text = stringResource(id = R.string.main_header_amount) + " " + systemInfo.amount + " €")
         Text(text = stringResource(id = R.string.main_header_left_count) + " " + systemInfo.leftCount)
         Text(text = stringResource(id = R.string.main_header_delivered_count) + " " + systemInfo.deliveredCount)
         Text(text = stringResource(id = R.string.main_header_undelivered_count) + " " + systemInfo.undeliveredCount)

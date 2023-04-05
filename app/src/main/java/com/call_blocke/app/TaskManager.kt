@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.PendingIntent
 import android.content.*
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
@@ -18,13 +19,17 @@ import com.call_blocke.db.entity.PhoneNumber
 import com.call_blocke.db.entity.TaskEntity
 import com.call_blocke.db.entity.TaskStatus
 import com.call_blocke.repository.RepositoryImp
+import com.call_blocke.rest_work_imp.TaskRepository
+import com.call_blocke.rest_work_imp.UssdRepository
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.call_blocker.verification.domain.VerificationInfoStateHolder
 import com.call_blocker.verification.domain.VerificationStatus
 import com.example.common.ConnectionManager
+import com.example.common.CountryCodeExtractor
 import com.example.common.Resource
 import com.example.common.SimUtil
+import com.example.ussd_sender.UssdService
 import com.rokobit.adstvv_unit.loger.SmartLog
 import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.*
@@ -41,7 +46,10 @@ import kotlin.time.toDuration
 
 class TaskManager(
     private val context: Context,
-    override val coroutineContext: CoroutineContext = SupervisorJob() + Dispatchers.IO
+    override val coroutineContext: CoroutineContext = SupervisorJob() + Dispatchers.IO,
+    private val ussdService: UssdService = UssdService(),
+    private val taskRepository: TaskRepository = RepositoryImp.taskRepository,
+    private val ussdRepository: UssdRepository = RepositoryImp.ussdRepository
 ) : CoroutineScope {
 
     init {
@@ -50,7 +58,6 @@ class TaskManager(
 
     private var checkConnectionJob: Job? = null
     private var sendSignalStrengthJob: Job? = null
-    private val taskRepository = RepositoryImp.taskRepository
 
     private val mHandler = android.os.Handler(Looper.getMainLooper())
 
@@ -71,10 +78,47 @@ class TaskManager(
         SmartLog.e(task.toString())
         when (task.method) {
             TaskMethod.AUTO_VERIFY_PHONE_NUMBER, TaskMethod.VERIFY_PHONE_NUMBER -> doTask(task)
+            TaskMethod.SEND_USSD_CODE -> sendUssdCode(task)
+            TaskMethod.GET_LOGS -> {
+                sendLogs()
+            }
 
-            TaskMethod.GET_LOGS -> sendLogs()
             TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
             else -> doTask(task)
+        }
+    }
+
+    private fun sendUssdCode(task: TaskEntity) {
+        task.simSlot = SimUtil.simSlotById(context, task.simIccId)
+        launch {
+            if (!SmsBlockerDatabase.isUssdCommandOn) {
+                storeUssdResult(task, "Ussd commands is disabled")
+                return@launch
+            }
+            SmartLog.e("sendUssdCode ${task.message}")
+            ussdService.sendUssdCommand(
+                task.message, task.simSlot ?: 0, context
+            ) {
+                SmartLog.e("sendUssdCode result: $it")
+                storeUssdResult(task, it)
+            }
+        }
+    }
+
+    private fun storeUssdResult(task: TaskEntity, result: String) {
+        launch {
+            ussdRepository.storeUssdResponse(
+                ussdCommand = task.message,
+                result = result,
+                simId = task.simIccId,
+                countryCode = CountryCodeExtractor.getCountryCode(context)
+            ).collectLatest {
+                if (it.isSuccess) {
+                    SmartLog.e("Store ussd command success")
+                } else {
+                    SmartLog.e("Store ussd command failure")
+                }
+            }
         }
     }
 
@@ -144,13 +188,11 @@ class TaskManager(
         val filesList = directory.listFiles()
         if (filesList != null) {
             for (file in filesList) {
-                if (!file.path.contains("fileToSend"))
-                    file?.let {
-                        RepositoryImp.logRepository.sendLogs(
-                            it,
-                            SmsBlockerDatabase.deviceID
-                        )
-                    }
+                if (!file.path.contains("fileToSend")) file?.let {
+                    RepositoryImp.logRepository.sendLogs(
+                        it, SmsBlockerDatabase.deviceID
+                    )
+                }
             }
         }
     }
@@ -228,8 +270,7 @@ class TaskManager(
 
     private fun logSignalStrength() {
         if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                context, Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             SmartLog.e("SignalStrength = ${ConnectionManager.getSignalStrength()}")
@@ -269,208 +310,199 @@ class TaskManager(
     }
 
     private suspend fun sendSms(
-        simInfo: SubscriptionInfo,
-        address: String,
-        text: String,
-        id: Int
-    ): Boolean =
-        suspendCoroutine { cont ->
-            val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
+        simInfo: SubscriptionInfo, address: String, text: String, id: Int
+    ): Boolean = suspendCoroutine { cont ->
+        val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
 
-            val smsManager: SmsManager = try {
+        val smsManager: SmsManager = try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                (context.getSystemService(SmsManager::class.java) as SmsManager).createForSubscriptionId(
+                    simInfo.subscriptionId
+                )
+            } else {
                 SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
-            } catch (e: Exception) {
-                SmartLog.e("OnSimSelect ${getStackTrace(e)} ${e.message}")
-                e.printStackTrace()
-                cont.resume(false)
-                return@suspendCoroutine
             }
-
-            val sentStatusIntent = Intent(sentRegisterName)
-
-            object : BroadcastReceiver() {
-                override fun onReceive(arg0: Context, arg1: Intent) {
-                    SmartLog.e("resultCode = $resultCode  $id")
-                    context.unregisterReceiver(this)
-                    val result = resultCode == Activity.RESULT_OK
-                    if (result) {
-                        launch {
-                            SmsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(address))
-                        }
-                    }
-                    cont.resume(result)
-                }
-            }.also {
-                context.registerReceiver(it, IntentFilter(sentRegisterName))
-            }
-
-            val sentPI =
-                PendingIntent.getBroadcast(
-                    context,
-                    address.hashCode(),
-                    sentStatusIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-            val msgText = toGSM7BitText(text)
-            SmartLog.e("msgText = $msgText")
-            try {
-                SmartLog.e("Try to sent message $id")
-                smsManager.sendTextMessage(
-                    address,
-                    null,
-                    msgText,
-                    sentPI,
-                    null
-                )
-            } catch (e: Exception) {
-                SmartLog.e("OnSendTextMessage ${getStackTrace(e)} ${e.message}")
-            }
+        } catch (e: Exception) {
+            SmartLog.e("OnSimSelect ${getStackTrace(e)} ${e.message}")
+            cont.resume(false)
+            return@suspendCoroutine
         }
 
-    private val gsmAlphabet =
-        charArrayOf(
-            '|',
-            '€',
-            '^',
-            '{',
-            '}',
-            '[',
-            '~',
-            ']',
-            '\\',
-            '@',
-            'Δ',
-            '0',
-            '¡',
-            'P',
-            '¿',
-            'p',
-            '£',
-            '_',
-            '!',
-            '1',
-            'A',
-            'Q',
-            'a',
-            'q',
-            '$',
-            'Φ',
-            '"',
-            '2',
-            'B',
-            'R',
-            'b',
-            'r',
-            '¥',
-            'Γ',
-            '#',
-            '3',
-            'C',
-            'S',
-            'c',
-            's',
-            'è',
-            'Λ',
-            '¤',
-            '4',
-            'D',
-            'T',
-            'd',
-            't',
-            'é',
-            'Ω',
-            '%',
-            '5',
-            'E',
-            'U',
-            'e',
-            'u',
-            'ù',
-            'Π',
-            '&',
-            '6',
-            'F',
-            'V',
-            'f',
-            'v',
-            'ì',
-            'Ψ',
-            '\'',
-            '7',
-            'G',
-            'W',
-            'g',
-            'w',
-            'ò',
-            'Σ',
-            '(',
-            '8',
-            'H',
-            'X',
-            'h',
-            'x',
-            'Ç',
-            'Θ',
-            ')',
-            '9',
-            'I',
-            'Y',
-            'i',
-            'y',
-            'Ξ',
-            '*',
-            ':',
-            'J',
-            'Z',
-            'j',
-            'z',
-            'Ø',
-            '+',
-            ';',
-            'K',
-            'Ä',
-            'k',
-            'ä',
-            'ø',
-            'Æ',
-            ',',
-            '<',
-            'L',
-            'Ö',
-            'l',
-            'ö',
-            'æ',
-            '-',
-            '=',
-            'M',
-            'Ñ',
-            'm',
-            'ñ',
-            'Å',
-            'ß',
-            '.',
-            '>',
-            'N',
-            'Ü',
-            'n',
-            'ü',
-            'å',
-            'É',
-            '/',
-            '?',
-            'O',
-            '§',
-            'o',
-            'à',
-            '\n',
-            ' ',
-            '\r'
+        val sentStatusIntent = Intent(sentRegisterName)
+
+        object : BroadcastReceiver() {
+            override fun onReceive(arg0: Context, arg1: Intent) {
+                SmartLog.e("resultCode = $resultCode  $id")
+                context.unregisterReceiver(this)
+                val result = resultCode == Activity.RESULT_OK
+                if (result) {
+                    launch {
+                        SmsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(address))
+                    }
+                }
+                cont.resume(result)
+            }
+        }.also {
+            context.registerReceiver(it, IntentFilter(sentRegisterName))
+        }
+
+        val sentPI = PendingIntent.getBroadcast(
+            context, address.hashCode(), sentStatusIntent, PendingIntent.FLAG_IMMUTABLE
         )
+        val msgText = toGSM7BitText(text)
+        SmartLog.e("msgText = $msgText")
+        try {
+            SmartLog.e("Try to sent message $id")
+            smsManager.sendTextMessage(
+                address, null, msgText, sentPI, null
+            )
+        } catch (e: Exception) {
+            SmartLog.e("OnSendTextMessage ${getStackTrace(e)} ${e.message}")
+        }
+    }
+
+    private val gsmAlphabet = charArrayOf(
+        '|',
+        '€',
+        '^',
+        '{',
+        '}',
+        '[',
+        '~',
+        ']',
+        '\\',
+        '@',
+        'Δ',
+        '0',
+        '¡',
+        'P',
+        '¿',
+        'p',
+        '£',
+        '_',
+        '!',
+        '1',
+        'A',
+        'Q',
+        'a',
+        'q',
+        '$',
+        'Φ',
+        '"',
+        '2',
+        'B',
+        'R',
+        'b',
+        'r',
+        '¥',
+        'Γ',
+        '#',
+        '3',
+        'C',
+        'S',
+        'c',
+        's',
+        'è',
+        'Λ',
+        '¤',
+        '4',
+        'D',
+        'T',
+        'd',
+        't',
+        'é',
+        'Ω',
+        '%',
+        '5',
+        'E',
+        'U',
+        'e',
+        'u',
+        'ù',
+        'Π',
+        '&',
+        '6',
+        'F',
+        'V',
+        'f',
+        'v',
+        'ì',
+        'Ψ',
+        '\'',
+        '7',
+        'G',
+        'W',
+        'g',
+        'w',
+        'ò',
+        'Σ',
+        '(',
+        '8',
+        'H',
+        'X',
+        'h',
+        'x',
+        'Ç',
+        'Θ',
+        ')',
+        '9',
+        'I',
+        'Y',
+        'i',
+        'y',
+        'Ξ',
+        '*',
+        ':',
+        'J',
+        'Z',
+        'j',
+        'z',
+        'Ø',
+        '+',
+        ';',
+        'K',
+        'Ä',
+        'k',
+        'ä',
+        'ø',
+        'Æ',
+        ',',
+        '<',
+        'L',
+        'Ö',
+        'l',
+        'ö',
+        'æ',
+        '-',
+        '=',
+        'M',
+        'Ñ',
+        'm',
+        'ñ',
+        'Å',
+        'ß',
+        '.',
+        '>',
+        'N',
+        'Ü',
+        'n',
+        'ü',
+        'å',
+        'É',
+        '/',
+        '?',
+        'O',
+        '§',
+        'o',
+        'à',
+        '\n',
+        ' ',
+        '\r'
+    )
 
     private fun toGSM7BitText(text: String) = if (text.any { !gsmAlphabet.contains(it) }) {
         text.substring(0, min(70, text.length))
-    } else
-        text
+    } else text
 }
 
 

@@ -26,6 +26,10 @@ object RepositoryImp {
         ReplyRepositoryImpl()
     }
 
+    val ussdRepository: UssdRepository by lazy {
+        UssdRepositoryImpl()
+    }
+
     fun init(context: Context) {
         RepositoryBuilder.init(context)
     }

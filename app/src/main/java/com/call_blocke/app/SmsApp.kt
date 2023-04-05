@@ -10,6 +10,7 @@ import com.call_blocke.app.worker_manager.ClearPhoneNumbersTableScheduler
 import com.call_blocke.db.SmsBlockerDatabase
 import com.call_blocke.repository.RepositoryImp
 import com.example.common.ConnectionManager
+import com.example.ussd_sender.UssdService
 import com.google.firebase.FirebaseApp
 import com.rokobit.adstvv_unit.loger.LogBuild
 import java.util.concurrent.TimeUnit
@@ -20,6 +21,7 @@ class SmsApp : Application() {
     override fun onCreate() {
         super.onCreate()
         SmsBlockerDatabase.init(context = this)
+        SmsBlockerDatabase.isUssdCommandOn = UssdService.hasAccessibilityPermission(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationService.createNotificationChannel(applicationContext)
         }
