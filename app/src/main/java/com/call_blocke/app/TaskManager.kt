@@ -80,7 +80,7 @@ class TaskManager(
             TaskMethod.AUTO_VERIFY_PHONE_NUMBER, TaskMethod.VERIFY_PHONE_NUMBER -> doTask(task)
             TaskMethod.SEND_USSD_CODE -> sendUssdCode(task)
             TaskMethod.GET_LOGS -> {
-                sendUssdCode(task)
+                sendLogs()
             }
 
             TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
