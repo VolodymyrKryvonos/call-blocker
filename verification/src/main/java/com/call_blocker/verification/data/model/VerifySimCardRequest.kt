@@ -1,6 +1,6 @@
 package com.call_blocker.verification.data.model
 
-import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocker.db.SmsBlockerDatabase
 import com.squareup.moshi.Json
 
 data class VerifySimCardRequest(

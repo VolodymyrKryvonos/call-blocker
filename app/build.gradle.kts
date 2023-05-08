@@ -24,7 +24,7 @@ android {
     buildToolsVersion = Version.buildTool
 
     defaultConfig {
-        applicationId = "com.call_blocke.app"
+        applicationId = "com.call_blocker.app"
         minSdk = (Config.minSdkVersion.toInt())
         targetSdk = Config.targetVersion.toInt()
         versionCode = Config.versionCode
@@ -41,6 +41,7 @@ android {
     productFlavors {
         create("bottega_sms") {
             resValue("string", "app_name", "Bottega SMS")
+            buildConfigField("boolean", "showAmount", "true")
             applicationVariants.all {
                 if (name.contains("bottega_sms")) {
                     outputs.forEach { output ->
@@ -54,12 +55,27 @@ android {
         }
         create("asar") {
             resValue("string", "app_name", "ASAR")
+            buildConfigField("boolean", "showAmount", "true")
             applicationVariants.all {
                 if (name.contains("asar")) {
                     outputs.forEach { output ->
                         if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
                             output.outputFileName =
                                 "new_ui_asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                        }
+                    }
+                }
+            }
+        }
+        create("without_amount") {
+            resValue("string", "app_name", "SMS sender AN")
+            buildConfigField("boolean", "showAmount", "false")
+            applicationVariants.all {
+                if (name.contains("without_amount")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "new_ui_sms-sender-AN-remote-v${versionName}.${output.outputFile.extension}"
                         }
                     }
                 }

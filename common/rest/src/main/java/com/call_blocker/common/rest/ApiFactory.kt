@@ -6,8 +6,8 @@
 
 package com.call_blocker.common.rest
 
-import com.call_blocke.db.SmsBlockerDatabase
-import com.rokobit.adstvv_unit.loger.SmartLog
+import com.call_blocker.db.SmsBlockerDatabase
+import com.call_blocker.loger.SmartLog
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.CacheControl
@@ -45,7 +45,7 @@ class ApiFactory {
 
             chain.proceed(request)
         }
-        builder?.addInterceptor(UnauthorizedInterceptor())
+//        builder?.addInterceptor(UnauthorizedInterceptor())
         val logging = if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY

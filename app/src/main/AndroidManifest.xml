@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.call_blocke.app">
+    package="com.call_blocker.app">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -51,7 +51,7 @@
     <uses-feature android:name="android.hardware.telephony" />
 
     <application
-        android:name=".SmsApp"
+        android:name="com.call_blocker.app.SmsApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="false"
@@ -74,7 +74,7 @@
         <!--        </activity>-->
 
         <activity
-            android:name=".new_ui.HolderActivity"
+            android:name="com.call_blocker.app.new_ui.HolderActivity"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -84,7 +84,7 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
+            android:name="com.call_blocker.app.MainActivity"
             android:directBootAware="true"
             android:exported="true"
             android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE">
@@ -104,7 +104,7 @@
         </activity>
 
         <service
-            android:name=".service.TaskExecutorService"
+            android:name="com.call_blocker.app.service.TaskExecutorService"
             android:directBootAware="true"
             android:exported="true"
             android:foregroundServiceType="phoneCall"
@@ -122,7 +122,7 @@
         </service>
 
         <receiver
-            android:name=".broad_cast.SmsReceiver"
+            android:name="com.call_blocker.app.broad_cast.SmsReceiver"
             android:directBootAware="true"
             android:enabled="true"
             android:exported="true"
@@ -134,7 +134,7 @@
         </receiver>
 
         <receiver
-            android:name=".broad_cast.MmsReceiver"
+            android:name="com.call_blocker.app.broad_cast.MmsReceiver"
             android:directBootAware="true"
             android:exported="true"
             android:permission="android.permission.BROADCAST_WAP_PUSH">
@@ -146,7 +146,7 @@
         </receiver>
 
         <receiver
-            android:name=".broad_cast.CallReceiver"
+            android:name="com.call_blocker.app.broad_cast.CallReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -155,7 +155,7 @@
         </receiver>
 
         <receiver
-            android:name=".broad_cast.SimSlotReceiver"
+            android:name="com.call_blocker.app.broad_cast.SimSlotReceiver"
             android:directBootAware="true"
             android:enabled="true"
             android:exported="true">
@@ -165,10 +165,10 @@
             </intent-filter>
         </receiver>
 
-        <service android:name=".service.ChangeSimCardNotifierService" />
+        <service android:name="com.call_blocker.app.service.ChangeSimCardNotifierService" />
 
         <service
-            android:name="com.example.ussd_sender.UssdResultReceiver"
+            android:name="com.call_blocker.ussd_sender.UssdResultReceiver"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
             <intent-filter>

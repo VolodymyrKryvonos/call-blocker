@@ -1,20 +1,20 @@
 package com.call_blocker.verification.domain
 
 import android.content.Context
-import com.call_blocke.db.SmsBlockerDatabase
+import com.call_blocker.common.CountryCodeExtractor
+import com.call_blocker.common.Resource
+import com.call_blocker.common.SimUtil
 import com.call_blocker.common.rest.AppRest
 import com.call_blocker.common.rest.Const
+import com.call_blocker.db.SmsBlockerDatabase
+import com.call_blocker.loger.SmartLog
+import com.call_blocker.loger.utils.getStackTrace
 import com.call_blocker.verification.data.VerificationRepository
 import com.call_blocker.verification.data.api.VerificationApi
 import com.call_blocker.verification.data.model.AutoVerificationRequest
 import com.call_blocker.verification.data.model.CheckSimCardRequest
 import com.call_blocker.verification.data.model.ConfirmSimCardVerificationRequest
 import com.call_blocker.verification.data.model.VerifySimCardRequest
-import com.example.common.CountryCodeExtractor
-import com.example.common.Resource
-import com.example.common.SimUtil
-import com.rokobit.adstvv_unit.loger.SmartLog
-import com.rokobit.adstvv_unit.loger.utils.getStackTrace
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 

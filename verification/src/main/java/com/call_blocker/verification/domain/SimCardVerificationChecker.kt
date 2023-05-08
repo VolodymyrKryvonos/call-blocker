@@ -1,16 +1,11 @@
 package com.call_blocker.verification.domain
 
 import android.content.Context
+import com.call_blocker.common.Resource
+import com.call_blocker.common.SimUtil
 import com.call_blocker.verification.data.VerificationRepository
-import com.example.common.Resource
-import com.example.common.SimUtil
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 interface SimCardVerificationChecker {

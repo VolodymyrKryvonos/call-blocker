@@ -1,10 +1,10 @@
 package com.call_blocker.verification.domain
 
 import android.content.Context
+import com.call_blocker.common.Resource
+import com.call_blocker.common.SimUtil
+import com.call_blocker.loger.SmartLog
 import com.call_blocker.verification.data.VerificationRepository
-import com.example.common.Resource
-import com.example.common.SimUtil
-import com.rokobit.adstvv_unit.loger.SmartLog
 import kotlinx.coroutines.flow.collectLatest
 
 class SimCardVerifier {

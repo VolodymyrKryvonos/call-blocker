@@ -1,8 +1,8 @@
 package com.call_blocker.verification.data
 
 import android.content.Context
+import com.call_blocker.common.Resource
 import com.call_blocker.verification.data.model.CheckSimCardResponse
-import com.example.common.Resource
 import kotlinx.coroutines.flow.Flow
 
 interface VerificationRepository {

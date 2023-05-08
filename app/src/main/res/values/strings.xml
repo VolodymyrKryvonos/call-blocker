@@ -42,7 +42,7 @@
 
     <string name="intro_welcome_title">Great!</string>
     <string name="intro_welcome_label">You had just opened the account</string>
-    <string name="intro_welcome_to_desc">To properly work application you have make setup.\nPlease click \"Next\" button to start setup.</string>
+    <string name="intro_welcome_to_desc">Please click \"Next\" to start setup</string>
     <string name="intro_welcome_next_btn_title">Next</string>
 
     <string name="intro_permissions_title">Allow Permission</string>
@@ -51,7 +51,7 @@
 
     <string name="intro_app_as_default_title">Set application as default SMS application</string>
     <string name="intro_app_as_default_label">App has to be as default SMS application for controlling black list</string>
-    <string name="intro_app_as_default_to_desc">If you allow please click \"Setup\" button and than select this application.</string>
+    <string name="intro_app_as_default_to_desc">To make app default for SMS please click \"Setup\" and than select this application</string>
     <string name="intro_app_as_default_next_btn_title">Setup</string>
     <string name="task_list_loading_text">Loading</string>
     <string name="black_list_remove_item_btn_title">Remove</string>

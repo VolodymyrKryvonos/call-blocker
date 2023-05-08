@@ -1,7 +1,7 @@
 package com.call_blocker.common.rest
 
-import com.rokobit.adstvv_unit.loger.SmartLog
-import com.rokobit.adstvv_unit.loger.utils.getStackTrace
+import com.call_blocker.loger.SmartLog
+import com.call_blocker.loger.utils.getStackTrace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
