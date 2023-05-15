@@ -28,4 +28,5 @@ dependencies {
     implementation(AppDependencies.base)
     implementation(project(mapOf("path" to ":loger")))
     implementation(project(mapOf("path" to ":common")))
+    implementation(project(mapOf("path" to ":ussd-library-kotlin")))
 }

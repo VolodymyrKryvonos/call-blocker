@@ -6,12 +6,14 @@ import android.app.PendingIntent
 import android.content.*
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import androidx.core.app.ActivityCompat
 import com.call_blocker.app.util.NotificationService
+import com.call_blocker.app.util.wakeScreen
 import com.call_blocker.app.worker_manager.SendingSMSWorker
 import com.call_blocker.common.ConnectionManager
 import com.call_blocker.common.CountryCodeExtractor
@@ -27,6 +29,7 @@ import com.call_blocker.loger.utils.getStackTrace
 import com.call_blocker.repository.RepositoryImp
 import com.call_blocker.rest_work_imp.TaskRepository
 import com.call_blocker.rest_work_imp.UssdRepository
+import com.call_blocker.ussd_sender.SessionResult
 import com.call_blocker.ussd_sender.UssdService
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
@@ -40,14 +43,12 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.math.min
 import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 
 
 class TaskManager(
     private val context: Context,
     override val coroutineContext: CoroutineContext = SupervisorJob() + Dispatchers.IO,
-    private val ussdService: UssdService = UssdService(),
     private val taskRepository: TaskRepository = RepositoryImp.taskRepository,
     private val ussdRepository: UssdRepository = RepositoryImp.ussdRepository
 ) : CoroutineScope {
@@ -59,7 +60,7 @@ class TaskManager(
     private var checkConnectionJob: Job? = null
     private var sendSignalStrengthJob: Job? = null
 
-    private val mHandler = android.os.Handler(Looper.getMainLooper())
+    private val mHandler = Handler(Looper.getMainLooper())
 
     private val resolver: ContentResolver = context.contentResolver
 
@@ -88,20 +89,41 @@ class TaskManager(
         }
     }
 
+
     private fun sendUssdCode(task: TaskEntity) {
         task.simSlot = SimUtil.simSlotById(context, task.simIccId)
+        val sessionCallback: (SessionResult) -> Unit = { result ->
+            SmartLog.e("sendUssdCode result: $result")
+            storeUssdResult(
+                task,
+                when (result) {
+                    is SessionResult.Error -> result.message
+                    is SessionResult.Success -> result.message
+                    SessionResult.Timeout -> "Session timeout"
+                }
+            )
+        }
         launch {
             if (!SmsBlockerDatabase.isUssdCommandOn) {
                 storeUssdResult(task, "Ussd commands is disabled")
                 return@launch
             }
             SmartLog.e("sendUssdCode ${task.message}")
-            ussdService.sendUssdCommand(
-                task.message, task.simSlot ?: 0, context
-            ) {
-                SmartLog.e("sendUssdCode result: $it")
-                storeUssdResult(task, it)
+            withContext(Dispatchers.Main){
+                wakeScreen(context)
             }
+            if (task.message == "stop") {
+                UssdService.closeSession()
+                return@launch
+            }
+            if (!UssdService.isSessionAlive) {
+                UssdService.startSession(
+                    task.message, task.simSlot ?: 0, context, sessionCallback
+                )
+            } else {
+                UssdService.selectMenu(task.message, sessionCallback)
+            }
+
         }
     }
 
@@ -160,7 +182,6 @@ class TaskManager(
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     fun checkConnection() {
         checkConnectionJob?.cancel()
         checkConnectionJob = launch {

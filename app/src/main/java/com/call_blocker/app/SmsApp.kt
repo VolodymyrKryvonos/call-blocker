@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit
 
 class SmsApp : Application() {
 
+
     override fun onCreate() {
         super.onCreate()
         SmsBlockerDatabase.init(context = this)
@@ -40,6 +41,4 @@ class SmsApp : Application() {
             )
         LogBuild.build(this)
     }
-
-
 }

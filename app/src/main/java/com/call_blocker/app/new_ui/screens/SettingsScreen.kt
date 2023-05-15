@@ -6,7 +6,16 @@ import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
@@ -25,7 +34,12 @@ import androidx.core.content.FileProvider
 import com.call_blocker.adstv.ui.primaryDimens
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.R
-import com.call_blocker.app.new_ui.*
+import com.call_blocker.app.new_ui.buttonBackground
+import com.call_blocker.app.new_ui.buttonTextColor
+import com.call_blocker.app.new_ui.darkGrey
+import com.call_blocker.app.new_ui.dividerColor
+import com.call_blocker.app.new_ui.itemBackground
+import com.call_blocker.app.new_ui.medium24Sp
 import com.call_blocker.app.new_ui.screens.home_screen.Container
 import com.call_blocker.app.new_ui.widgets.ToggleButton
 import com.call_blocker.db.SmsBlockerDatabase
@@ -73,8 +87,8 @@ fun SettingsScreen() {
                     size = primaryDimens * 4
                 )
             )
+            Spacer(modifier = Modifier.height(15.dp))
             Text(text = stringResource(id = R.string.app_name), style = medium24Sp)
-            Spacer(modifier = Modifier.weight(1f))
             Container {
                 Row(
                     Modifier
@@ -94,47 +108,10 @@ fun SettingsScreen() {
                     }
                 }
             }
-            Button(
-                onClick = {
-                    viewLog(context)
-                },
-                shape = RoundedCornerShape(100f),
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
-            ) {
-                Text(
-                    text = stringResource(id = R.string.viewLogs),
-                    style = MaterialTheme.typography.h5,
-                    color = buttonTextColor
-                )
-            }
-            Button(
-                onClick = {
-                    sendLogs(context)
-                },
-                shape = RoundedCornerShape(100f),
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
-            ) {
-                Text(
-                    text = stringResource(id = R.string.sendLogs),
-                    style = MaterialTheme.typography.h5,
-                    color = buttonTextColor
-                )
-            }
-            Button(
-                onClick = {
-                    clearLogs(context)
-                },
-                shape = RoundedCornerShape(100f),
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
-            ) {
-                Text(
-                    text = stringResource(id = R.string.clearLogs),
-                    style = MaterialTheme.typography.h5,
-                    color = buttonTextColor
-                )
+            Spacer(modifier = Modifier.weight(1f))
+
+            if (BuildConfig.logs) {
+                Logs(context)
             }
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -146,6 +123,52 @@ fun SettingsScreen() {
             )
             Spacer(modifier = Modifier.height(20.dp))
         }
+    }
+}
+
+@Composable
+fun Logs(context: Context) {
+    Button(
+        onClick = {
+            viewLog(context)
+        },
+        shape = RoundedCornerShape(100f),
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
+    ) {
+        Text(
+            text = stringResource(id = R.string.viewLogs),
+            style = MaterialTheme.typography.h5,
+            color = buttonTextColor
+        )
+    }
+    Button(
+        onClick = {
+            sendLogs(context)
+        },
+        shape = RoundedCornerShape(100f),
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
+    ) {
+        Text(
+            text = stringResource(id = R.string.sendLogs),
+            style = MaterialTheme.typography.h5,
+            color = buttonTextColor
+        )
+    }
+    Button(
+        onClick = {
+            clearLogs(context)
+        },
+        shape = RoundedCornerShape(100f),
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(backgroundColor = buttonBackground)
+    ) {
+        Text(
+            text = stringResource(id = R.string.clearLogs),
+            style = MaterialTheme.typography.h5,
+            color = buttonTextColor
+        )
     }
 }
 

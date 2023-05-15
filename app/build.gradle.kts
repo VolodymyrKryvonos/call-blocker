@@ -34,6 +34,8 @@ android {
         buildConfigField("int", "major", "${Config.major}")
         buildConfigField("int", "minor", "${Config.minor}")
         buildConfigField("int", "patch", "${Config.patch}")
+        buildConfigField("boolean", "showAmount", "true")
+        buildConfigField("boolean", "logs", "true")
     }
 
     flavorDimensions += "version"
@@ -41,7 +43,6 @@ android {
     productFlavors {
         create("bottega_sms") {
             resValue("string", "app_name", "Bottega SMS")
-            buildConfigField("boolean", "showAmount", "true")
             applicationVariants.all {
                 if (name.contains("bottega_sms")) {
                     outputs.forEach { output ->
@@ -55,7 +56,6 @@ android {
         }
         create("asar") {
             resValue("string", "app_name", "ASAR")
-            buildConfigField("boolean", "showAmount", "true")
             applicationVariants.all {
                 if (name.contains("asar")) {
                     outputs.forEach { output ->
@@ -70,6 +70,7 @@ android {
         create("without_amount") {
             resValue("string", "app_name", "SMS sender AN")
             buildConfigField("boolean", "showAmount", "false")
+            buildConfigField("boolean", "logs", "false")
             applicationVariants.all {
                 if (name.contains("without_amount")) {
                     outputs.forEach { output ->
@@ -137,6 +138,7 @@ dependencies {
 
     implementation(project(":loger"))
 
+    implementation(project(":ussd-library-kotlin"))
     implementation("androidx.work:work-runtime-ktx:2.8.0")
     implementation(project(mapOf("path" to ":ussd_sender")))
 }

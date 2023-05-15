@@ -8,7 +8,7 @@ object Const {
 
     const val sandboxDomain = "sandbox.free-tokens.info"
 
-    const val port = 8090
+    const val port = 8844
 
     const val url = "https://$domain/api/v1/"
 
