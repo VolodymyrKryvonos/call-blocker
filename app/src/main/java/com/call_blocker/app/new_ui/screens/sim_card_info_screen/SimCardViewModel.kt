@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.call_blocker.app.worker_manager.SendingSMSWorker
 import com.call_blocker.common.SimUtil
 import com.call_blocker.repository.RepositoryImp
-import com.call_blocker.ussd_sender.UssdService
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.call_blocker.verification.domain.SimCardVerifier
@@ -27,7 +26,6 @@ class SimCardViewModel : ViewModel(),
     private val taskRepository = RepositoryImp.taskRepository
     private val settingsRepository = RepositoryImp.settingsRepository
 
-    private val ussdService = UssdService()
     init {
         coroutineScope = viewModelScope
         viewModelScope.launch {

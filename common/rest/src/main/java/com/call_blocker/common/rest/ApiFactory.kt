@@ -45,7 +45,8 @@ class ApiFactory {
 
             chain.proceed(request)
         }
-//        builder?.addInterceptor(UnauthorizedInterceptor())
+        builder?.addInterceptor(AuthorizationInterceptor())
+        builder?.addInterceptor(UnauthorizedInterceptor())
         val logging = if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
@@ -89,6 +90,16 @@ class ApiFactory {
         const val CONNECT_TIMEOUT = DEFAULT_TIMEOUT
         const val WRITE_TIMEOUT = DEFAULT_TIMEOUT
         const val READ_TIMEOUT = DEFAULT_TIMEOUT
+    }
+}
+
+internal class AuthorizationInterceptor : Interceptor {
+    @Throws(IOException::class)
+    override fun intercept(chain: Chain): Response {
+        val request  = chain.request().newBuilder()
+            .addHeader("Authorization", "Bearer " + SmsBlockerDatabase.userToken)
+            .build();
+        return chain.proceed(request)
     }
 }
 

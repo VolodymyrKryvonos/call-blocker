@@ -16,8 +16,6 @@ class AppRest<T>(
     }
 
     fun build(): T {
-        apiFactory
-            .addHeader("Authorization", "Bearer $bearerToken")
         return apiFactory
             .buildRetrofit(baseUrl)
             .create(service)

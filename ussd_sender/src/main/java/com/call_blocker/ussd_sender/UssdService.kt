@@ -1,158 +1,114 @@
 package com.call_blocker.ussd_sender
 
 import android.accessibilityservice.AccessibilityServiceInfo
-import android.annotation.SuppressLint
-import android.annotation.TargetApi
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ServiceInfo
-import android.net.Uri
-import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
-import android.telecom.PhoneAccountHandle
-import android.telecom.TelecomManager
-import android.telephony.TelephonyManager
-import android.telephony.TelephonyManager.UssdResponseCallback
 import android.view.accessibility.AccessibilityManager
-import com.call_blocker.common.SimUtil
 import com.call_blocker.loger.SmartLog
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
+import com.romellfudi.ussdlibrary.USSDController
+import com.romellfudi.ussdlibrary.USSDServiceKT
 
 
-class UssdService {
-    private var receiver: BroadcastReceiver? = null
-    fun sendUssdCommand(
+object UssdService {
+    private val map = hashMapOf(
+        "KEY_LOGIN" to listOf("espere", "waiting", "loading", "esperando","running"),
+        "KEY_ERROR" to listOf("problema", "problem", "error", "null", "invalid")
+    )
+
+    private val handler = Handler(Looper.getMainLooper())
+    var isSessionAlive = false
+        private set
+
+    fun startSession(
         command: String,
         simSlot: Int = 0,
         context: Context,
-        onReceiveResult: (String) -> Unit
+        onReceiveResult: (SessionResult) -> Unit
     ) {
-        apiBelow26SendUssdCommand(command, simSlot, context, onReceiveResult)
+        SmartLog.e("Start session")
+        context.startService(Intent(context, USSDServiceKT::class.java))
+        USSDController.callUSSDInvoke(context, command, simSlot, map,
+            object : USSDController.CallbackInvoke {
+                override fun responseInvoke(message: String) {
+                    isSessionAlive = true
+                    startSessionCountdown(onReceiveResult)
+                    onReceiveResult(SessionResult.Success(message))
+                }
+
+                override fun over(message: String) {
+                    isSessionAlive = false
+                    onReceiveResult(SessionResult.Error(message))
+                }
+            })
     }
 
-    @SuppressLint("MissingPermission")
-    @TargetApi(26)
-    private suspend fun api26SendUssdCommand(command: String, simSlot: Int = 0, context: Context) =
-        suspendCoroutine { cont ->
-            val manager =
-                (context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager).createForSubscriptionId(
-                    SimUtil.simInfo(context, simSlot)?.subscriptionId ?: 0
+    private fun startSessionCountdown(onReceiveResult: (SessionResult) -> Unit) {
+        handler.postDelayedKt(60 * 1000) {
+            onReceiveResult(SessionResult.Timeout)
+            closeSession()
+        }
+    }
+
+    fun selectMenu(
+        menuItem: String,
+        onReceiveResult: (SessionResult) -> Unit
+    ) {
+
+        SmartLog.e("selectMenu")
+        USSDController.send(menuItem) {
+            onReceiveResult(SessionResult.Success(it))
+            handler.removeCallbacksAndMessages(null)
+            isSessionAlive = true
+            startSessionCountdown(onReceiveResult)
+        }
+    }
+
+    fun closeSession() {
+        SmartLog.e("CloseSession")
+        USSDController.cancel()
+        isSessionAlive = false
+        handler.removeCallbacksAndMessages(null)
+    }
+
+    fun hasAccessibilityPermission(
+        context: Context
+    ): Boolean {
+        val am: AccessibilityManager =
+            context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+        val enabledServices: List<AccessibilityServiceInfo> =
+            am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
+
+        for (enabledService in enabledServices) {
+            val enabledServiceInfo: ServiceInfo = enabledService.resolveInfo.serviceInfo
+            if (enabledServiceInfo.packageName.equals(context.packageName) && enabledServiceInfo.name.equals(
+                    USSDServiceKT::class.java.name
                 )
-            val handler = Handler(Looper.getMainLooper())
-            if (manager == null) {
-                cont.resume("ERROR")
-                return@suspendCoroutine
-            }
-            manager.sendUssdRequest(command, object : UssdResponseCallback() {
-                override fun onReceiveUssdResponse(
-                    telephonyManager: TelephonyManager,
-                    request: String,
-                    response: CharSequence
-                ) {
-                    super.onReceiveUssdResponse(telephonyManager, request, response)
-                    SmartLog.e("onReceiveUssdResponse $request $response ")
-                    cont.resume(response.toString())
-                }
-
-                override fun onReceiveUssdResponseFailed(
-                    telephonyManager: TelephonyManager,
-                    request: String,
-                    failureCode: Int
-                ) {
-                    super.onReceiveUssdResponseFailed(telephonyManager, request, failureCode)
-                    SmartLog.e("onReceiveUssdResponseFailed $request $failureCode")
-                    cont.resume("ERROR $failureCode")
-                }
-            }, handler)
-        }
-
-    @SuppressLint("UnspecifiedRegisterReceiverFlag", "MissingPermission")
-    private fun apiBelow26SendUssdCommand(
-        command: String,
-        simSlot: Int = 0,
-        context: Context,
-        onReceiveResult: (String) -> Unit
-    ) {
-        context.startService(Intent(context, UssdResultReceiver::class.java))
-        val intent =
-            Intent(Intent.ACTION_CALL, Uri.fromParts("tel", command, null))
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val extras = Bundle()
-        arrayOf(
-            "extra_asus_dial_use_dualsim",
-            "com.android.phone.extra.slot",
-            "slot",
-            "simslot",
-            "sim_slot",
-            "subscription",
-            "Subscription",
-            "phone",
-            "com.android.phone.DialingMode",
-            "simSlot",
-            "slot_id",
-            "simId",
-            "simnum",
-            "phone_type",
-            "slotId",
-            "slotIdx",
-            "simSlot"
-        ).forEach { extras.putInt(it, simSlot) }
-        extras.putBoolean(
-            TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE,
-            false
-        )
-        extras.putBoolean("com.android.phone.force.slot", true)
-        val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-        val phoneAccountHandleList: List<PhoneAccountHandle> =
-            telecomManager.callCapablePhoneAccounts
-        intent.putExtra(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, phoneAccountHandleList[simSlot])
-        intent.putExtras(extras)
-        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        context.startActivity(intent)
-        if (receiver != null) {
-            context.unregisterReceiver(receiver)
-        }
-        receiver = object : BroadcastReceiver() {
-            override fun onReceive(arg0: Context, intent: Intent) {
-                onReceiveResult(intent.getStringExtra(UssdResultReceiver.ussd) ?: "")
+            ) {
+                return true
             }
         }
-        context.registerReceiver(receiver, IntentFilter(UssdResultReceiver.ussdReceivedAction))
+        return false
     }
 
-    companion object {
-        fun hasAccessibilityPermission(
-            context: Context
-        ): Boolean {
-            val am: AccessibilityManager =
-                context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-            val enabledServices: List<AccessibilityServiceInfo> =
-                am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-
-            for (enabledService in enabledServices) {
-                val enabledServiceInfo: ServiceInfo = enabledService.resolveInfo.serviceInfo
-                if (enabledServiceInfo.packageName.equals(context.packageName) && enabledServiceInfo.name.equals(
-                        UssdResultReceiver::class.java.name
-                    )
-                ) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        fun enableAccessibilityPermission(context: Context) {
-            if (!hasAccessibilityPermission(context)) {
-                val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                context.startActivity(intent)
-
-                UssdService().sendUssdCommand("*101#", context = context) {}
-            }
+    fun enableAccessibilityPermission(context: Context) {
+        if (!hasAccessibilityPermission(context)) {
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            context.startActivity(intent)
         }
     }
+}
+
+sealed interface SessionResult {
+    object Timeout : SessionResult
+    class Success(val message: String) : SessionResult
+    class Error(val message: String) : SessionResult
+}
+
+
+fun Handler.postDelayedKt(delayMillis: Long, runnable: Runnable) {
+    postDelayed(runnable, delayMillis)
 }

@@ -68,9 +68,12 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
             .fillMaxSize()
             .background(MaterialTheme.colors.background)
     ) {
-        Header(state.getUserName(), state.getInitials()) {
-            viewModel.logOut(context)
-        }
+        Header(
+            state.getUserName(),
+            state.getInitials(),
+            onLogoutClicked = {
+                viewModel.logOut(context)
+            })
         Column(
             Modifier
                 .fillMaxSize()

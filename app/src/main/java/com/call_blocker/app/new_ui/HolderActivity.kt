@@ -29,6 +29,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.call_blocker.app.R
+import com.call_blocker.app.SmsApp
 import com.call_blocker.app.new_ui.navigation.BottomNavGraph
 import com.call_blocker.app.new_ui.navigation.Routes
 import com.call_blocker.app.new_ui.screens.home_screen.HomeViewModel
@@ -51,7 +52,6 @@ class HolderActivity : ComponentActivity() {
     private val splashViewModel: SplashViewModel by viewModels()
     private val tasksViewModel: TasksViewModel by viewModels()
     private val authorizationViewModel: AuthorizationViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         splashViewModel.initMe(this)

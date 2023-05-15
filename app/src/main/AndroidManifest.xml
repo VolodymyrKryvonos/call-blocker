@@ -30,6 +30,7 @@
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD"/>
 
 
     <!-- @SystemApi @hide Allows an application to call APIs that allow it to do interactions
@@ -76,6 +77,7 @@
         <activity
             android:name="com.call_blocker.app.new_ui.HolderActivity"
             android:exported="true"
+            android:launchMode="singleInstance"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -168,7 +170,7 @@
         <service android:name="com.call_blocker.app.service.ChangeSimCardNotifierService" />
 
         <service
-            android:name="com.call_blocker.ussd_sender.UssdResultReceiver"
+            android:name="com.romellfudi.ussdlibrary.USSDServiceKT"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
             android:exported="true">
             <intent-filter>
