@@ -42,7 +42,9 @@ import com.call_blocker.app.new_ui.itemBackground
 import com.call_blocker.app.new_ui.medium24Sp
 import com.call_blocker.app.new_ui.screens.home_screen.Container
 import com.call_blocker.app.new_ui.widgets.ToggleButton
+import com.call_blocker.common.SimUtil
 import com.call_blocker.db.SmsBlockerDatabase
+import com.call_blocker.loger.SmartLog
 import com.call_blocker.ussd_sender.UssdService
 import java.io.File
 
@@ -128,6 +130,7 @@ fun SettingsScreen() {
 
 @Composable
 fun Logs(context: Context) {
+    SmartLog.e("Imei = ${SimUtil.getImei(context)}")
     Button(
         onClick = {
             viewLog(context)

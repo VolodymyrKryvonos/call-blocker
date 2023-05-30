@@ -2,8 +2,10 @@ package com.call_blocker.common
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
+import android.telephony.TelephonyManager
 
 object SimUtil {
     @SuppressLint("MissingPermission")
@@ -48,5 +50,18 @@ object SimUtil {
     fun simSlotById(context: Context?, simId: String): Int {
         val simInfo = getSIMInfo(context)
         return simInfo?.firstOrNull { it.iccId.contains(simId) }?.simSlotIndex ?: -1
+    }
+
+    @SuppressLint("MissingPermission")
+    fun getImei(context: Context): String {
+        val telephonyManager =
+            (context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager).createForSubscriptionId(
+                0
+            )
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            telephonyManager.imei
+        } else {
+            telephonyManager.deviceId
+        }
     }
 }

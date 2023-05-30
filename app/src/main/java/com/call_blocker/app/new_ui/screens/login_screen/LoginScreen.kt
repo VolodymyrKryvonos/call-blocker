@@ -104,23 +104,27 @@ fun LoginScreen(viewModel: AuthorizationViewModel) {
                 )
             }
         }
-        Spacer(modifier = Modifier.height(22.dp))
-        Text(
-            text = stringResource(id = R.string.or),
-            style = MaterialTheme.typography.h5,
-            color = darkGrey
-        )
-        Spacer(modifier = Modifier.height(22.dp))
-        Text(
-            modifier = Modifier
-                .clickable {
-                    viewModel.isSignUp = !viewModel.isSignUp
-                }
-                .padding(8.dp),
-            text = stringResource(id = if (viewModel.isSignUp) R.string.signIn else R.string.createAccount),
-            style = MaterialTheme.typography.h5,
-            color = primary
-        )
+
+        if (BuildConfig.showAmount) {
+            Spacer(modifier = Modifier.height(22.dp))
+            Text(
+                text = stringResource(id = R.string.or),
+                style = MaterialTheme.typography.h5,
+                color = darkGrey
+            )
+            Spacer(modifier = Modifier.height(22.dp))
+
+            Text(
+                modifier = Modifier
+                    .clickable {
+                        viewModel.isSignUp = !viewModel.isSignUp
+                    }
+                    .padding(8.dp),
+                text = stringResource(id = if (viewModel.isSignUp) R.string.signIn else R.string.createAccount),
+                style = MaterialTheme.typography.h5,
+                color = primary
+            )
+        }
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = "v ${BuildConfig.VERSION_NAME}",
