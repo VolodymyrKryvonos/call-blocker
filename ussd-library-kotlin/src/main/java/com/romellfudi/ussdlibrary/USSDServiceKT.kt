@@ -92,6 +92,7 @@ open class USSDServiceKT : AccessibilityService() {
             "miuix.appcompat.app.AlertDialog",
             "com.android.phone.MMIDialogActivity",
             "androidx.appcompat.app.e",
+            "com.samsung.telephony.phone.mmi.SamsungMmiDialogActivity"
         ).contains(event.className)
     }
 

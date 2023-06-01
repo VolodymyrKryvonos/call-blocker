@@ -3,7 +3,11 @@ package com.call_blocker.app
 import android.Manifest
 import android.app.Activity
 import android.app.PendingIntent
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
@@ -35,8 +39,14 @@ import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.call_blocker.verification.domain.VerificationInfoStateHolder
 import com.call_blocker.verification.domain.VerificationStatus
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
@@ -91,6 +101,7 @@ class TaskManager(
 
 
     private fun sendUssdCode(task: TaskEntity) {
+        SmartLog.e("sendUssdCode $task")
         task.simSlot = SimUtil.simSlotById(context, task.simIccId)
         val sessionCallback: (SessionResult) -> Unit = { result ->
             SmartLog.e("sendUssdCode result: $result")
@@ -121,7 +132,13 @@ class TaskManager(
                     task.message, task.simSlot ?: 0, context, sessionCallback
                 )
             } else {
-                UssdService.selectMenu(task.message, sessionCallback)
+                try {
+                    UssdService.selectMenu(task.message, sessionCallback)
+                } catch (e: Exception) {
+                    UssdService.startSession(
+                        task.message, task.simSlot ?: 0, context, sessionCallback
+                    )
+                }
             }
 
         }

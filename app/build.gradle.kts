@@ -54,34 +54,34 @@ android {
                 }
             }
         }
-        create("asar") {
-            resValue("string", "app_name", "ASAR")
-            applicationVariants.all {
-                if (name.contains("asar")) {
-                    outputs.forEach { output ->
-                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                            output.outputFileName =
-                                "new_ui_asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
-                        }
-                    }
-                }
-            }
-        }
-        create("without_amount") {
-            resValue("string", "app_name", "SMS sender AN")
-            buildConfigField("boolean", "showAmount", "false")
-            buildConfigField("boolean", "logs", "false")
-            applicationVariants.all {
-                if (name.contains("without_amount")) {
-                    outputs.forEach { output ->
-                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                            output.outputFileName =
-                                "new_ui_sms-sender-AN-remote-v${versionName}.${output.outputFile.extension}"
-                        }
-                    }
-                }
-            }
-        }
+//        create("asar") {
+//            resValue("string", "app_name", "ASAR")
+//            applicationVariants.all {
+//                if (name.contains("asar")) {
+//                    outputs.forEach { output ->
+//                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+//                            output.outputFileName =
+//                                "new_ui_asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        create("without_amount") {
+//            resValue("string", "app_name", "SMS sender AN")
+//            buildConfigField("boolean", "showAmount", "false")
+//            buildConfigField("boolean", "logs", "false")
+//            applicationVariants.all {
+//                if (name.contains("without_amount")) {
+//                    outputs.forEach { output ->
+//                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+//                            output.outputFileName =
+//                                "new_ui_sms-sender-AN-remote-v${versionName}.${output.outputFile.extension}"
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
     compileOptions {

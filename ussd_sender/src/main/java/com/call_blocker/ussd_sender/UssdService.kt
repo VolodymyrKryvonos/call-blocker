@@ -9,13 +9,14 @@ import android.os.Looper
 import android.provider.Settings
 import android.view.accessibility.AccessibilityManager
 import com.call_blocker.loger.SmartLog
+import com.call_blocker.loger.utils.getStackTrace
 import com.romellfudi.ussdlibrary.USSDController
 import com.romellfudi.ussdlibrary.USSDServiceKT
 
 
 object UssdService {
     private val map = hashMapOf(
-        "KEY_LOGIN" to listOf("espere", "waiting", "loading", "esperando","running"),
+        "KEY_LOGIN" to listOf("espere", "waiting", "loading", "esperando", "running"),
         "KEY_ERROR" to listOf("problema", "problem", "error", "null", "invalid")
     )
 
@@ -29,21 +30,26 @@ object UssdService {
         context: Context,
         onReceiveResult: (SessionResult) -> Unit
     ) {
-        SmartLog.e("Start session")
-        context.startService(Intent(context, USSDServiceKT::class.java))
-        USSDController.callUSSDInvoke(context, command, simSlot, map,
-            object : USSDController.CallbackInvoke {
-                override fun responseInvoke(message: String) {
-                    isSessionAlive = true
-                    startSessionCountdown(onReceiveResult)
-                    onReceiveResult(SessionResult.Success(message))
-                }
+        try {
+            SmartLog.e("Start session")
+            context.startService(Intent(context, USSDServiceKT::class.java))
+            USSDController.callUSSDInvoke(context, command, simSlot, map,
+                object : USSDController.CallbackInvoke {
+                    override fun responseInvoke(message: String) {
+                        isSessionAlive = true
+                        startSessionCountdown(onReceiveResult)
+                        onReceiveResult(SessionResult.Success(message))
+                    }
 
-                override fun over(message: String) {
-                    isSessionAlive = false
-                    onReceiveResult(SessionResult.Error(message))
-                }
-            })
+                    override fun over(message: String) {
+                        isSessionAlive = false
+                        onReceiveResult(SessionResult.Error(message))
+                    }
+                })
+        } catch (e: Exception) {
+            SmartLog.e("UssdService startSession error: ${getStackTrace(e)}")
+            onReceiveResult(SessionResult.Error("Error occurred, try again"))
+        }
     }
 
     private fun startSessionCountdown(onReceiveResult: (SessionResult) -> Unit) {
@@ -57,7 +63,6 @@ object UssdService {
         menuItem: String,
         onReceiveResult: (SessionResult) -> Unit
     ) {
-
         SmartLog.e("selectMenu")
         USSDController.send(menuItem) {
             onReceiveResult(SessionResult.Success(it))
@@ -69,7 +74,11 @@ object UssdService {
 
     fun closeSession() {
         SmartLog.e("CloseSession")
-        USSDController.cancel()
+        try {
+            USSDController.cancel()
+        } catch (e: Exception) {
+            SmartLog.e("UssdService closeSession error: ${getStackTrace(e)}")
+        }
         isSessionAlive = false
         handler.removeCallbacksAndMessages(null)
     }
