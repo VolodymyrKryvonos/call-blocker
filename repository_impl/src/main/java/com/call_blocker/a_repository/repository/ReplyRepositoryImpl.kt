@@ -18,9 +18,15 @@ class ReplyRepositoryImpl : ReplyRepository {
             ReplyRest::class.java
         ).build()
 
-    override suspend fun storeReply(phone: String, msg: String, receivedDate: Long) {
+    override suspend fun storeReply(
+        phone: String,
+        msg: String,
+        receivedDate: Long,
+        simIccid: String?,
+        simSlot: Int?
+    ) {
         try {
-            replyRest.sendReply(ReplyBody(msg, phone, receivedDate))
+            replyRest.sendReply(ReplyBody(msg, phone, receivedDate, simIccid, simSlot))
         } catch (e: Exception) {
             SmartLog.e("Store reply: ${getStackTrace(e)}")
         }

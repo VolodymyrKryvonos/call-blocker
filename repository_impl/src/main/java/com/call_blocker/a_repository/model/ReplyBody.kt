@@ -6,5 +6,7 @@ data class ReplyBody(
     val message: String,
     val msisdn: String,
     val received_date: Long,
+    val simId: String?,
+    val simSlot: Int?,
     val unique_id: String = SmsBlockerDatabase.deviceID
 )

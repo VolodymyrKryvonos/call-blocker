@@ -5,13 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.telephony.SmsMessage
+import android.telephony.SubscriptionInfo
+import com.call_blocker.common.SimUtil
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
 import com.call_blocker.repository.RepositoryImp.replyRepository
 import com.call_blocker.verification.domain.SimCardVerifier
 import com.squareup.moshi.Json
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,7 +21,6 @@ import kotlinx.coroutines.launch
 class SmsReceiver : BroadcastReceiver() {
 
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
     override fun onReceive(context: Context, intent: Intent) {
         SmsBlockerDatabase.init(context)
         val bundle: Bundle?
@@ -31,15 +30,16 @@ class SmsReceiver : BroadcastReceiver() {
                 val pduObjects = bundle["pdus"] as Array<*>?
                 if (pduObjects != null) {
                     coroutineScope.launch {
-                        processSms(pduObjects, bundle)
+                        processSms(pduObjects, bundle, context)
                     }
                 }
             }
         }
     }
 
-    private suspend fun processSms(pduObjects: Array<*>, bundle: Bundle) {
-        val currentSMS = getIncomingMessage(pduObjects, bundle)
+    private suspend fun processSms(pduObjects: Array<*>, bundle: Bundle, context: Context) {
+        val currentSMS = getIncomingMessage(pduObjects, bundle, context)
+        SmartLog.e("processSms $currentSMS")
         storeReply(currentSMS)
         checkIsVerificationSms(currentSMS)
     }
@@ -70,11 +70,17 @@ class SmsReceiver : BroadcastReceiver() {
         replyRepository.storeReply(
             sms.senderNumber,
             sms.smsText,
-            sms.receiveDate
+            sms.receiveDate,
+            sms.simIccid,
+            sms.simSlot
         )
     }
 
-    private fun getIncomingMessage(pduObjects: Array<*>, bundle: Bundle): ReplyMessage {
+    private fun getIncomingMessage(
+        pduObjects: Array<*>,
+        bundle: Bundle,
+        context: Context
+    ): ReplyMessage {
         val smsText = StringBuilder()
         var senderNumber = ""
         var receivedDate = 0L
@@ -89,7 +95,53 @@ class SmsReceiver : BroadcastReceiver() {
             senderNumber = currentFrame.displayOriginatingAddress
             receivedDate = currentFrame.timestampMillis
         }
-        return ReplyMessage(receivedDate, smsText.toString(), senderNumber)
+
+        bundle.keySet().forEach {
+            SmartLog.e("Bundle sms $it: ${bundle[it]}")
+        }
+        val simInfo = getSimSubscriptionInfo(bundle, context)
+
+        return ReplyMessage(
+            receivedDate,
+            smsText.toString(),
+            senderNumber,
+            simInfo?.iccId,
+            simInfo?.simSlotIndex
+        )
+    }
+
+    private fun getSimSubscriptionInfo(bundle: Bundle, context: Context): SubscriptionInfo? {
+        val subscriptionId = bundle.getInt("subscription", -1)
+        val subscriptionIndex = bundle.getInt("android.telephony.extra.SUBSCRIPTION_INDEX", -1)
+        val slotIndex = bundle.getInt("android.telephony.extra.SLOT_INDEX", -1)
+
+        val subscriptionInfoList = SimUtil.getSIMInfo(context)
+        when {
+            subscriptionId != -1 -> {
+                for (subscriptionInfo in subscriptionInfoList ?: emptyList()) {
+                    if (subscriptionInfo.subscriptionId == subscriptionId) {
+                        return subscriptionInfo
+                    }
+                }
+            }
+
+            subscriptionIndex != -1 -> {
+                for (subscriptionInfo in subscriptionInfoList ?: emptyList()) {
+                    if (subscriptionInfo.subscriptionId == subscriptionIndex) {
+                        return subscriptionInfo
+                    }
+                }
+            }
+
+            else -> {
+                for (subscriptionInfo in subscriptionInfoList ?: emptyList()) {
+                    if (subscriptionInfo.simSlotIndex == slotIndex) {
+                        return subscriptionInfo
+                    }
+                }
+            }
+        }
+        return null
     }
 
 }
@@ -97,7 +149,9 @@ class SmsReceiver : BroadcastReceiver() {
 data class ReplyMessage(
     val receiveDate: Long,
     val smsText: String,
-    val senderNumber: String
+    val senderNumber: String,
+    val simIccid: String?,
+    val simSlot: Int?
 )
 
 data class VerificationSms(
