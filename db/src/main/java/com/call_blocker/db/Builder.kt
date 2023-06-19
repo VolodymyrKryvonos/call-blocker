@@ -1,16 +1,19 @@
 package com.call_blocker.db
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import androidx.room.Room
-import com.call_blocker.db.entity.*
+import com.call_blocker.db.entity.PhoneNumberDao
+import com.call_blocker.db.entity.ReplayTaskDao
+import com.call_blocker.db.entity.SystemDetailEntity
+import com.call_blocker.db.entity.TaskDao
+import com.call_blocker.db.entity.TaskStatusDao
 import com.call_blocker.model.Profile
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-object SmsBlockerDatabase {
+class SmsBlockerDatabase(context: Context) {
 
     private var preference: Preference? = null
 
@@ -19,8 +22,6 @@ object SmsBlockerDatabase {
     val userIsAuthLiveData = MutableStateFlow(false)
 
     val onSimChanged = MutableStateFlow(false)
-
-    var isInitialized: Boolean = false
 
     val isSimChanged: Boolean
         get() {
@@ -165,10 +166,7 @@ object SmsBlockerDatabase {
     val isSimChange: Boolean
         get() = secondSimChanged || firstSimChanged
 
-    @SuppressLint("HardwareIds")
-    fun init(context: Context) {
-        if (isInitialized)
-            return
+    init {
         preference = Preference(context)
 
         preference?.deviceID = fun(): String {
@@ -184,7 +182,6 @@ object SmsBlockerDatabase {
         ).build()
 
         userIsAuthLiveData.tryEmit(userToken != null)
-        isInitialized = true
     }
 
     class DbModuleException(override val message: String?) : Exception()

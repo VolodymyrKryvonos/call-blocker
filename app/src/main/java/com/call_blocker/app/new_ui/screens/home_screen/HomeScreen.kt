@@ -1,10 +1,33 @@
 package com.call_blocker.app.new_ui.screens.home_screen
 
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,9 +38,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.navigation.NavHostController
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.R
 import com.call_blocker.app.new_ui.backgroundConnected
@@ -40,26 +62,17 @@ import com.call_blocker.app.new_ui.tintConnected
 import com.call_blocker.app.new_ui.tintError
 import com.call_blocker.app.new_ui.uniqueIdTextColor
 import com.call_blocker.app.new_ui.widgets.IconWithBackground
-import com.call_blocker.app.screen.main.OnLifecycleEvent
-import com.call_blocker.common.SimUtil
-import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.verification.domain.VerificationInfo
 
+@Preview
 @Composable
-fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
-    val state = viewModel.state
+fun HomeScreen(
+    state: HomeScreenState = HomeScreenState(),
+    onEvent: (event: HomeScreenEvents) -> Unit = {},
+    onNewDestination: (destination: String) -> Unit = {}
+) {
     val context = LocalContext.current
     val spaceHeight = 14.dp
-    OnLifecycleEvent { _, event ->
-        when (event) {
-            Lifecycle.Event.ON_RESUME -> {
-                viewModel.reloadSystemInfo(context)
-                viewModel.checkSimCards(context)
-            }
-
-            else -> {}
-        }
-    }
     if (state.isLoading) {
         CircularProgressIndicator()
     }
@@ -69,10 +82,11 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
             .background(MaterialTheme.colors.background)
     ) {
         Header(
+            state.uniqueId,
             state.getUserName(),
             state.getInitials(),
             onLogoutClicked = {
-                viewModel.logOut(context)
+                onEvent(HomeScreenEvents.LogOutEvent(context))
             })
         Column(
             Modifier
@@ -81,11 +95,13 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                 .padding(horizontal = 15.dp, vertical = spaceHeight)
         ) {
             ConnectionState(isConnected = state.isConnected, isRunning = state.isRunning) {
-                if (viewModel.state.isRunning) {
-                    viewModel.stopExecutor(context)
-                } else {
-                    viewModel.runExecutor(context)
-                }
+                onEvent(
+                    if (state.isRunning) {
+                        HomeScreenEvents.StopExecutorEvent(context)
+                    } else {
+                        HomeScreenEvents.RunExecutorEvent(context)
+                    }
+                )
             }
             if (BuildConfig.showAmount) {
                 Spacer(modifier = Modifier.height(spaceHeight))
@@ -104,15 +120,13 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                     state.firstSimDayLimit,
                     state.firstSimVerificationState,
                     onResetClick = {
-                        viewModel.resetSim(0, context)
+                        onEvent(HomeScreenEvents.ResetSimEvent(context, 0))
                     },
                     onVerifyClick = {
-                        viewModel.verifySimCard(
-                            SimUtil.firstSim(context)?.iccId ?: "", 0, context
-                        )
+                        onEvent(HomeScreenEvents.VerifySimCardEvent(context, 0))
                     },
                     onClick = {
-                        navController.navigate(
+                        onNewDestination(
                             Routes.BottomNavigation.SimInfoScreen.getDestinationWithSimId(
                                 0
                             )
@@ -126,15 +140,13 @@ fun HomeScreen(viewModel: HomeViewModel, navController: NavHostController) {
                     state.secondSimDayLimit,
                     state.secondSimVerificationState,
                     onResetClick = {
-                        viewModel.resetSim(1, context)
+                        onEvent(HomeScreenEvents.ResetSimEvent(context, 1))
                     },
                     onVerifyClick = {
-                        viewModel.verifySimCard(
-                            SimUtil.secondSim(context)?.iccId ?: "", 1, context
-                        )
+                        onEvent(HomeScreenEvents.VerifySimCardEvent(context, 1))
                     },
                     onClick = {
-                        navController.navigate(
+                        onNewDestination(
                             Routes.BottomNavigation.SimInfoScreen.getDestinationWithSimId(
                                 1
                             )
@@ -513,7 +525,7 @@ private fun ConnectionState(
 }
 
 @Composable
-fun Header(userName: String, initials: String, onLogoutClicked: () -> Unit) {
+fun Header(deviceId: String, userName: String, initials: String, onLogoutClicked: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -529,7 +541,7 @@ fun Header(userName: String, initials: String, onLogoutClicked: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
-                text = SmsBlockerDatabase.deviceID,
+                text = deviceId,
                 color = uniqueIdTextColor,
                 style = MaterialTheme.typography.overline,
                 fontWeight = FontWeight.Light

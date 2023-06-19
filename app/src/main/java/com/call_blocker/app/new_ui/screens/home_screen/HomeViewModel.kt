@@ -1,18 +1,18 @@
 package com.call_blocker.app.new_ui.screens.home_screen
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocker.app.BuildConfig
+import com.call_blocker.app.new_ui.BaseViewModel
 import com.call_blocker.app.worker_manager.SendingSMSWorker
 import com.call_blocker.common.Resource
 import com.call_blocker.common.SimUtil
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
-import com.call_blocker.repository.RepositoryImp
+import com.call_blocker.rest_work_imp.SettingsRepository
+import com.call_blocker.rest_work_imp.TaskRepository
+import com.call_blocker.rest_work_imp.UserRepository
+import com.call_blocker.verification.data.VerificationRepository
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.call_blocker.verification.domain.SimCardVerifier
@@ -22,39 +22,61 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerificationCheckerImpl() {
-    private val settingsRepository = RepositoryImp.settingsRepository
-    private val taskRepository = RepositoryImp.taskRepository
-    private val userRepository = RepositoryImp.userRepository
-    private val simCardVerifier = SimCardVerifier()
-    var state by mutableStateOf(HomeScreenState())
-        private set
+class HomeViewModel(
+    private val settingsRepository: SettingsRepository,
+    private val taskRepository: TaskRepository,
+    private val userRepository: UserRepository,
+    private val simCardVerifier: SimCardVerifier,
+    private val smsBlockerDatabase: SmsBlockerDatabase,
+    verificationRepository: VerificationRepository
+) : BaseViewModel<HomeScreenState, HomeScreenEvents>(),
+    SimCardVerificationChecker by SimCardVerificationCheckerImpl(verificationRepository) {
+    override fun setInitialState() = HomeScreenState(uniqueId = smsBlockerDatabase.deviceID)
+
+    override fun handleEvent(event: HomeScreenEvents) {
+        when (event) {
+            HomeScreenEvents.CheckIsLatestVersionEvent -> checkIsLatestVersion()
+            HomeScreenEvents.CloseUpdateDialogEvent -> closeUpdateDialog()
+            is HomeScreenEvents.LogOutEvent -> logOut(event)
+            is HomeScreenEvents.ReloadSystemInfoEvent -> reloadSystemInfo(event)
+            is HomeScreenEvents.ResetSimEvent -> resetSim(event)
+            is HomeScreenEvents.RunExecutorEvent -> runExecutor(event)
+            is HomeScreenEvents.StopExecutorEvent -> stopExecutor(event)
+            is HomeScreenEvents.VerifySimCardEvent -> verifySimCard(event)
+        }
+    }
 
     init {
         coroutineScope = viewModelScope
         viewModelScope.launch {
-            state = state.copy(
-                isRunning = SendingSMSWorker.isRunning.value,
-                isConnected = taskRepository.connectionStatusFlow.value
-            )
+            setState {
+                state.value.copy(
+                    uniqueId = smsBlockerDatabase.deviceID,
+                    isRunning = SendingSMSWorker.isRunning.value,
+                    isConnected = taskRepository.connectionStatusFlow.value
+                )
+            }
             launch {
                 taskRepository.connectionStatusFlow.collectLatest {
-                    state = state.copy(isConnected = it)
+                    setState {
+                        state.value.copy(isConnected = it)
+                    }
                 }
             }
             launch {
                 SendingSMSWorker.isRunning.collectLatest {
-                    state = state.copy(isRunning = it)
+
+                    setState { state.value.copy(isRunning = it) }
                 }
             }
             launch {
                 VerificationInfoStateHolder.getStateHolderBySimSlotIndex(0).collectLatest {
-                    state = state.copy(firstSimVerificationState = it)
+                    setState { state.value.copy(firstSimVerificationState = it) }
                 }
             }
             launch {
                 VerificationInfoStateHolder.getStateHolderBySimSlotIndex(1).collectLatest {
-                    state = state.copy(secondSimVerificationState = it)
+                    setState { state.value.copy(secondSimVerificationState = it) }
                 }
             }
         }
@@ -62,15 +84,16 @@ class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
     }
 
     fun closeUpdateDialog() {
-        state = state.copy(showUpdateAppDialog = false)
+
+        setState { state.value.copy(showUpdateAppDialog = false) }
     }
 
     fun checkIsLatestVersion() {
-        state = state.copy(showUpdateAppDialog = !isVersionUpToDate())
+        setState { state.value.copy(showUpdateAppDialog = !isVersionUpToDate()) }
     }
 
     private fun isVersionUpToDate(): Boolean {
-        val profile = SmsBlockerDatabase.profile
+        val profile = smsBlockerDatabase.profile
 
         val isMajorHigherThenLatest = (profile?.latestMajorVersion ?: 0) < BuildConfig.major
         if (isMajorHigherThenLatest)
@@ -87,19 +110,19 @@ class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
         return isMajorUpToDate && isMinorUpToDate && isPatchUpToDate
     }
 
-    fun runExecutor(context: Context) {
-        if (state.isRunning)
+    fun runExecutor(event: HomeScreenEvents.RunExecutorEvent) {
+        if (state.value.isRunning)
             return
         viewModelScope.launch {
             settingsRepository.changeSimCard(
-                context
+                event.context
             )
         }
-        SendingSMSWorker.start(context = context)
+        SendingSMSWorker.start(context = event.context)
     }
 
-    fun stopExecutor(context: Context) {
-        SendingSMSWorker.stop(context = context)
+    fun stopExecutor(event: HomeScreenEvents.StopExecutorEvent) {
+        SendingSMSWorker.stop(context = event.context)
         notifyServerUserStopService()
     }
 
@@ -112,34 +135,38 @@ class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
         }
     }
 
-    fun reloadSystemInfo(context: Context) {
+    fun reloadSystemInfo(event: HomeScreenEvents.ReloadSystemInfoEvent) {
         viewModelScope.launch(Dispatchers.IO) {
             launch {
-                simsInfo(context)
+                simsInfo(event.context)
             }
             launch {
-                getSystemDetails(context)
+                getSystemDetails(event.context)
             }
             launch {
-                checkSimCards(context)
+                checkSimCards(event.context)
             }
         }
     }
 
     private suspend fun getSystemDetails(context: Context) {
-        state = state.copy(isLoading = true)
+
+        setState { state.value.copy(isLoading = true) }
         val systemDetail = userRepository.systemDetail(
             context
         )
-        state = state.copy(
-            firstName = systemDetail.firstName,
-            lastName = systemDetail.lastName,
-            isLoading = false,
-            amount = systemDetail.amount,
-            delivered = systemDetail.deliveredCount,
-            undelivered = systemDetail.undeliveredCount,
-            leftToSend = systemDetail.leftCount
-        )
+
+        setState {
+            state.value.copy(
+                firstName = systemDetail.firstName,
+                lastName = systemDetail.lastName,
+                isLoading = false,
+                amount = systemDetail.amount,
+                delivered = systemDetail.deliveredCount,
+                undelivered = systemDetail.undeliveredCount,
+                leftToSend = systemDetail.leftCount
+            )
+        }
     }
 
     private suspend fun simsInfo(context: Context) {
@@ -160,48 +187,54 @@ class HomeViewModel : ViewModel(), SimCardVerificationChecker by SimCardVerifica
             }
         }
 
-        state = state.copy(
-            deliveredFirstSim = deliveredFirstSim,
-            deliveredSecondSim = deliveredSecondSim,
-            firstSimDayLimit = limitFirstSim,
-            secondSimDayLimit = limitSecondSim,
-            isFirstSimAvailable = SimUtil.firstSim(context) != null,
-            isSecondSimAvailable = SimUtil.secondSim(context) != null
-        )
-    }
 
-    fun verifySimCard(simId: String, simSlot: Int, context: Context, phoneNumber: String = "") {
-        runExecutor(context)
-        viewModelScope.launch {
-            while (!state.isConnected) {
-                delay(1000)
-            }
-            simCardVerifier.verifySimCard(context, simSlot)
+        setState {
+            state.value.copy(
+                deliveredFirstSim = deliveredFirstSim,
+                deliveredSecondSim = deliveredSecondSim,
+                firstSimDayLimit = limitFirstSim,
+                secondSimDayLimit = limitSecondSim,
+                isFirstSimAvailable = SimUtil.firstSim(context) != null,
+                isSecondSimAvailable = SimUtil.secondSim(context) != null
+            )
         }
     }
 
-    fun logOut(context: Context) {
-        stopExecutor(context = context)
+    fun verifySimCard(event: HomeScreenEvents.VerifySimCardEvent) {
+        runExecutor(HomeScreenEvents.RunExecutorEvent(event.context))
+        viewModelScope.launch {
+            while (!state.value.isConnected) {
+                delay(1000)
+            }
+            simCardVerifier.verifySimCard(event.context, event.simSlot)
+        }
+    }
+
+    fun logOut(event: HomeScreenEvents.LogOutEvent) {
+        stopExecutor(HomeScreenEvents.StopExecutorEvent(event.context))
         userRepository.logOut()
     }
 
-    fun resetSim(simSlotID: Int, context: Context) = viewModelScope.launch(Dispatchers.IO) {
-        state = state.copy(isLoading = true)
+    fun resetSim(event: HomeScreenEvents.ResetSimEvent) = viewModelScope.launch(Dispatchers.IO) {
+
+        setState { state.value.copy(isLoading = true) }
         try {
-            val simInfo = SimUtil.simInfo(context, simSlotID)
             settingsRepository.refreshDataForSim(
-                simSlot = simSlotID, context = context
+                simSlot = event.simSlot, context = event.context
             )
 
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        state = if (simSlotID == 0) {
-            state.copy(deliveredFirstSim = 0)
-        } else {
-            state.copy(deliveredSecondSim = 0)
+
+        setState {
+            if (event.simSlot == 0) {
+                state.value.copy(deliveredFirstSim = 0)
+            } else {
+                state.value.copy(deliveredSecondSim = 0)
+            }
         }
-        taskRepository.clearFor(simIndex = simSlotID)
-        state = state.copy(isLoading = false)
+        taskRepository.clearFor(simIndex = event.simSlot)
+        setState { state.value.copy(isLoading = false) }
     }
 }

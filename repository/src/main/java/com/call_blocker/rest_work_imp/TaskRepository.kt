@@ -1,24 +1,20 @@
 package com.call_blocker.rest_work_imp
 
-import com.call_blocker.db.Preference
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.TaskMethod
 import com.call_blocker.db.entity.TaskEntity
 import com.call_blocker.db.entity.TaskStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import java.util.*
+import java.util.Calendar
+import java.util.TimeZone
 
-abstract class TaskRepository {
+abstract class TaskRepository(private val smsBlockerDatabase: SmsBlockerDatabase) {
 
-    var preference: Preference? = null
-
-    private val taskDao = SmsBlockerDatabase.taskDao
+    private val taskDao = smsBlockerDatabase.taskDao
 
     protected suspend fun task(id: Int) =
         taskDao.findByID(id) ?: TaskEntity(-1, TaskMethod.UNDEFINED, "", "", simIccId = "")
-
-    protected abstract suspend fun confirmTask(data: List<TaskEntity>)
 
     abstract fun reconnect()
 
@@ -50,10 +46,10 @@ abstract class TaskRepository {
     suspend fun taskOnDelivered(taskEntity: TaskEntity) {
         when (taskEntity.simSlot) {
             0 -> {
-                SmsBlockerDatabase.smsTodaySentFirstSim++
+                smsBlockerDatabase.smsTodaySentFirstSim++
             }
             1 -> {
-                SmsBlockerDatabase.smsTodaySentSecondSim++
+                smsBlockerDatabase.smsTodaySentSecondSim++
             }
             else -> {}
         }

@@ -7,7 +7,5 @@ data class GetProfileRequest(
     @Json(name = "app_ver")
     val appVersion: String,
     @Json(name = "protocol_ver")
-    val protocolVersion: String,
-    @Json(name = "unique_id")
-    val uniqueId: String
+    val protocolVersion: String
 )

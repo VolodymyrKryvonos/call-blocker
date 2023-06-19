@@ -4,10 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,12 +27,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.call_blocker.app.R
-import com.call_blocker.app.SmsApp
 import com.call_blocker.app.new_ui.navigation.BottomNavGraph
 import com.call_blocker.app.new_ui.navigation.Routes
+import com.call_blocker.app.new_ui.screens.home_screen.HomeScreenEvents
 import com.call_blocker.app.new_ui.screens.home_screen.HomeViewModel
 import com.call_blocker.app.new_ui.screens.login_screen.AuthorizationViewModel
 import com.call_blocker.app.new_ui.screens.login_screen.LoginScreen
+import com.call_blocker.app.new_ui.screens.settings_screen.SettingsViewModel
 import com.call_blocker.app.new_ui.screens.sim_card_info_screen.SimCardViewModel
 import com.call_blocker.app.new_ui.screens.task_screen.TasksViewModel
 import com.call_blocker.app.new_ui.widgets.AlertDialog
@@ -45,40 +44,49 @@ import com.call_blocker.app.screen.intro.IntroScreen
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.ussd_sender.UssdService
 import kotlinx.coroutines.delay
+import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class HolderActivity : ComponentActivity() {
-    private val homeViewModel: HomeViewModel by viewModels()
-    private val simCardViewModel: SimCardViewModel by viewModels()
-    private val splashViewModel: SplashViewModel by viewModels()
-    private val tasksViewModel: TasksViewModel by viewModels()
-    private val authorizationViewModel: AuthorizationViewModel by viewModels()
+    private val homeViewModel: HomeViewModel by viewModel()
+    private val simCardViewModel: SimCardViewModel by viewModel()
+    private val splashViewModel: SplashViewModel by viewModel()
+    private val tasksViewModel: TasksViewModel by viewModel()
+    private val settingsViewModel: SettingsViewModel by viewModel()
+    private val authorizationViewModel: AuthorizationViewModel by viewModel()
+    private val smsBlockerDatabase: SmsBlockerDatabase by inject()
+
+    private var navController: NavHostController? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         splashViewModel.initMe(this)
-        simCardViewModel.simsInfo(this)
+        if (splashViewModel.isPermissionGranted.value == true && splashViewModel.isAppDefault.value == true)
+            simCardViewModel.simsInfo(this)
         setContent {
-            val isUserAuthorized by SmsBlockerDatabase
+            val isUserAuthorized by smsBlockerDatabase
                 .userIsAuthLiveData
-                .collectAsState(initial = SmsBlockerDatabase.userToken != null)
+                .collectAsState(initial = smsBlockerDatabase.userToken != null)
+
             val isPermissionsGranted by splashViewModel.isPermissionGranted.observeAsState(initial = null)
             val isAppDefault by splashViewModel.isAppDefault.observeAsState(initial = null)
-            val navController: NavHostController = rememberNavController()
-            Log.e("isAppDefault", "$isAppDefault")
-            Log.e("isPermissionsGranted", "$isPermissionsGranted")
+
+            navController = rememberNavController()
+
             if (!isUserAuthorized) {
                 Them {
                     LoginScreen(authorizationViewModel)
                 }
             } else {
                 if (isPermissionsGranted == true && isAppDefault == true)
-                    Scaffold(bottomBar = { Them { BottomBar(navController = navController) } }) { padding ->
+                    Scaffold(bottomBar = { Them { BottomBar(navController = navController!!) } }) { padding ->
                         Them {
                             Box(modifier = Modifier.padding(padding)) {
                                 BottomNavGraph(
-                                    navController,
+                                    navController!!,
                                     homeViewModel = homeViewModel,
                                     simCardViewModel = simCardViewModel,
-                                    tasksViewModel = tasksViewModel
+                                    tasksViewModel = tasksViewModel,
+                                    settingsViewModel = settingsViewModel
                                 )
                             }
                         }
@@ -95,15 +103,27 @@ class HolderActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+
+        when (navController?.currentDestination?.route) {
+            Routes.BottomNavigation.HomeScreen.destination -> {
+                homeViewModel.reloadSystemInfo(HomeScreenEvents.ReloadSystemInfoEvent(this))
+                homeViewModel.checkSimCards(this)
+            }
+
+            Routes.BottomNavigation.SimInfoScreen.destination -> {
+                simCardViewModel.simsInfo(this)
+            }
+        }
+        simCardViewModel.simsInfo(this)
         homeViewModel.checkIsLatestVersion()
-        SmsBlockerDatabase.isUssdCommandOn = UssdService.hasAccessibilityPermission(this)
+        smsBlockerDatabase.isUssdCommandOn = UssdService.hasAccessibilityPermission(this)
     }
 
     @Composable
     private fun UpdateAppVersionDialog() {
         Them {
-            if (homeViewModel.state.showUpdateAppDialog) {
-                val profile = SmsBlockerDatabase.profile
+            if (homeViewModel.state.value.showUpdateAppDialog) {
+                val profile = smsBlockerDatabase.profile
                 AlertDialog(
                     title = stringResource(id = R.string.update_application),
                     message = stringResource(

@@ -1,4 +1,4 @@
-package com.call_blocker.app.new_ui.screens
+package com.call_blocker.app.new_ui.screens.settings_screen
 
 import android.content.Context
 import android.content.Intent
@@ -22,13 +22,13 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.call_blocker.adstv.ui.primaryDimens
@@ -43,15 +43,17 @@ import com.call_blocker.app.new_ui.medium24Sp
 import com.call_blocker.app.new_ui.screens.home_screen.Container
 import com.call_blocker.app.new_ui.widgets.ToggleButton
 import com.call_blocker.common.SimUtil
-import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
 import com.call_blocker.ussd_sender.UssdService
 import java.io.File
 
+@Preview
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(
+    state: SettingsScreenState = SettingsScreenState(),
+    onEvent: (event: SettingsEvent) -> Unit = {}
+) {
     val context = LocalContext.current
-    val isUssdCommandOn = SmsBlockerDatabase.ussdCommandState.collectAsState()
     Column(
         Modifier
             .fillMaxSize()
@@ -100,12 +102,14 @@ fun SettingsScreen() {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(text = stringResource(id = R.string.enable_ussd))
-                    ToggleButton(isUssdCommandOn.value) {
-                        SmsBlockerDatabase.isUssdCommandOn = it
+                    ToggleButton(state.isUssdOn) {
                         if (it) {
+                            onEvent(SettingsEvent.TurnOnUssd)
                             UssdService.enableAccessibilityPermission(
                                 context
                             )
+                        } else {
+                            onEvent(SettingsEvent.TurnOffUssd)
                         }
                     }
                 }

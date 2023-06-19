@@ -6,7 +6,7 @@ import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.entity.SystemDetailEntity
 import kotlinx.coroutines.flow.Flow
 
-abstract class UserRepository {
+abstract class UserRepository(protected val smsBlockerDatabase: SmsBlockerDatabase) {
 
     /**
      * Implement rest
@@ -51,8 +51,8 @@ abstract class UserRepository {
         }
 
         if (userToken != null) {
-            SmsBlockerDatabase.userToken = userToken
-            SmsBlockerDatabase.userPassword = password
+            smsBlockerDatabase.userToken = userToken
+            smsBlockerDatabase.userPassword = password
         }
 
         return userToken != null
@@ -80,8 +80,8 @@ abstract class UserRepository {
         }
 
         if (userToken != null) {
-            SmsBlockerDatabase.userToken = userToken
-            SmsBlockerDatabase.userPassword = password
+            smsBlockerDatabase.userToken = userToken
+            smsBlockerDatabase.userPassword = password
         }
 
         return userToken != null
@@ -90,21 +90,15 @@ abstract class UserRepository {
     suspend fun systemDetail(
         context: Context
     ): SystemDetailEntity {
-        SmsBlockerDatabase.systemDetail = loadSystemDetail(
+        smsBlockerDatabase.systemDetail = loadSystemDetail(
             context
         )
-        return SmsBlockerDatabase.systemDetail
+        return smsBlockerDatabase.systemDetail
     }
 
     fun logOut() {
-        SmsBlockerDatabase.userToken = null
+        smsBlockerDatabase.userToken = null
     }
 
-    val deviceID = SmsBlockerDatabase.deviceID
-
-    fun userName() = SmsBlockerDatabase.userName
-
-    fun userPassword() = SmsBlockerDatabase.userPassword
-
-
+    val deviceID = smsBlockerDatabase.deviceID
 }

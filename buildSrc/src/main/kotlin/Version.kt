@@ -8,4 +8,5 @@ object Version {
     const val compose = "1.3.1"
     const val lifecycle_version = "2.3.1"
     const val paging_version = "3.0.0"
+    const val koin = "3.4.2"
 }

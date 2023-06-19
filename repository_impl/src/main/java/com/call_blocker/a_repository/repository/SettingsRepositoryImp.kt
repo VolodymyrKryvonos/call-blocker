@@ -10,7 +10,6 @@ import com.call_blocker.common.ConnectionManager
 import com.call_blocker.common.CountryCodeExtractor
 import com.call_blocker.common.Resource
 import com.call_blocker.common.SimUtil
-import com.call_blocker.common.rest.AppRest
 import com.call_blocker.common.rest.Const
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
@@ -23,14 +22,29 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 
-class SettingsRepositoryImp : SettingsRepository() {
-
-    private val settingsRest: SettingsRest
-        get() = AppRest(
-            Const.url,
-            SmsBlockerDatabase.userToken ?: "",
-            SettingsRest::class.java
-        ).build()
+class SettingsRepositoryImp(
+    private val settingsRest: SettingsRest,
+    private val smsBlockerDatabase: SmsBlockerDatabase
+) : SettingsRepository {
+    override suspend fun setSmsPerDay(
+        context: Context,
+        smsPerDaySimFirst: Int,
+        smsPerDaySimSecond: Int,
+        smsPerMonthSimFirst: Int,
+        smsPerMonthSimSecond: Int
+    ) {
+        try {
+            updateSmsPerDay(
+                context,
+                smsPerDaySimFirst,
+                smsPerDaySimSecond,
+                smsPerMonthSimFirst,
+                smsPerMonthSimSecond
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
     override suspend fun updateSmsPerDay(
         context: Context,
@@ -73,10 +87,10 @@ class SettingsRepositoryImp : SettingsRepository() {
                 )
             )
 
-            SmsBlockerDatabase.smsPerDaySimFirst = smsPerDaySimFirst
-            SmsBlockerDatabase.smsPerDaySimSecond = smsPerDaySimSecond
-            SmsBlockerDatabase.smsPerMonthSimFirst = smsPerMonthSimFirst
-            SmsBlockerDatabase.smsPerMonthSimSecond = smsPerMonthSimSecond
+            smsBlockerDatabase.smsPerDaySimFirst = smsPerDaySimFirst
+            smsBlockerDatabase.smsPerDaySimSecond = smsPerDaySimSecond
+            smsBlockerDatabase.smsPerMonthSimFirst = smsPerMonthSimFirst
+            smsBlockerDatabase.smsPerMonthSimSecond = smsPerMonthSimSecond
         } catch (e: Exception) {
             SmartLog.e("Failed update sms per day ${getStackTrace(e)}")
         }
@@ -85,9 +99,9 @@ class SettingsRepositoryImp : SettingsRepository() {
     override suspend fun refreshDataForSim(simSlot: Int, context: Context) {
         try {
             if (simSlot == 0) {
-                SmsBlockerDatabase.firstSimChanged = false
+                smsBlockerDatabase.firstSimChanged = false
             } else {
-                SmsBlockerDatabase.secondSimChanged = false
+                smsBlockerDatabase.secondSimChanged = false
             }
             val countryCode = CountryCodeExtractor.getCountryCode(context)
             val simInfo = SimUtil.simInfo(context, simSlot)
@@ -157,7 +171,6 @@ class SettingsRepositoryImp : SettingsRepository() {
         try {
             val profile = settingsRest.getProfile(
                 GetProfileRequest(
-                    uniqueId = SmsBlockerDatabase.deviceID,
                     protocolVersion = Const.protocolVersion,
                     appVersion = BuildConfig.versionName
                 )
@@ -247,8 +260,8 @@ class SettingsRepositoryImp : SettingsRepository() {
                 )
             )
             if (response.status) {
-                SmsBlockerDatabase.smsPerDaySimFirst = response.firstSimLimit
-                SmsBlockerDatabase.smsPerDaySimSecond = response.secondSimLimit
+                smsBlockerDatabase.smsPerDaySimFirst = response.firstSimLimit
+                smsBlockerDatabase.smsPerDaySimSecond = response.secondSimLimit
             }
         } catch (e: Exception) {
             SmartLog.e("Failed send change sim card request ${getStackTrace(e)}")

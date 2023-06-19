@@ -1,12 +1,12 @@
 package com.call_blocker.app.new_ui.screens.home_screen
 
-import com.call_blocker.db.SmsBlockerDatabase
+import com.call_blocker.app.new_ui.UiState
 import com.call_blocker.verification.domain.VerificationInfo
 
 data class HomeScreenState(
     val firstName: String = "",
     val lastName: String = "",
-    val uniqueId: String = SmsBlockerDatabase.deviceID,
+    val uniqueId: String = "",
     val isRunning: Boolean = false,
     val isConnected: Boolean = false,
     val amount: Float = 0f,
@@ -24,7 +24,7 @@ data class HomeScreenState(
     val secondSimVerificationState: VerificationInfo = VerificationInfo(),
     val isLoading: Boolean = false,
     val error: String? = null
-) {
+) : UiState {
     fun getUserName(): String {
         return "$firstName $lastName"
     }

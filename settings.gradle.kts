@@ -7,7 +7,6 @@ include(":loger")
 
 include(":db")
 include(":repository_impl")
-include(":repository_di")
 include(":model")
 include(":common")
 include(":verification")

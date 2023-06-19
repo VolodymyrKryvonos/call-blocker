@@ -41,7 +41,7 @@ data class UserInfoDto(
             @Json(name = "total")
             val total: String,
             @Json(name = "type_bank")
-            val typeBank: String
+            val typeBank: String?
         ) {
             data class Details(
                 @Json(name = "delivered_count")

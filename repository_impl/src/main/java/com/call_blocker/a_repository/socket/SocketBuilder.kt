@@ -9,17 +9,26 @@ import com.call_blocker.common.rest.Pinger
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
 import com.call_blocker.loger.utils.getStackTrace
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import okhttp3.*
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 class SocketBuilder private constructor(
     private val userToken: String,
     private val uuid: String,
-    var ip: String
+    private var ip: String,
+    private val smsBlockerDatabase: SmsBlockerDatabase
 ) : WebSocketListener(), CoroutineScope {
 
     override val coroutineContext: CoroutineContext
@@ -55,9 +64,9 @@ class SocketBuilder private constructor(
             .build()
         if (!statusConnect.value) {
             val connectorBuilder = OkHttpClient.Builder()
-            if (SmsBlockerDatabase.profile?.isKeepAlive == true)
+            if (smsBlockerDatabase.profile?.isKeepAlive == true)
                 connectorBuilder.pingInterval(
-                    SmsBlockerDatabase.profile?.keepAliveDelay?.toLong() ?: 600L, TimeUnit.SECONDS
+                    smsBlockerDatabase.profile?.keepAliveDelay?.toLong() ?: 600L, TimeUnit.SECONDS
                 )
             connector = connectorBuilder.build().newWebSocket(url, this@SocketBuilder)
         }
@@ -188,12 +197,13 @@ class SocketBuilder private constructor(
             return data
         }
 
-        fun build(): SocketBuilder {
+        fun build(smsBlockerDatabase: SmsBlockerDatabase): SocketBuilder {
             SmartLog.e("SocketBuilder build")
             return SocketBuilder(
                 userToken = userToken!!,
                 uuid = uuid!!,
-                ip = domain
+                ip = domain,
+                smsBlockerDatabase = smsBlockerDatabase
             )
         }
 

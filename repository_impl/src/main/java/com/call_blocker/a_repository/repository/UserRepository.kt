@@ -11,8 +11,6 @@ import com.call_blocker.common.ConnectionManager
 import com.call_blocker.common.CountryCodeExtractor
 import com.call_blocker.common.Resource
 import com.call_blocker.common.SimUtil
-import com.call_blocker.common.rest.AppRest
-import com.call_blocker.common.rest.Const
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.entity.SystemDetailEntity
 import com.call_blocker.loger.SmartLog
@@ -20,12 +18,10 @@ import com.call_blocker.loger.utils.getStackTrace
 import com.call_blocker.rest_work_imp.UserRepository
 import kotlinx.coroutines.flow.flow
 
-class UserRepositoryImp : UserRepository() {
-
-    private val userRest: UserRest
-        get() = AppRest(Const.url, SmsBlockerDatabase.userToken ?: "", UserRest::class.java).build()
-
-
+class UserRepositoryImp(
+    private val userRest: UserRest,
+    smsBlockerDatabase: SmsBlockerDatabase
+) : UserRepository(smsBlockerDatabase) {
     override suspend fun doLogin(
         email: String,
         password: String,
@@ -33,7 +29,6 @@ class UserRepositoryImp : UserRepository() {
     ): String {
         return userRest.signIn(
             LoginRequest(
-                uniqueId = SmsBlockerDatabase.deviceID,
                 email = email,
                 password = password,
                 version = version
@@ -48,7 +43,6 @@ class UserRepositoryImp : UserRepository() {
     ): String {
         return userRest.signUp(
             RegisterRequest(
-                uniqueId = SmsBlockerDatabase.deviceID,
                 email = email,
                 password = password,
                 nameOfPackage = packageName,
@@ -78,14 +72,14 @@ class UserRepositoryImp : UserRepository() {
                 )
             ).toUserInfo()
                 .let {
-                    SmsBlockerDatabase.userName = "${it.user.name} ${it.user.lastName}"
+                    smsBlockerDatabase.userName = "${it.user.name} ${it.user.lastName}"
                     it
                 }
         } catch (e: Exception) {
             SmartLog.e("Failed load system details ${getStackTrace(e)}")
             // SmsBlockerDatabase.userToken = null
             null
-        }?.user ?: return SmsBlockerDatabase.systemDetail
+        }?.user ?: return smsBlockerDatabase.systemDetail
 
         return try {
             SystemDetailEntity(

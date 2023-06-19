@@ -1,9 +1,11 @@
 package com.call_blocker.app.new_ui.screens.sim_card_info_screen
 
 import android.telephony.SubscriptionInfo
+import com.call_blocker.app.new_ui.UiState
 import com.call_blocker.verification.domain.VerificationInfo
 
 data class SimCardInfoScreenState(
+    val currentPage: Int = 0,
     val deliveredFirstSim: Int = 0,
     val deliveredSecondSim: Int = 0,
     val firstSimDayLimit: Int = 0,
@@ -16,7 +18,7 @@ data class SimCardInfoScreenState(
     val secondSimConnectedOn: String = "",
     val firstSimVerificationState: VerificationInfo = VerificationInfo(),
     val secondSimVerificationState: VerificationInfo = VerificationInfo(),
-)
+) : UiState
 
 data class SimInfoState(
     val delivered: Int = 0,

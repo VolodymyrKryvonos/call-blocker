@@ -1,14 +1,13 @@
 package com.call_blocker.app.new_ui.screens.sim_card_info_screen
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.call_blocker.app.new_ui.BaseViewModel
 import com.call_blocker.app.worker_manager.SendingSMSWorker
 import com.call_blocker.common.SimUtil
-import com.call_blocker.repository.RepositoryImp
+import com.call_blocker.rest_work_imp.SettingsRepository
+import com.call_blocker.rest_work_imp.TaskRepository
+import com.call_blocker.verification.data.VerificationRepository
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.call_blocker.verification.domain.SimCardVerifier
@@ -19,35 +18,49 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 
-class SimCardViewModel : ViewModel(),
-    SimCardVerificationChecker by SimCardVerificationCheckerImpl() {
-    var state: SimCardInfoScreenState by mutableStateOf(SimCardInfoScreenState())
-    private val simCardVerifier = SimCardVerifier()
-    private val taskRepository = RepositoryImp.taskRepository
-    private val settingsRepository = RepositoryImp.settingsRepository
+class SimCardViewModel(
+    private val simCardVerifier: SimCardVerifier,
+    private val taskRepository: TaskRepository,
+    private val settingsRepository: SettingsRepository,
+    verificationRepository: VerificationRepository
+) : BaseViewModel<SimCardInfoScreenState, SimCardInfoEvents>(),
+    SimCardVerificationChecker by SimCardVerificationCheckerImpl(verificationRepository) {
+    override fun setInitialState() = SimCardInfoScreenState()
 
     init {
         coroutineScope = viewModelScope
         viewModelScope.launch {
             launch {
                 VerificationInfoStateHolder.getStateHolderBySimSlotIndex(0).collectLatest {
-                    state = state.copy(firstSimVerificationState = it)
+                    setState { state.value.copy(firstSimVerificationState = it) }
                 }
             }
             launch {
                 VerificationInfoStateHolder.getStateHolderBySimSlotIndex(1).collectLatest {
-                    state = state.copy(secondSimVerificationState = it)
+                    setState { state.value.copy(secondSimVerificationState = it) }
                 }
             }
         }
     }
 
+    override fun handleEvent(event: SimCardInfoEvents) {
+        when (event) {
+            is SimCardInfoEvents.CheckSimCardsEvent -> checkSimCards(event.context)
+            is SimCardInfoEvents.ResetSimCardEvent -> resetSim(event)
+            is SimCardInfoEvents.SetNewLimitsEvent -> setNewLimitForSim(event)
+            is SimCardInfoEvents.VerifySimCardEvent -> verifySimCard(event)
+            is SimCardInfoEvents.SetCurrentPageEvent -> setState { state.value.copy(currentPage = event.page) }
+        }
+    }
+
     fun simsInfo(context: Context) {
         viewModelScope.launch {
-            state = state.copy(
-                firstSimSubInfo = SimUtil.firstSim(context),
-                secondSimSubInfo = SimUtil.secondSim(context)
-            )
+            setState {
+                state.value.copy(
+                    firstSimSubInfo = SimUtil.firstSim(context),
+                    secondSimSubInfo = SimUtil.secondSim(context)
+                )
+            }
             val response = settingsRepository.simInfo(
                 context
             )
@@ -70,73 +83,82 @@ class SimCardViewModel : ViewModel(),
                 }
             }
 
-            state = state.copy(
-                deliveredFirstSim = deliveredFirstSim,
-                deliveredSecondSim = deliveredSecondSim,
-                firstSimDayLimit = limitFirstSim,
-                secondSimDayLimit = limitSecondSim,
-                firstSimConnectedOn = firstSimConnectedOn,
-                secondSimConnectedOn = secondSimConnectedOn
-            )
+            setState {
+                state.value.copy(
+                    deliveredFirstSim = deliveredFirstSim,
+                    deliveredSecondSim = deliveredSecondSim,
+                    firstSimDayLimit = limitFirstSim,
+                    secondSimDayLimit = limitSecondSim,
+                    firstSimConnectedOn = firstSimConnectedOn,
+                    secondSimConnectedOn = secondSimConnectedOn
+                )
+            }
         }
     }
 
-    fun verifySimCard(simId: String, simSlot: Int, context: Context, phoneNumber: String = "") {
+    fun verifySimCard(event: SimCardInfoEvents.VerifySimCardEvent) {
         if (!SendingSMSWorker.isRunning.value) {
-            SendingSMSWorker.start(context)
+            SendingSMSWorker.start(event.context)
         }
         viewModelScope.launch {
             while (!taskRepository.connectionStatusFlow.value) {
                 delay(1000)
             }
-            simCardVerifier.verifySimCard(context, simSlot)
+            simCardVerifier.verifySimCard(event.context, event.simSlot)
         }
     }
 
-    fun resetSim(simSlotID: Int, context: Context) = viewModelScope.launch(Dispatchers.IO) {
-        try {
-            settingsRepository.refreshDataForSim(
-                simSlot = simSlotID,
-                context = context
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
+    fun resetSim(event: SimCardInfoEvents.ResetSimCardEvent) =
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                settingsRepository.refreshDataForSim(
+                    simSlot = event.simSlotID,
+                    context = event.context
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            setState {
+                if (event.simSlotID == 0) {
+                    state.value.copy(deliveredFirstSim = 0)
+                } else {
+                    state.value.copy(deliveredSecondSim = 0)
+                }
+            }
+            taskRepository.clearFor(simIndex = event.simSlotID)
         }
-        state = if (simSlotID == 0) {
-            state.copy(deliveredFirstSim = 0)
-        } else {
-            state.copy(deliveredSecondSim = 0)
-        }
-        taskRepository.clearFor(simIndex = simSlotID)
-    }
 
-    fun setNewLimitForSim(context: Context, index: Int, dayLimit: Int, monthLimit: Int) {
+    fun setNewLimitForSim(event: SimCardInfoEvents.SetNewLimitsEvent) {
         val firstSimDayLimit: Int
         val firstSimMonthLimit: Int
         val secondSimDayLimit: Int
         val secondSimMonthLimit: Int
-        if (index == 0) {
-            firstSimDayLimit = dayLimit
-            firstSimMonthLimit = monthLimit
-            secondSimDayLimit = state.secondSimDayLimit
-            secondSimMonthLimit = state.secondSimMonthLimit
-            state = state.copy(
-                firstSimDayLimit = firstSimDayLimit,
-                firstSimMonthLimit = firstSimMonthLimit
-            )
+        if (event.index == 0) {
+            firstSimDayLimit = event.dayLimit
+            firstSimMonthLimit = event.monthLimit
+            secondSimDayLimit = state.value.secondSimDayLimit
+            secondSimMonthLimit = state.value.secondSimMonthLimit
+            setState {
+                state.value.copy(
+                    firstSimDayLimit = firstSimDayLimit,
+                    firstSimMonthLimit = firstSimMonthLimit
+                )
+            }
         } else {
-            firstSimDayLimit = state.firstSimDayLimit
-            firstSimMonthLimit = state.firstSimMonthLimit
-            secondSimDayLimit = dayLimit
-            secondSimMonthLimit = monthLimit
-            state = state.copy(
-                secondSimDayLimit = secondSimDayLimit,
-                secondSimMonthLimit = secondSimMonthLimit
-            )
+            firstSimDayLimit = state.value.firstSimDayLimit
+            firstSimMonthLimit = state.value.firstSimMonthLimit
+            secondSimDayLimit = event.dayLimit
+            secondSimMonthLimit = event.monthLimit
+            setState {
+                state.value.copy(
+                    secondSimDayLimit = secondSimDayLimit,
+                    secondSimMonthLimit = secondSimMonthLimit
+                )
+            }
         }
         viewModelScope.launch {
             settingsRepository.setSmsPerDay(
-                context = context,
+                context = event.context,
                 smsPerDaySimFirst = firstSimDayLimit,
                 smsPerMonthSimFirst = firstSimMonthLimit,
                 smsPerDaySimSecond = secondSimDayLimit,

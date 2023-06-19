@@ -4,8 +4,13 @@ import android.content.Context
 import com.call_blocker.common.Resource
 import com.call_blocker.common.SimUtil
 import com.call_blocker.verification.data.VerificationRepository
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 
 interface SimCardVerificationChecker {
@@ -30,8 +35,9 @@ interface SimCardVerificationChecker {
 }
 
 
-class SimCardVerificationCheckerImpl : SimCardVerificationChecker {
-    override val verificationRepository: VerificationRepository = VerificationRepositoryImpl()
+class SimCardVerificationCheckerImpl(repository: VerificationRepository) :
+    SimCardVerificationChecker {
+    override val verificationRepository: VerificationRepository = repository
     override var coroutineScope: CoroutineScope = object : CoroutineScope {
         override val coroutineContext: CoroutineContext
             get() = SupervisorJob()

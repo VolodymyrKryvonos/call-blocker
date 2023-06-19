@@ -11,6 +11,7 @@ import com.call_blocker.loger.SmartLog
 import com.call_blocker.loger.utils.getStackTrace
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
+import org.koin.java.KoinJavaComponent.get
 
 enum class SimSlotState {
     ABSENT,
@@ -42,15 +43,16 @@ class SimSlotReceiver : BroadcastReceiver() {
     private fun trackSimCardWasIdentified(context: Context?) {
         val firstSim = SimUtil.firstSim(context)
         val secondSim = SimUtil.secondSim(context)
-        if (firstSim?.iccId != SmsBlockerDatabase.firstSimId) {
-            SmartLog.e("Sim1 was changed oldId = ${SmsBlockerDatabase.firstSimId} newId = $firstSim?.iccId")
-            SmsBlockerDatabase.firstSimId = firstSim?.iccId
-            SmsBlockerDatabase.firstSimChanged = true
+        val smsBlockerDatabase: SmsBlockerDatabase = get(SmsBlockerDatabase::class.java)
+        if (firstSim?.iccId != smsBlockerDatabase.firstSimId) {
+            SmartLog.e("Sim1 was changed oldId = ${smsBlockerDatabase.firstSimId} newId = $firstSim?.iccId")
+            smsBlockerDatabase.firstSimId = firstSim?.iccId
+            smsBlockerDatabase.firstSimChanged = true
         }
-        if (secondSim?.iccId != SmsBlockerDatabase.secondSimId) {
-            SmartLog.e("Sim2 was changed oldId = ${SmsBlockerDatabase.secondSimId} newId = $secondSim?.iccId")
-            SmsBlockerDatabase.secondSimId = secondSim?.iccId
-            SmsBlockerDatabase.secondSimChanged = true
+        if (secondSim?.iccId != smsBlockerDatabase.secondSimId) {
+            SmartLog.e("Sim2 was changed oldId = ${smsBlockerDatabase.secondSimId} newId = $secondSim?.iccId")
+            smsBlockerDatabase.secondSimId = secondSim?.iccId
+            smsBlockerDatabase.secondSimChanged = true
         }
         ChangeSimCardNotifierService.startService(context ?: return)
     }

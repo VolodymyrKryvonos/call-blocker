@@ -1,10 +1,10 @@
 package com.call_blocker.a_repository.repository
 
-import com.call_blocker.a_repository.model.*
+import com.call_blocker.a_repository.model.ResendUnprocessedRequest
+import com.call_blocker.a_repository.model.SocketMessage
+import com.call_blocker.a_repository.model.TaskResponse
 import com.call_blocker.a_repository.rest.TaskRest
 import com.call_blocker.a_repository.socket.SocketBuilder
-import com.call_blocker.common.rest.AppRest
-import com.call_blocker.common.rest.Const
 import com.call_blocker.common.rest.Const.domain
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.TaskMethod
@@ -18,46 +18,32 @@ import com.call_blocker.rest_work_imp.TaskRepository
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
-class TaskRepositoryImp : TaskRepository() {
-
-    private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
-    private val taskRest =
-        AppRest(Const.url, SmsBlockerDatabase.userToken ?: "", TaskRest::class.java).build()
-
+class TaskRepositoryImp(
+    private val taskRest: TaskRest,
+    private val moshi: Moshi,
+    private val smsBlockerDatabase: SmsBlockerDatabase
+) : TaskRepository(smsBlockerDatabase) {
 
     private val socketBuilder by lazy {
         SocketBuilder
             .Builder
-            .setUserToken(SmsBlockerDatabase.userToken ?: "jhfhjlbdhjlf")
-            .setUUid(SmsBlockerDatabase.deviceID)
+            .setUserToken(smsBlockerDatabase.userToken ?: "jhfhjlbdhjlf")
+            .setUUid(smsBlockerDatabase.deviceID)
             .setIP(domain)
-            .build()
-    }
-
-    override suspend fun confirmTask(data: List<TaskEntity>) {
-        taskRest.confirmStatus(ConfirmStatusRequest(
-            data = data.map {
-                TaskStatusRequest(
-                    id = it.id,
-                    error = if (it.status == TaskStatus.DELIVERED)
-                        "SUCCESS"
-                    else "Generic failure error",
-                    statusCode = if (it.status == TaskStatus.DELIVERED) 1 else 0,
-                    simId = if (it.simSlot == 0)
-                        "msisdn_1"
-                    else "msisdn_2"
-                )
-            }
-        ))
+            .build(smsBlockerDatabase)
     }
 
     override fun reconnect() {
@@ -180,7 +166,8 @@ class TaskRepositoryImp : TaskRepository() {
                         else -> Date().time
                     },
                     simIccid = task.simIccId
-                )
+                ),
+                unique_id = smsBlockerDatabase.deviceID
             )
 
             if (!socketBuilder.sendMessage(
@@ -188,7 +175,7 @@ class TaskRepositoryImp : TaskRepository() {
                 )
             ) {
                 SmartLog.e("Failed send status $req")
-                SmsBlockerDatabase.taskStatusDao.insertTaskStatus(
+                smsBlockerDatabase.taskStatusDao.insertTaskStatus(
                     TaskStatusData(
                         id = req.data.id,
                         status = req.data.status,
@@ -204,7 +191,7 @@ class TaskRepositoryImp : TaskRepository() {
     }
 
     override suspend fun sendTaskStatuses() {
-        val statues = SmsBlockerDatabase.taskStatusDao.getAllTaskStatus()
+        val statues = smsBlockerDatabase.taskStatusDao.getAllTaskStatus()
         val statuesMaped = statues.map {
             TaskStatusRequest(
                 data = TaskStatusDataRequest(
@@ -213,7 +200,8 @@ class TaskRepositoryImp : TaskRepository() {
                     simId = it.simId,
                     date = it.time,
                     simIccid = it.simIccid
-                )
+                ),
+                unique_id = smsBlockerDatabase.deviceID
             )
         }
         for ((i, status) in statuesMaped.withIndex()) {
@@ -221,7 +209,7 @@ class TaskRepositoryImp : TaskRepository() {
                     moshi.adapter(TaskStatusRequest::class.java).toJson(status)
                 )
             ) {
-                SmsBlockerDatabase.taskStatusDao.deleteTaskStatus(statues[i])
+                smsBlockerDatabase.taskStatusDao.deleteTaskStatus(statues[i])
             } else {
                 SmartLog.e("Failed send status $status")
             }
@@ -234,7 +222,7 @@ class TaskRepositoryImp : TaskRepository() {
 
 data class TaskStatusRequest(
     val method: String = "SMS_STATUS",
-    val unique_id: String = SmsBlockerDatabase.deviceID,
+    val unique_id: String,
     val data: TaskStatusDataRequest
 )
 

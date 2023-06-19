@@ -28,6 +28,7 @@ android {
 dependencies {
     implementation(AppDependencies.base)
     implementation(AppDependencies.rest)
+    implementation(AppDependencies.koin)
     implementation(project(":loger"))
     implementation(project(":db"))
 }

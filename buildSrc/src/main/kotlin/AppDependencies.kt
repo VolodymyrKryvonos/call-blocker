@@ -42,6 +42,9 @@ object AppDependencies {
         add("com.squareup.okhttp3:logging-interceptor:4.9.1")
     }
 
+    val koin = arrayListOf<String>().apply {
+        add("io.insert-koin:koin-android:${Version.koin}")
+    }
 
     const val okhttp = "com.squareup.okhttp3:okhttp:4.9.1"
 

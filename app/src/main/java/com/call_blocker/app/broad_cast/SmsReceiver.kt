@@ -7,22 +7,21 @@ import android.os.Bundle
 import android.telephony.SmsMessage
 import android.telephony.SubscriptionInfo
 import com.call_blocker.common.SimUtil
-import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
-import com.call_blocker.repository.RepositoryImp.replyRepository
+import com.call_blocker.rest_work_imp.ReplyRepository
 import com.call_blocker.verification.domain.SimCardVerifier
 import com.squareup.moshi.Json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import org.koin.java.KoinJavaComponent.get
 
 
 class SmsReceiver : BroadcastReceiver() {
 
     private val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     override fun onReceive(context: Context, intent: Intent) {
-        SmsBlockerDatabase.init(context)
         val bundle: Bundle?
         if (intent.action == "android.provider.Telephony.SMS_RECEIVED") {
             bundle = intent.extras
@@ -56,7 +55,7 @@ class SmsReceiver : BroadcastReceiver() {
         val verificationSms = VerificationSms("", verificationWords[1], verificationWords[2])
 
         SmartLog.e("verificationSms $verificationSms")
-        val verifier = SimCardVerifier()
+        val verifier: SimCardVerifier = get(SimCardVerifier::class.java)
         verifier.confirmVerification(
             simID = verificationSms.simIccid,
             verificationCode = verificationSms.verificationCode ?: "",
@@ -67,6 +66,8 @@ class SmsReceiver : BroadcastReceiver() {
 
     private suspend fun storeReply(sms: ReplyMessage) {
         SmartLog.e("storeReply ${sms.smsText} ${sms.senderNumber}")
+
+        val replyRepository: ReplyRepository = get(ReplyRepository::class.java)
         replyRepository.storeReply(
             sms.senderNumber,
             sms.smsText,
@@ -160,7 +161,5 @@ data class VerificationSms(
     @Json(name = "sim_iccid")
     val simIccid: String,
     @Json(name = "verification_code")
-    val verificationCode: String?,
-    @Json(name = "unique_id")
-    val uniqueId: String? = SmsBlockerDatabase.deviceID
+    val verificationCode: String?
 )

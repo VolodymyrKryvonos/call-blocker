@@ -1,6 +1,5 @@
 package com.call_blocker.verification.data.model
 
-import com.call_blocker.db.SmsBlockerDatabase
 import com.squareup.moshi.Json
 
 data class CheckSimCardRequest(
@@ -10,8 +9,6 @@ data class CheckSimCardRequest(
     val countryCode: String,
     @Json(name = "sim_slot")
     val simSlot: String,
-    @Json(name = "unique_id")
-    val uniqueId: String = SmsBlockerDatabase.deviceID,
     @Json(name = "msisdn")
     val phoneNumber: String? = null,
 )

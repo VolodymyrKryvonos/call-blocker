@@ -18,8 +18,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
 import com.call_blocker.app.R
 import com.call_blocker.app.new_ui.backgroundError
 import com.call_blocker.app.new_ui.buttonBackground
@@ -38,7 +38,6 @@ import com.call_blocker.app.new_ui.tabTextColor
 import com.call_blocker.app.new_ui.tintError
 import com.call_blocker.app.new_ui.widgets.IconWithBackground
 import com.call_blocker.app.new_ui.widgets.TextFieldWithErrorMsg
-import com.call_blocker.app.screen.main.OnLifecycleEvent
 
 data class SimTab(
     val name: String,
@@ -47,23 +46,14 @@ data class SimTab(
     val simInfo: SimInfoState
 )
 
+@Preview
 @Composable
-fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int = 0) {
-    var currentTab: Int by remember {
-        mutableStateOf(simSlot)
-    }
-    val state = viewModel.state
+fun SimCardInfoScreen(
+    state: SimCardInfoScreenState = SimCardInfoScreenState(),
+    onEvent: (event: SimCardInfoEvents) -> Unit = {}
+) {
     val tabs = getTabList(state)
     val context = LocalContext.current
-    OnLifecycleEvent { _, event ->
-        when (event) {
-            Lifecycle.Event.ON_RESUME -> {
-                viewModel.simsInfo(context)
-            }
-
-            else -> {}
-        }
-    }
     Column(
         Modifier
             .fillMaxSize()
@@ -88,9 +78,9 @@ fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int = 0) {
                 val indicator = @Composable { tabPositions: List<TabPosition> ->
                     Box(
                         modifier = Modifier
-                            .tabIndicatorOffset(tabPositions[currentTab])
+                            .tabIndicatorOffset(tabPositions[state.currentPage])
                             .height(4.dp)
-                            .padding(horizontal = tabPositions[currentTab].width / 3)
+                            .padding(horizontal = tabPositions[state.currentPage].width / 3)
                             .background(
                                 color = primary,
                                 shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp)
@@ -98,7 +88,7 @@ fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int = 0) {
                     )
                 }
                 TabRow(
-                    selectedTabIndex = currentTab,
+                    selectedTabIndex = state.currentPage,
                     contentColor = tabTextColor,
                     indicator = indicator,
                     backgroundColor = itemBackground
@@ -113,13 +103,13 @@ fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int = 0) {
                                         contentDescription = ""
                                     )
                                 },
-                                selected = currentTab == index,
-                                onClick = { currentTab = index }
+                                selected = state.currentPage == index,
+                                onClick = { onEvent(SimCardInfoEvents.SetCurrentPageEvent(index)) }
                             )
                         } else {
                             Tab(text = { Text(tab.name, style = MaterialTheme.typography.h5) },
-                                selected = currentTab == index,
-                                onClick = { currentTab = index }
+                                selected = state.currentPage == index,
+                                onClick = { onEvent(SimCardInfoEvents.SetCurrentPageEvent(index)) }
                             )
                         }
 
@@ -128,26 +118,31 @@ fun SimCardInfoScreen(viewModel: SimCardViewModel, simSlot: Int = 0) {
             }
             Spacer(modifier = Modifier.height(10.dp))
             SimCardInfoTab(
-                tabs[currentTab].simInfo,
+                tabs.first().simInfo,
                 onNewLimitsSet = { dayLimit, monthLimit ->
-                    viewModel.setNewLimitForSim(
-                        context,
-                        tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
-                        dayLimit,
-                        monthLimit
+                    onEvent(
+                        SimCardInfoEvents.SetNewLimitsEvent(
+                            context = context,
+                            index = tabs.first().simInfo.simSubInfo.simSlotIndex,
+                            dayLimit = dayLimit,
+                            monthLimit = monthLimit
+                        )
                     )
                 },
                 onResetClicked = {
-                    viewModel.resetSim(
-                        tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
-                        context
+                    onEvent(
+                        SimCardInfoEvents.ResetSimCardEvent(
+                            context = context,
+                            simSlotID = tabs.first().simInfo.simSubInfo.simSlotIndex
+                        )
                     )
                 },
                 onVerifyClicked = {
-                    viewModel.verifySimCard(
-                        tabs[currentTab].simInfo.simSubInfo.iccId,
-                        tabs[currentTab].simInfo.simSubInfo.simSlotIndex,
-                        context
+                    onEvent(
+                        SimCardInfoEvents.VerifySimCardEvent(
+                            context = context,
+                            simSlot = tabs.first().simInfo.simSubInfo.simSlotIndex
+                        )
                     )
                 })
         }

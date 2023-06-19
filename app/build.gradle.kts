@@ -67,21 +67,21 @@ android {
                 }
             }
         }
-        create("without_amount") {
-            resValue("string", "app_name", "SMS sender AN")
-            buildConfigField("boolean", "showAmount", "false")
-            buildConfigField("boolean", "logs", "false")
-            applicationVariants.all {
-                if (name.contains("without_amount")) {
-                    outputs.forEach { output ->
-                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                            output.outputFileName =
-                                "new_ui_sms-sender-AN-remote-v${versionName}.${output.outputFile.extension}"
-                        }
-                    }
-                }
-            }
-        }
+//        create("without_amount") {
+//            resValue("string", "app_name", "SMS sender AN")
+//            buildConfigField("boolean", "showAmount", "false")
+//            buildConfigField("boolean", "logs", "false")
+//            applicationVariants.all {
+//                if (name.contains("without_amount")) {
+//                    outputs.forEach { output ->
+//                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+//                            output.outputFileName =
+//                                "new_ui_sms-sender-AN-remote-v${versionName}.${output.outputFile.extension}"
+//                        }
+//                    }
+//                }
+//            }
+//        }
     }
 
     compileOptions {
@@ -117,28 +117,26 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.5.3")
 
     implementation(AppDependencies.moshi)
+    implementation(AppDependencies.koin)
 
-    implementation(project(":ui"))
 
     implementation("com.google.android.material:material:1.8.0")
-    implementation(project(":repository_di"))
-    implementation(project(":repository"))
-
-    implementation(project(":db"))
-
-    implementation(project(":model"))
-
     implementation(platform("com.google.firebase:firebase-bom:29.0.0"))
 
     implementation("com.google.firebase:firebase-analytics-ktx")
 
     implementation("com.google.firebase:firebase-crashlytics-ktx")
-    implementation(project(":common"))
-    implementation(project(":verification"))
+
+    implementation("androidx.work:work-runtime-ktx:2.8.0")
 
     implementation(project(":loger"))
-
+    implementation(project(":repository"))
+    implementation(project(":ui"))
+    implementation(project(":db"))
+    implementation(project(":repository_impl"))
+    implementation(project(":common"))
+    implementation(project(":verification"))
+    implementation(project(":model"))
     implementation(project(":ussd-library-kotlin"))
-    implementation("androidx.work:work-runtime-ktx:2.8.0")
     implementation(project(mapOf("path" to ":ussd_sender")))
 }

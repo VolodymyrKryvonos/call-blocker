@@ -1,8 +1,6 @@
 package com.call_blocker.a_repository.repository
 
 import com.call_blocker.a_repository.rest.LogRest
-import com.call_blocker.common.rest.AppRest
-import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
 import com.call_blocker.loger.utils.getStackTrace
 import com.call_blocker.rest_work_imp.LogRepository
@@ -13,12 +11,7 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 
 
-class LogRepositoryImpl : LogRepository {
-    private val logRest: LogRest
-        get() = AppRest(
-            bearerToken = SmsBlockerDatabase.userToken ?: "",
-            service = LogRest::class.java
-        ).build()
+class LogRepositoryImpl(private val logRest: LogRest) : LogRepository {
 
     override suspend fun sendLogs(file: File, deviceId: String) {
         val fileToSend = File(file.parent, "fileToSend.html")
@@ -31,6 +24,5 @@ class LogRepositoryImpl : LogRepository {
         } catch (e: Exception) {
             SmartLog.e("Send logs ${getStackTrace(e)}")
         }
-
     }
 }

@@ -1,25 +1,41 @@
 package com.call_blocker.app.new_ui.screens.task_screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.call_blocker.app.R
-import com.call_blocker.app.new_ui.*
+import com.call_blocker.app.new_ui.background
+import com.call_blocker.app.new_ui.bold16Sp
+import com.call_blocker.app.new_ui.darkGrey
+import com.call_blocker.app.new_ui.itemBackground
+import com.call_blocker.app.new_ui.lightBlue
+import com.call_blocker.app.new_ui.primary
 import com.call_blocker.app.new_ui.screens.home_screen.Container
 import com.call_blocker.app.new_ui.widgets.IconWithBackground
 
+@Preview
 @Composable
-fun TaskScreen(viewModel: TasksViewModel) {
-    val tasks = viewModel.taskList.collectAsState(initial = listOf())
+fun TaskScreen(
+    state: TasksScreenState = TasksScreenState(),
+    onEvent: (TasksScreenEvents) -> Unit = {}
+) {
     Column(
         Modifier
             .fillMaxSize()
@@ -39,7 +55,7 @@ fun TaskScreen(viewModel: TasksViewModel) {
         }
 
         LazyColumn {
-            items(tasks.value) { item ->
+            items(state.taskList) { item ->
                 TaskItem(item)
             }
         }

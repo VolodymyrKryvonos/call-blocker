@@ -14,8 +14,12 @@ import okhttp3.CacheControl
 import okhttp3.Interceptor
 import okhttp3.Interceptor.*
 import okhttp3.OkHttpClient
+import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
+import org.json.JSONObject
+import org.koin.java.KoinJavaComponent.get
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
@@ -47,6 +51,7 @@ class ApiFactory {
         }
         builder?.addInterceptor(AuthorizationInterceptor())
         builder?.addInterceptor(UnauthorizedInterceptor())
+        builder?.addInterceptor(UniqueIdInterceptor())
         val logging = if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.BODY
@@ -61,19 +66,6 @@ class ApiFactory {
         builder?.addInterceptor(logging)
     }
 
-    fun addHeader(name: String, value: String) {
-        builder?.addInterceptor { chain ->
-            val original = chain.request()
-            val requestBuilder = original.newBuilder()
-                .addHeader(name, value)
-
-            val request = requestBuilder
-                .cacheControl(CacheControl.Builder().noCache().build())
-                .build()
-
-            chain.proceed(request)
-        }
-    }
 
     fun buildRetrofit(baseUrl: String): Retrofit {
         val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
@@ -93,11 +85,43 @@ class ApiFactory {
     }
 }
 
+internal class UniqueIdInterceptor : Interceptor {
+    override fun intercept(chain: Chain): Response {
+
+        val smsBlockerDatabase: SmsBlockerDatabase = get(SmsBlockerDatabase::class.java)
+        val originalRequest = chain.request()
+        if (originalRequest.method == "POST") {
+            val newBody = JSONObject(originalRequest.body.bodyToString())
+            newBody.put("unique_id", smsBlockerDatabase.deviceID)
+
+            return chain.proceed(
+                originalRequest.newBuilder()
+                    .post(
+                        newBody
+                            .toString()
+                            .toRequestBody(originalRequest.body?.contentType())
+                    )
+                    .build()
+            )
+        }
+        return chain.proceed(originalRequest)
+    }
+}
+
+fun RequestBody?.bodyToString(): String {
+    if (this == null) return ""
+    val buffer = okio.Buffer()
+    writeTo(buffer)
+    return buffer.readUtf8()
+}
+
 internal class AuthorizationInterceptor : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Chain): Response {
-        val request  = chain.request().newBuilder()
-            .addHeader("Authorization", "Bearer " + SmsBlockerDatabase.userToken)
+
+        val smsBlockerDatabase: SmsBlockerDatabase = get(SmsBlockerDatabase::class.java)
+        val request = chain.request().newBuilder()
+            .addHeader("Authorization", "Bearer ${smsBlockerDatabase.userToken}")
             .build();
         return chain.proceed(request)
     }
@@ -106,9 +130,10 @@ internal class AuthorizationInterceptor : Interceptor {
 internal class UnauthorizedInterceptor : Interceptor {
     @Throws(IOException::class)
     override fun intercept(chain: Chain): Response {
+        val smsBlockerDatabase: SmsBlockerDatabase = get(SmsBlockerDatabase::class.java)
         val response: Response = chain.proceed(chain.request())
         if (response.code == 401) {
-            SmsBlockerDatabase.userToken = null
+            smsBlockerDatabase.userToken = null
         }
         return response
     }

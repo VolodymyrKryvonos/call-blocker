@@ -7,16 +7,26 @@ import android.os.Build
 import android.os.IBinder
 import com.call_blocker.app.util.NotificationService
 import com.call_blocker.db.SmsBlockerDatabase
-import com.call_blocker.repository.RepositoryImp
-import kotlinx.coroutines.*
+import com.call_blocker.rest_work_imp.SettingsRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
+import org.koin.core.component.KoinComponent
 import kotlin.coroutines.CoroutineContext
 
-class ChangeSimCardNotifierService : Service(), CoroutineScope {
+class ChangeSimCardNotifierService : Service(), CoroutineScope, KoinComponent {
 
     override val coroutineContext: CoroutineContext
         get() = SupervisorJob() + Dispatchers.IO
 
     private var notificationJob: Job? = null
+    private val smsBlockerDatabase: SmsBlockerDatabase by inject()
+    private val settingsRepository: SettingsRepository by inject()
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -28,11 +38,11 @@ class ChangeSimCardNotifierService : Service(), CoroutineScope {
         notificationJob?.cancel()
         notificationJob = launch {
             delay(15 * 1000)
-            RepositoryImp.settingsRepository.changeSimCard(
+            settingsRepository.changeSimCard(
                 this@ChangeSimCardNotifierService
             )
-            SmsBlockerDatabase.firstSimChanged = false
-            SmsBlockerDatabase.secondSimChanged = false
+            smsBlockerDatabase.firstSimChanged = false
+            smsBlockerDatabase.secondSimChanged = false
             this@ChangeSimCardNotifierService.stopForeground(STOP_FOREGROUND_REMOVE)
         }
         return START_NOT_STICKY

@@ -3,8 +3,6 @@ package com.call_blocker.a_repository.model
 import com.squareup.moshi.Json
 
 data class RegisterRequest(
-    @Json(name = "unique_id")
-    override val uniqueId: String,
     override val email: String,
     override val password: String,
     @Json(name = "name_of_package")

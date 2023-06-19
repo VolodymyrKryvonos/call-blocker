@@ -4,8 +4,6 @@ import android.content.Context
 import com.call_blocker.common.CountryCodeExtractor
 import com.call_blocker.common.Resource
 import com.call_blocker.common.SimUtil
-import com.call_blocker.common.rest.AppRest
-import com.call_blocker.common.rest.Const
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
 import com.call_blocker.loger.utils.getStackTrace
@@ -18,9 +16,10 @@ import com.call_blocker.verification.data.model.VerifySimCardRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class VerificationRepositoryImpl : VerificationRepository {
-    private val verificationApi =
-        AppRest(Const.url, SmsBlockerDatabase.userToken ?: "", VerificationApi::class.java).build()
+class VerificationRepositoryImpl(
+    private val verificationApi: VerificationApi,
+    private val smsBlockerDatabase: SmsBlockerDatabase
+) : VerificationRepository {
 
     override fun checkSimCard(
         context: Context,

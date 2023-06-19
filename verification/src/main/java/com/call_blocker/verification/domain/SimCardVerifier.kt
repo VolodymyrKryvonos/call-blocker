@@ -7,8 +7,7 @@ import com.call_blocker.loger.SmartLog
 import com.call_blocker.verification.data.VerificationRepository
 import kotlinx.coroutines.flow.collectLatest
 
-class SimCardVerifier {
-    private val verificationRepository: VerificationRepository = VerificationRepositoryImpl()
+class SimCardVerifier(private val verificationRepository: VerificationRepository) {
 
     suspend fun verifySimCard(
         context: Context,

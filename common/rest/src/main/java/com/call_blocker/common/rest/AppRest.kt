@@ -7,8 +7,6 @@
 package com.call_blocker.common.rest
 
 class AppRest<T>(
-    private val baseUrl: String = Const.url,
-    private val bearerToken: String,
     private val service: Class<T>
 ) {
 
@@ -17,7 +15,7 @@ class AppRest<T>(
 
     fun build(): T {
         return apiFactory
-            .buildRetrofit(baseUrl)
+            .buildRetrofit(Const.url)
             .create(service)
     }
 

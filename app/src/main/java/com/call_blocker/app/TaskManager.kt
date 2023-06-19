@@ -30,13 +30,13 @@ import com.call_blocker.db.entity.TaskEntity
 import com.call_blocker.db.entity.TaskStatus
 import com.call_blocker.loger.SmartLog
 import com.call_blocker.loger.utils.getStackTrace
-import com.call_blocker.repository.RepositoryImp
+import com.call_blocker.rest_work_imp.LogRepository
+import com.call_blocker.rest_work_imp.SettingsRepository
 import com.call_blocker.rest_work_imp.TaskRepository
 import com.call_blocker.rest_work_imp.UssdRepository
 import com.call_blocker.ussd_sender.SessionResult
 import com.call_blocker.ussd_sender.UssdService
 import com.call_blocker.verification.domain.SimCardVerificationChecker
-import com.call_blocker.verification.domain.SimCardVerificationCheckerImpl
 import com.call_blocker.verification.domain.VerificationInfoStateHolder
 import com.call_blocker.verification.domain.VerificationStatus
 import kotlinx.coroutines.CoroutineScope
@@ -59,8 +59,12 @@ import kotlin.time.toDuration
 class TaskManager(
     private val context: Context,
     override val coroutineContext: CoroutineContext = SupervisorJob() + Dispatchers.IO,
-    private val taskRepository: TaskRepository = RepositoryImp.taskRepository,
-    private val ussdRepository: UssdRepository = RepositoryImp.ussdRepository
+    private val taskRepository: TaskRepository,
+    private val ussdRepository: UssdRepository,
+    private val settingsRepository: SettingsRepository,
+    private val logRepository: LogRepository,
+    private val simCardVerificationChecker: SimCardVerificationChecker,
+    private val smsBlockerDatabase: SmsBlockerDatabase
 ) : CoroutineScope {
 
     init {
@@ -82,7 +86,7 @@ class TaskManager(
     }
 
     private val smsLimitInterval by lazy {
-        (SmsBlockerDatabase.profile?.delaySmsSend ?: 40) * 1000L
+        (smsBlockerDatabase.profile?.delaySmsSend ?: 40) * 1000L
     }
 
     suspend fun processTask(task: TaskEntity) {
@@ -115,12 +119,12 @@ class TaskManager(
             )
         }
         launch {
-            if (!SmsBlockerDatabase.isUssdCommandOn) {
+            if (!smsBlockerDatabase.isUssdCommandOn) {
                 storeUssdResult(task, "Ussd commands is disabled")
                 return@launch
             }
             SmartLog.e("sendUssdCode ${task.message}")
-            withContext(Dispatchers.Main){
+            withContext(Dispatchers.Main) {
                 wakeScreen(context)
             }
             if (task.message == "stop") {
@@ -163,16 +167,16 @@ class TaskManager(
 
     private fun updateProfile() {
         launch {
-            RepositoryImp.settingsRepository.getProfile().collectLatest {
+            settingsRepository.getProfile().collectLatest {
                 when (it) {
                     is Resource.Error -> Unit
                     is Resource.Loading -> Unit
                     is Resource.Success -> {
-                        SmsBlockerDatabase.profile = it.data
+                        smsBlockerDatabase.profile = it.data
                         sendSignalStrengthJob?.cancel()
                         sendSignalStrength()
-                        RepositoryImp.taskRepository.reconnect()
-                        if (SmsBlockerDatabase.profile?.isConnected == true) {
+                        taskRepository.reconnect()
+                        if (smsBlockerDatabase.profile?.isConnected == true) {
                             checkConnection()
                         }
                     }
@@ -188,10 +192,10 @@ class TaskManager(
         sendSignalStrengthJob = launch {
             while (SendingSMSWorker.isRunning.value) {
                 val delay =
-                    SmsBlockerDatabase.profile?.delaySignalStrength?.toDuration(DurationUnit.SECONDS)
+                    smsBlockerDatabase.profile?.delaySignalStrength?.toDuration(DurationUnit.SECONDS)
                 if (delay != null) {
                     delay(delay)
-                    RepositoryImp.settingsRepository.sendSignalStrengthInfo(
+                    settingsRepository.sendSignalStrengthInfo(
                         context
                     )
                 }
@@ -204,16 +208,16 @@ class TaskManager(
         checkConnectionJob = launch {
             while (SendingSMSWorker.isRunning.value) {
                 val delay =
-                    SmsBlockerDatabase.profile?.delayIsConnected?.toDuration(DurationUnit.SECONDS)
+                    smsBlockerDatabase.profile?.delayIsConnected?.toDuration(DurationUnit.SECONDS)
                 SmartLog.e("Check connection delay ${delay?.inWholeSeconds} seconds")
                 if (delay != null) {
                     delay(delay)
-                    val connectionStatus = RepositoryImp.settingsRepository.checkConnection(
+                    val connectionStatus = settingsRepository.checkConnection(
                         context
                     )
                     if (connectionStatus is Resource.Success) {
                         if (connectionStatus.data?.status == false) {
-                            RepositoryImp.taskRepository.reconnect()
+                            taskRepository.reconnect()
                         }
                     }
                 } else {
@@ -229,8 +233,8 @@ class TaskManager(
         if (filesList != null) {
             for (file in filesList) {
                 if (!file.path.contains("fileToSend")) file?.let {
-                    RepositoryImp.logRepository.sendLogs(
-                        it, SmsBlockerDatabase.deviceID
+                    logRepository.sendLogs(
+                        it, smsBlockerDatabase.deviceID
                     )
                 }
             }
@@ -289,8 +293,6 @@ class TaskManager(
     private suspend fun sendStatus(status: Boolean, task: TaskEntity) {
         if (status) {
             if (task.method == TaskMethod.VERIFY_PHONE_NUMBER || task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
-                val simCardVerificationChecker: SimCardVerificationChecker =
-                    SimCardVerificationCheckerImpl()
                 simCardVerificationChecker.coroutineScope = this
                 simCardVerificationChecker.waitForVerification(task.simSlot ?: -1, context)
             }
@@ -377,7 +379,7 @@ class TaskManager(
                 val result = resultCode == Activity.RESULT_OK
                 if (result) {
                     launch {
-                        SmsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(address))
+                        smsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(address))
                     }
                 }
                 cont.resume(result)

@@ -6,45 +6,61 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PowerManager
 import androidx.core.app.ActivityCompat
-import androidx.work.*
+import androidx.work.CoroutineWorker
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.WorkerParameters
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.TaskManager
 import com.call_blocker.app.util.NotificationService
 import com.call_blocker.common.ConnectionManager
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
-import com.call_blocker.repository.RepositoryImp
+import com.call_blocker.rest_work_imp.SettingsRepository
 import com.call_blocker.rest_work_imp.TaskMessage
+import com.call_blocker.rest_work_imp.TaskRepository
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.util.concurrent.TimeUnit
 
 class SendingSMSWorker(private val context: Context, parameters: WorkerParameters) :
-    CoroutineWorker(context, parameters) {
+    CoroutineWorker(context, parameters), KoinComponent {
     private val wakeLock: PowerManager.WakeLock by lazy {
         (context.getSystemService(Context.POWER_SERVICE) as PowerManager).run {
             newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyApp::MyWakelockTag")
         }
     }
+    private val taskManager: TaskManager by inject()
 
-
-    companion object {
+    companion object : KoinComponent {
         val isRunning = MutableStateFlow(false)
-
         var job: Job? = null
         const val WORK_NAME = "ServiceWorker"
 
+        private val smsBlockerDatabase: SmsBlockerDatabase by inject()
+        private val taskRepository: TaskRepository by inject()
+        private val settingsRepository: SettingsRepository by inject()
         fun start(context: Context) {
             SmartLog.e("${getDeviceName()} start service ${BuildConfig.VERSION_NAME}")
             SmartLog.e("Android ${Build.VERSION.SDK_INT}")
             startWorkers(context)
-            SmartLog.e("Sms1 ${SmsBlockerDatabase.smsPerDaySimFirst}")
-            SmartLog.e("Sms2 ${SmsBlockerDatabase.smsPerDaySimSecond}")
+            SmartLog.e("Sms1 ${smsBlockerDatabase.smsPerDaySimFirst}")
+            SmartLog.e("Sms2 ${smsBlockerDatabase.smsPerDaySimSecond}")
             if (ActivityCompat.checkSelfPermission(
                     context,
                     Manifest.permission.ACCESS_FINE_LOCATION
@@ -94,10 +110,10 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                 isRunning.emit(false)
                 launch {
-                    RepositoryImp.taskRepository.resendReceived()
+                    taskRepository.resendReceived()
                 }
                 launch {
-                    RepositoryImp.settingsRepository.notifyServerUserStopService()
+                    settingsRepository.notifyServerUserStopService()
                 }
             }
         }
@@ -106,21 +122,17 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
 
     private var taskList: Flow<TaskMessage>? = null
 
-    private val taskManager by lazy {
-        TaskManager(applicationContext)
-    }
-
     override suspend fun doWork(): Result {
         SmartLog.e("Start worker")
-        taskList = RepositoryImp.taskRepository.taskMessage()
+        taskList = taskRepository.taskMessage()
         wakeLock.acquire(1000 * 60 * 35)
         isRunning.emit(true)
         setForeground(NotificationService.createForegroundInfo(context))
         withContext(Dispatchers.IO) {
-            RepositoryImp.taskRepository.connectionStatusFlow.onEach {
+            taskRepository.connectionStatusFlow.onEach {
                 SmartLog.e("Connect status $it")
                 if (it) {
-                    RepositoryImp.taskRepository.sendTaskStatuses()
+                    taskRepository.sendTaskStatuses()
                 }
             }.launchIn(this)
 

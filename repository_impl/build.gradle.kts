@@ -27,6 +27,7 @@ android {
 
 dependencies {
     implementation(AppDependencies.base)
+    implementation(AppDependencies.koin)
 
     implementation(project(":db"))
 

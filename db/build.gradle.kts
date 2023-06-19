@@ -35,5 +35,6 @@ dependencies {
     implementation("androidx.room:room-ktx:2.5.0")
 
     implementation(AppDependencies.moshi)
+    implementation(AppDependencies.koin)
     implementation(AppDependencies.security)
 }

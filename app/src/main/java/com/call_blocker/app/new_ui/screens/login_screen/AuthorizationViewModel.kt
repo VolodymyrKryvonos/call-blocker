@@ -7,10 +7,12 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocker.app.BuildConfig
-import com.call_blocker.repository.RepositoryImp
+import com.call_blocker.rest_work_imp.UserRepository
 import kotlinx.coroutines.launch
 
-class AuthorizationViewModel : ViewModel() {
+class AuthorizationViewModel(
+    private val userRepository: UserRepository
+) : ViewModel() {
     var isSignUp: Boolean by mutableStateOf(false)
     var email: String by mutableStateOf("")
     var emailError by mutableStateOf(false)
@@ -19,8 +21,6 @@ class AuthorizationViewModel : ViewModel() {
     var confirmPassword: String by mutableStateOf("")
     var confirmPasswordError by mutableStateOf(false)
     var isLoading by mutableStateOf(false)
-
-    private val userRepository = RepositoryImp.userRepository
 
 
     fun isEmailValid() {
