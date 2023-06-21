@@ -1,6 +1,7 @@
 package com.call_blocker.app.new_ui.screens.home_screen
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.new_ui.BaseViewModel
@@ -34,6 +35,7 @@ class HomeViewModel(
     override fun setInitialState() = HomeScreenState(uniqueId = smsBlockerDatabase.deviceID)
 
     override fun handleEvent(event: HomeScreenEvents) {
+        Log.e("HomeViewModel", "$event")
         when (event) {
             HomeScreenEvents.CheckIsLatestVersionEvent -> checkIsLatestVersion()
             HomeScreenEvents.CloseUpdateDialogEvent -> closeUpdateDialog()

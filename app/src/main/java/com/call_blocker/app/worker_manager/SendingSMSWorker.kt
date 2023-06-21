@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -19,6 +20,7 @@ import com.call_blocker.app.util.NotificationService
 import com.call_blocker.common.ConnectionManager
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
+import com.call_blocker.loger.utils.getStackTrace
 import com.call_blocker.rest_work_imp.SettingsRepository
 import com.call_blocker.rest_work_imp.TaskMessage
 import com.call_blocker.rest_work_imp.TaskRepository
@@ -123,27 +125,31 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
     private var taskList: Flow<TaskMessage>? = null
 
     override suspend fun doWork(): Result {
-        SmartLog.e("Start worker")
-        taskList = taskRepository.taskMessage()
-        wakeLock.acquire(1000 * 60 * 35)
-        isRunning.emit(true)
-        setForeground(NotificationService.createForegroundInfo(context))
-        withContext(Dispatchers.IO) {
-            taskRepository.connectionStatusFlow.onEach {
-                SmartLog.e("Connect status $it")
-                if (it) {
-                    taskRepository.sendTaskStatuses()
-                }
-            }.launchIn(this)
+        try {
+            SmartLog.e("Start worker")
+            taskList = taskRepository.taskMessage()
+            wakeLock.acquire(1000 * 60 * 35)
+            isRunning.emit(true)
+            setForeground(NotificationService.createForegroundInfo(context))
+            withContext(Dispatchers.IO) {
+                taskRepository.connectionStatusFlow.onEach {
+                    SmartLog.e("Connect status $it")
+                    if (it) {
+                        taskRepository.sendTaskStatuses()
+                    }
+                }.launchIn(this)
 
-            job = taskList!!.onEach { msg ->
-                SmartLog.d("onEach ${msg.list.map { it.id }}")
-                msg.list.forEach {
-                    taskManager.processTask(it)
-                }
-            }.launchIn(this)
-            taskManager.checkConnection()
-            taskManager.sendSignalStrength()
+                job = taskList!!.onEach { msg ->
+                    SmartLog.d("onEach ${msg.list.map { it.id }}")
+                    msg.list.forEach {
+                        taskManager.processTask(it)
+                    }
+                }.launchIn(this)
+                taskManager.checkConnection()
+                taskManager.sendSignalStrength()
+            }
+        } catch (e: Exception) {
+            Log.e("Worker", getStackTrace(e))
         }
         return Result.success()
     }

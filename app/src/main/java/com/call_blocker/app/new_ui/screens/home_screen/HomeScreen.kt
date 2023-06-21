@@ -42,6 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.R
+import com.call_blocker.app.new_ui.Them
 import com.call_blocker.app.new_ui.backgroundConnected
 import com.call_blocker.app.new_ui.backgroundError
 import com.call_blocker.app.new_ui.buttonShape
@@ -65,6 +66,13 @@ import com.call_blocker.app.new_ui.widgets.IconWithBackground
 import com.call_blocker.verification.domain.VerificationInfo
 
 @Preview
+@Composable
+fun PreviewHomeScreen() {
+    Them {
+        HomeScreen()
+    }
+}
+
 @Composable
 fun HomeScreen(
     state: HomeScreenState = HomeScreenState(),

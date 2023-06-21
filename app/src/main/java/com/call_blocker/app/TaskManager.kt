@@ -58,7 +58,6 @@ import kotlin.time.toDuration
 
 class TaskManager(
     private val context: Context,
-    override val coroutineContext: CoroutineContext = SupervisorJob() + Dispatchers.IO,
     private val taskRepository: TaskRepository,
     private val ussdRepository: UssdRepository,
     private val settingsRepository: SettingsRepository,
@@ -67,6 +66,7 @@ class TaskManager(
     private val smsBlockerDatabase: SmsBlockerDatabase
 ) : CoroutineScope {
 
+    override val coroutineContext: CoroutineContext = SupervisorJob() + Dispatchers.IO
     init {
         ConnectionManager.init(context)
     }

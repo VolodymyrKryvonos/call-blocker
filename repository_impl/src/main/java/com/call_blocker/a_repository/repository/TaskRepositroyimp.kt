@@ -82,6 +82,7 @@ class TaskRepositoryImp(
             }
         }
     }.onCompletion {
+        SmartLog.e("$it")
         if (it != null && it !is CancellationException) {
             SmartLog.e("onCompletion ${getStackTrace(it)}")
             socketBuilder.reconnect()

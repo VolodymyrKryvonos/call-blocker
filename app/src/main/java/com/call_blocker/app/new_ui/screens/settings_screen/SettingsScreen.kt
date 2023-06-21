@@ -34,6 +34,7 @@ import androidx.core.content.FileProvider
 import com.call_blocker.adstv.ui.primaryDimens
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.R
+import com.call_blocker.app.new_ui.Them
 import com.call_blocker.app.new_ui.buttonBackground
 import com.call_blocker.app.new_ui.buttonTextColor
 import com.call_blocker.app.new_ui.darkGrey
@@ -47,7 +48,15 @@ import com.call_blocker.loger.SmartLog
 import com.call_blocker.ussd_sender.UssdService
 import java.io.File
 
-@Preview
+
+@Composable
+@Preview(showSystemUi = true, showBackground = true)
+fun PreviewSettingsScreen() {
+    Them {
+        SettingsScreen()
+    }
+}
+
 @Composable
 fun SettingsScreen(
     state: SettingsScreenState = SettingsScreenState(),

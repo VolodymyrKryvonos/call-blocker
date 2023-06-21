@@ -1,5 +1,6 @@
 package com.call_blocker.app.new_ui.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavHostController
@@ -9,7 +10,6 @@ import com.call_blocker.app.new_ui.screens.home_screen.HomeScreen
 import com.call_blocker.app.new_ui.screens.home_screen.HomeViewModel
 import com.call_blocker.app.new_ui.screens.settings_screen.SettingsScreen
 import com.call_blocker.app.new_ui.screens.settings_screen.SettingsViewModel
-import com.call_blocker.app.new_ui.screens.sim_card_info_screen.SimCardInfoEvents
 import com.call_blocker.app.new_ui.screens.sim_card_info_screen.SimCardInfoScreen
 import com.call_blocker.app.new_ui.screens.sim_card_info_screen.SimCardViewModel
 import com.call_blocker.app.new_ui.screens.task_screen.TaskScreen
@@ -32,6 +32,7 @@ fun BottomNavGraph(
         startDestination = Routes.BottomNavigation.HomeScreen.destination
     ) {
         composable(route = Routes.BottomNavigation.HomeScreen.destination) {
+            Log.e("StateHomeScreen", "${homeState.value}")
             HomeScreen(
                 homeState.value,
                 onEvent = homeViewModel::handleEvent,
@@ -42,21 +43,15 @@ fun BottomNavGraph(
             route = Routes.BottomNavigation.SimInfoScreen.destination,
             arguments = Routes.BottomNavigation.SimInfoScreen.arguments
         ) {
-            simCardViewModel.handleEvent(
-                SimCardInfoEvents.SetCurrentPageEvent(
-                    it.arguments?.getInt(
-                        "SimSlot"
-                    ) ?: 0
-                )
-            )
-            SimCardInfoScreen(simCardState.value) { event ->
-                simCardViewModel.handleEvent(event)
-            }
+            Log.e("StateSimCardInfoScreen", "${simCardState.value}")
+            SimCardInfoScreen(simCardState.value, onEvent = simCardViewModel::handleEvent)
         }
         composable(route = Routes.BottomNavigation.SettingsScreen.destination) {
+            Log.e("StateSettingsScreen", "${settingsState.value}")
             SettingsScreen(settingsState.value, settingsViewModel::handleEvent)
         }
         composable(route = Routes.BottomNavigation.TaskListScreen.destination) {
+            Log.e("StateTaskScreen", "${tasksState.value}")
             TaskScreen(tasksState.value, tasksViewModel::handleEvent)
         }
     }

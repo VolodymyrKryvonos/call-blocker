@@ -1,6 +1,7 @@
 package com.call_blocker.app.new_ui.screens.sim_card_info_screen
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.call_blocker.app.new_ui.BaseViewModel
 import com.call_blocker.app.worker_manager.SendingSMSWorker
@@ -44,6 +45,7 @@ class SimCardViewModel(
     }
 
     override fun handleEvent(event: SimCardInfoEvents) {
+        Log.e("SimCardViewModel", "$event")
         when (event) {
             is SimCardInfoEvents.CheckSimCardsEvent -> checkSimCards(event.context)
             is SimCardInfoEvents.ResetSimCardEvent -> resetSim(event)
