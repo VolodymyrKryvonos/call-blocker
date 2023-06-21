@@ -52,6 +52,7 @@ class SimCardViewModel(
             is SimCardInfoEvents.SetNewLimitsEvent -> setNewLimitForSim(event)
             is SimCardInfoEvents.VerifySimCardEvent -> verifySimCard(event)
             is SimCardInfoEvents.SetCurrentPageEvent -> setState { state.value.copy(currentPage = event.page) }
+            is SimCardInfoEvents.ReloadSimInfoEvent -> simsInfo(event.context)
         }
     }
 

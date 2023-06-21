@@ -45,6 +45,7 @@ class HomeViewModel(
             is HomeScreenEvents.RunExecutorEvent -> runExecutor(event)
             is HomeScreenEvents.StopExecutorEvent -> stopExecutor(event)
             is HomeScreenEvents.VerifySimCardEvent -> verifySimCard(event)
+            is HomeScreenEvents.CheckSimCardsEvent -> checkSimCards(event.context)
         }
     }
 

@@ -1,6 +1,7 @@
 package com.call_blocker.app.new_ui.screens.sim_card_info_screen
 
 import android.telephony.SubscriptionInfo
+import android.util.Log
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.call_blocker.app.R
+import com.call_blocker.app.new_ui.Them
 import com.call_blocker.app.new_ui.backgroundError
 import com.call_blocker.app.new_ui.buttonBackground
 import com.call_blocker.app.new_ui.buttonShape
@@ -46,14 +48,26 @@ data class SimTab(
     val simInfo: SimInfoState
 )
 
+
+@Composable
 @Preview
+fun PreviewSimCardInfoScreen() {
+    Them {
+        SimCardInfoScreen()
+    }
+}
+
 @Composable
 fun SimCardInfoScreen(
     state: SimCardInfoScreenState = SimCardInfoScreenState(),
     onEvent: (event: SimCardInfoEvents) -> Unit = {}
 ) {
+    Log.e("SimCardInfoScreen", state.toString())
     val tabs = getTabList(state)
     val context = LocalContext.current
+    LaunchedEffect(key1 = Unit) {
+        onEvent(SimCardInfoEvents.ReloadSimInfoEvent(context))
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -109,7 +123,10 @@ fun SimCardInfoScreen(
                         } else {
                             Tab(text = { Text(tab.name, style = MaterialTheme.typography.h5) },
                                 selected = state.currentPage == index,
-                                onClick = { onEvent(SimCardInfoEvents.SetCurrentPageEvent(index)) }
+                                onClick = {
+                                    Log.e("onClick", "$index")
+                                    onEvent(SimCardInfoEvents.SetCurrentPageEvent(index))
+                                }
                             )
                         }
 
@@ -118,30 +135,30 @@ fun SimCardInfoScreen(
             }
             Spacer(modifier = Modifier.height(10.dp))
             SimCardInfoTab(
-                tabs.first().simInfo,
+                tabs[state.currentPage].simInfo,
                 onNewLimitsSet = { dayLimit, monthLimit ->
                     onEvent(
                         SimCardInfoEvents.SetNewLimitsEvent(
-                            context = context,
-                            index = tabs.first().simInfo.simSubInfo.simSlotIndex,
-                            dayLimit = dayLimit,
-                            monthLimit = monthLimit
+                            context,
+                            tabs[state.currentPage].simInfo.simSubInfo.simSlotIndex,
+                            dayLimit,
+                            monthLimit
                         )
                     )
                 },
                 onResetClicked = {
                     onEvent(
                         SimCardInfoEvents.ResetSimCardEvent(
-                            context = context,
-                            simSlotID = tabs.first().simInfo.simSubInfo.simSlotIndex
+                            tabs[state.currentPage].simInfo.simSubInfo.simSlotIndex,
+                            context
                         )
                     )
                 },
                 onVerifyClicked = {
                     onEvent(
                         SimCardInfoEvents.VerifySimCardEvent(
-                            context = context,
-                            simSlot = tabs.first().simInfo.simSubInfo.simSlotIndex
+                            tabs[state.currentPage].simInfo.simSubInfo.simSlotIndex,
+                            context
                         )
                     )
                 })
@@ -152,6 +169,7 @@ fun SimCardInfoScreen(
 @Composable
 fun getTabList(state: SimCardInfoScreenState): List<SimTab> {
     return mutableListOf<SimTab>().apply {
+        Log.e("getTabList", "$state")
         if (state.firstSimSubInfo != null)
             add(
                 SimTab(

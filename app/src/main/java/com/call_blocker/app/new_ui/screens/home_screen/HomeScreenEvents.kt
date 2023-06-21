@@ -12,4 +12,5 @@ sealed interface HomeScreenEvents : UiEvent {
     data class VerifySimCardEvent(val context: Context, val simSlot: Int) : HomeScreenEvents
     data class LogOutEvent(val context: Context) : HomeScreenEvents
     data class ResetSimEvent(val context: Context, val simSlot: Int) : HomeScreenEvents
+    data class CheckSimCardsEvent(val context: Context) : HomeScreenEvents
 }

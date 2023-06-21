@@ -30,10 +30,13 @@ import com.call_blocker.app.R
 import com.call_blocker.app.new_ui.navigation.BottomNavGraph
 import com.call_blocker.app.new_ui.navigation.Routes
 import com.call_blocker.app.new_ui.screens.home_screen.HomeScreenEvents
+import com.call_blocker.app.new_ui.screens.home_screen.HomeScreenState
 import com.call_blocker.app.new_ui.screens.home_screen.HomeViewModel
 import com.call_blocker.app.new_ui.screens.login_screen.AuthorizationViewModel
 import com.call_blocker.app.new_ui.screens.login_screen.LoginScreen
+import com.call_blocker.app.new_ui.screens.settings_screen.SettingsEvent
 import com.call_blocker.app.new_ui.screens.settings_screen.SettingsViewModel
+import com.call_blocker.app.new_ui.screens.sim_card_info_screen.SimCardInfoEvents
 import com.call_blocker.app.new_ui.screens.sim_card_info_screen.SimCardViewModel
 import com.call_blocker.app.new_ui.screens.task_screen.TasksViewModel
 import com.call_blocker.app.new_ui.widgets.AlertDialog
@@ -60,8 +63,6 @@ class HolderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         splashViewModel.initMe(this)
-        if (splashViewModel.isPermissionGranted.value == true && splashViewModel.isAppDefault.value == true)
-            simCardViewModel.simsInfo(this)
         setContent {
             val isUserAuthorized by smsBlockerDatabase
                 .userIsAuthLiveData
@@ -71,6 +72,11 @@ class HolderActivity : ComponentActivity() {
             val isAppDefault by splashViewModel.isAppDefault.observeAsState(initial = null)
 
             navController = rememberNavController()
+
+            val homeState = homeViewModel.state.collectAsState()
+            val simCardState = simCardViewModel.state.collectAsState()
+            val tasksState = tasksViewModel.state.collectAsState()
+            val settingsState = settingsViewModel.state.collectAsState()
 
             if (!isUserAuthorized) {
                 Them {
@@ -83,10 +89,17 @@ class HolderActivity : ComponentActivity() {
                             Box(modifier = Modifier.padding(padding)) {
                                 BottomNavGraph(
                                     navController!!,
-                                    homeViewModel = homeViewModel,
-                                    simCardViewModel = simCardViewModel,
-                                    tasksViewModel = tasksViewModel,
-                                    settingsViewModel = settingsViewModel
+                                    homeState = homeState.value,
+                                    simCardState = simCardState.value,
+                                    tasksState = tasksState.value,
+                                    settingsState = settingsState.value,
+                                    handleEvent = {
+                                        when (it) {
+                                            is HomeScreenEvents -> homeViewModel.handleEvent(it)
+                                            is SimCardInfoEvents -> simCardViewModel.handleEvent(it)
+                                            is SettingsEvent -> settingsViewModel.handleEvent(it)
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -97,32 +110,21 @@ class HolderActivity : ComponentActivity() {
                     Them { Banner(splashViewModel) }
 
             }
-            UpdateAppVersionDialog()
+            UpdateAppVersionDialog(homeState.value)
         }
     }
 
     override fun onResume() {
         super.onResume()
-
-        when (navController?.currentDestination?.route) {
-            Routes.BottomNavigation.HomeScreen.destination -> {
-                homeViewModel.reloadSystemInfo(HomeScreenEvents.ReloadSystemInfoEvent(this))
-                homeViewModel.checkSimCards(this)
-            }
-
-            Routes.BottomNavigation.SimInfoScreen.destination -> {
-                simCardViewModel.simsInfo(this)
-            }
-        }
-        simCardViewModel.simsInfo(this)
         homeViewModel.checkIsLatestVersion()
         smsBlockerDatabase.isUssdCommandOn = UssdService.hasAccessibilityPermission(this)
+        settingsViewModel.handleEvent(SettingsEvent.UpdateIsUssdEnableEvent(smsBlockerDatabase.isUssdCommandOn))
     }
 
     @Composable
-    private fun UpdateAppVersionDialog() {
+    private fun UpdateAppVersionDialog(state: HomeScreenState) {
         Them {
-            if (homeViewModel.state.value.showUpdateAppDialog) {
+            if (state.showUpdateAppDialog) {
                 val profile = smsBlockerDatabase.profile
                 AlertDialog(
                     title = stringResource(id = R.string.update_application),

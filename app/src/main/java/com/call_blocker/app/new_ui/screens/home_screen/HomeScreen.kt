@@ -29,6 +29,7 @@ import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,6 +82,13 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val spaceHeight = 14.dp
+
+    LaunchedEffect(key1 = Unit) {
+        onEvent(HomeScreenEvents.CheckIsLatestVersionEvent)
+        onEvent(HomeScreenEvents.CheckSimCardsEvent(context))
+        onEvent(HomeScreenEvents.ReloadSystemInfoEvent(context))
+    }
+
     if (state.isLoading) {
         CircularProgressIndicator()
     }

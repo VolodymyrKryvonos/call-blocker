@@ -15,4 +15,5 @@ sealed interface SimCardInfoEvents : UiEvent {
 
     data class CheckSimCardsEvent(val context: Context) : SimCardInfoEvents
     data class SetCurrentPageEvent(val page: Int) : SimCardInfoEvents
+    data class ReloadSimInfoEvent(val context: Context) : SimCardInfoEvents
 }
