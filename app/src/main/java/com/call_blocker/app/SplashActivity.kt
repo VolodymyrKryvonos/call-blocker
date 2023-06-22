@@ -3,7 +3,7 @@ package com.call_blocker.app
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.call_blocker.app.new_ui.HolderActivity
+import com.call_blocker.app.ui.HolderActivity
 
 class SplashActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

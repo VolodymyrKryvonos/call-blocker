@@ -14,7 +14,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.work.ForegroundInfo
 import com.call_blocker.app.R
-import com.call_blocker.app.new_ui.HolderActivity
+import com.call_blocker.app.ui.HolderActivity
 import com.call_blocker.db.entity.TaskEntity
 
 object NotificationService {

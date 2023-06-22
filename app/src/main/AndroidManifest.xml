@@ -75,7 +75,7 @@
         </activity>
 
         <activity
-            android:name=".new_ui.HolderActivity"
+            android:name=".ui.HolderActivity"
             android:directBootAware="true"
             android:exported="true"
             android:launchMode="singleInstance"
