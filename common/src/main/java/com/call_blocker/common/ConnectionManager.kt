@@ -1,14 +1,16 @@
 package com.call_blocker.common
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.net.wifi.WifiManager
 import android.telephony.*
-import androidx.annotation.RequiresPermission
+import com.call_blocker.loger.SmartLog
 import kotlin.random.Random
 
 
+@SuppressLint("MissingPermission")
 object ConnectionManager {
 
     private var connectionManager: ConnectivityManager? = null
@@ -22,7 +24,11 @@ object ConnectionManager {
         wifiManager = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
     }
 
-    @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
+    fun logSignalStrength() {
+        SmartLog.e("SignalStrength = ${getSignalStrength()}")
+        SmartLog.e("NetworkGeneration = ${getNetworkGeneration()}")
+    }
+
     fun getSignalStrength(): Int {
         var strength: Int = -60 + Random.nextInt(-15, 15)
         val cellInfos = telephonyManager?.allCellInfo
