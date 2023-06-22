@@ -90,7 +90,9 @@ internal class UniqueIdInterceptor : Interceptor {
 
         val smsBlockerDatabase: SmsBlockerDatabase = get(SmsBlockerDatabase::class.java)
         val originalRequest = chain.request()
-        if (originalRequest.method == "POST") {
+        if (originalRequest.method == "POST" &&
+            originalRequest.body?.contentType()?.subtype?.contains("json") == true
+        ) {
             val newBody = JSONObject(originalRequest.body.bodyToString())
             newBody.put("unique_id", smsBlockerDatabase.deviceID)
 

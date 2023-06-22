@@ -5,6 +5,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 val primary = Color(0xFF436BCD)
 val background = Color(0x66D5EDFF)
@@ -49,5 +50,9 @@ fun Them(content: @Composable () -> Unit) = MaterialTheme(
     ),
     content = content,
 )
+
+
+val primaryDimens by lazy { 24.dp }
+val secondaryDimens by lazy { 16.dp }
 
 val buttonShape = RoundedCornerShape(100f)

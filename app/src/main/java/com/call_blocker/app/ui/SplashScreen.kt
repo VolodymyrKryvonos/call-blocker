@@ -16,9 +16,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import com.call_blocker.adstv.ui.element.Title
-import com.call_blocker.adstv.ui.primaryDimens
 import com.call_blocker.app.R
+import com.call_blocker.app.ui.widgets.Title
 import kotlinx.coroutines.delay
 
 

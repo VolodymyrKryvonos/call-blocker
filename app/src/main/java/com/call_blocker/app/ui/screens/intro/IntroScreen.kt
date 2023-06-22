@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.call_blocker.adstv.ui.primaryDimens
 import com.call_blocker.app.R
 import com.call_blocker.app.ui.PERMISSIONS_REQUIRED
 import com.call_blocker.app.ui.SplashViewModel
@@ -41,6 +40,7 @@ import com.call_blocker.app.ui.bold16Sp
 import com.call_blocker.app.ui.buttonBackground
 import com.call_blocker.app.ui.buttonTextColor
 import com.call_blocker.app.ui.disabledButton
+import com.call_blocker.app.ui.primaryDimens
 
 @Composable
 private fun IntroItem(

@@ -12,8 +12,7 @@ import org.koin.dsl.module
 val verificationModule = module {
     single<VerificationRepository> {
         VerificationRepositoryImpl(
-            AppRest(VerificationApi::class.java).build(),
-            get()
+            AppRest(VerificationApi::class.java).build()
         )
     }
     single { SimCardVerifier(get()) }

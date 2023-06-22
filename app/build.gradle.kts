@@ -131,7 +131,6 @@ dependencies {
 
     implementation(project(":loger"))
     implementation(project(":repository"))
-    implementation(project(":ui"))
     implementation(project(":db"))
     implementation(project(":repository_impl"))
     implementation(project(":common"))

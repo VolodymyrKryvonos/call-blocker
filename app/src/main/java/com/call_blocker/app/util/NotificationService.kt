@@ -21,41 +21,7 @@ object NotificationService {
     private const val SERVICE_NOTIFICATION_CHANNEL_ID = "Service_Bottega_SMS"
     private const val EVENT_NOTIFICATION_CHANNEL_ID = "Event_Bottega_SMS"
     private const val CHANNEL_NAME = "Bottega SMS"
-    private const val VERIFICATION_SUCCESS_ID = 785
     private const val SERVICE_NOTIFICATION_ID = 772
-
-    fun showPhoneNumberVerifiedNotification(
-        phoneNumber: String,
-        context: Context,
-        simSlot: Int
-    ) {
-        val pendingIntent: PendingIntent =
-            Intent(context, HolderActivity::class.java).let { notificationIntent ->
-                PendingIntent.getActivity(
-                    context,
-                    0,
-                    notificationIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-            }
-        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Notification.Builder(context, EVENT_NOTIFICATION_CHANNEL_ID)
-        } else {
-            Notification.Builder(context)
-        }
-        notificationBuilder.setContentTitle(context.getString(R.string.verification_completed))
-            .setContentText(context.getString(R.string.your_verification_completed, phoneNumber))
-            .setSmallIcon(R.drawable.app_logo)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setCategory(Notification.CATEGORY_EVENT)
-        val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as
-                    NotificationManager
-
-        notificationManager.cancel(VERIFICATION_SUCCESS_ID + simSlot)
-        notificationManager.notify(VERIFICATION_SUCCESS_ID, notificationBuilder.build())
-    }
 
     fun showVerificationFailedNotification(context: Context, task: TaskEntity) {
         val pendingIntent: PendingIntent =

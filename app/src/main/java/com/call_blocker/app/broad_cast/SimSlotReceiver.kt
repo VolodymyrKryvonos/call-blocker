@@ -9,8 +9,6 @@ import com.call_blocker.common.SimUtil
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
 import com.call_blocker.loger.utils.getStackTrace
-import com.google.firebase.crashlytics.ktx.crashlytics
-import com.google.firebase.ktx.Firebase
 import org.koin.java.KoinJavaComponent.get
 
 enum class SimSlotState {
@@ -36,7 +34,6 @@ class SimSlotReceiver : BroadcastReceiver() {
             }
         } catch (e: Exception) {
             SmartLog.e(getStackTrace(e))
-            Firebase.crashlytics.recordException(e)
         }
     }
 

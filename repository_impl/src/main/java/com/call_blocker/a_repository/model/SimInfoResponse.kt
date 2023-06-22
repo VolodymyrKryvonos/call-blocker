@@ -19,7 +19,3 @@ data class SSimInfo(
     @Json(name = "sms_per_day")
     val smsPerDay: Int
 )
-
-data class DateData(
-    val date: String
-)

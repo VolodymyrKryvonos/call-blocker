@@ -6,7 +6,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.call_blocker.adstv.ui.R
+import com.call_blocker.app.R
 
 val roboto400 = FontFamily(fonts = arrayListOf(Font(R.font.roboto_regular, FontWeight.Normal)))
 val roboto500 = FontFamily(fonts = arrayListOf(Font(R.font.roboto_medium, FontWeight.Medium)))

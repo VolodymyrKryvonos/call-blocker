@@ -7,15 +7,26 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.autofill.AutofillNode
 import androidx.compose.ui.autofill.AutofillType
+import androidx.compose.ui.composed
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalAutofill
+import androidx.compose.ui.platform.LocalAutofillTree
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import com.call_blocker.adstv.ui.element.autofill
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import com.call_blocker.app.R
 import com.call_blocker.app.ui.primary
 import com.call_blocker.app.ui.tabIconColor
@@ -163,4 +174,61 @@ fun PasswordField(
         }
     )
 }
+
+
+@Composable
+fun Title(
+    text: String,
+    contentAlignment: TextAlign = TextAlign.Start,
+    modifier: Modifier = Modifier
+) = Text(
+    text = text,
+    fontSize = 32.sp,
+    fontFamily = mainFont,
+    color = Color.Black,
+    textAlign = contentAlignment,
+    modifier = modifier
+    //modifier = Modifier.animateContentSize()
+)
+
+@Composable
+fun Text(
+    text: String,
+    color: Color = Color.Black,
+    contentAlignment: TextAlign = TextAlign.Start
+) = Text(
+    text = text,
+    fontSize = 18.sp,
+    fontFamily = mainFont,
+    color = color,
+    textAlign = contentAlignment
+    //modifier = Modifier.fillMaxWidth()
+)
+
+@ExperimentalComposeUiApi
+fun Modifier.autofill(
+    autofillTypes: List<AutofillType>,
+    onFill: ((String) -> Unit),
+) = composed {
+    val autofill = LocalAutofill.current
+    val autofillNode = AutofillNode(onFill = onFill, autofillTypes = autofillTypes)
+    LocalAutofillTree.current += autofillNode
+
+    this
+        .onGloballyPositioned {
+            autofillNode.boundingBox = it.boundsInWindow()
+        }
+        .onFocusChanged { focusState ->
+            autofill?.run {
+                if (focusState.isFocused) {
+                    requestAutofillForNode(autofillNode)
+                } else {
+                    cancelAutofillForNode(autofillNode)
+                }
+            }
+        }
+}
+
+
+val mainFont = FontFamily(fonts = arrayListOf(Font(R.font.roboto_medium, FontWeight.Normal)))
 

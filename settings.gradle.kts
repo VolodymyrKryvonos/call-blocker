@@ -1,7 +1,6 @@
 rootProject.name = "call-blocker.unit"
 
 include(":app")
-include(":ui")
 include(":repository")
 include(":loger")
 

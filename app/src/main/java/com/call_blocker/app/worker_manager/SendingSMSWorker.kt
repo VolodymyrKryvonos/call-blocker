@@ -1,12 +1,8 @@
 package com.call_blocker.app.worker_manager
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PowerManager
-import android.util.Log
-import androidx.core.app.ActivityCompat
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
@@ -22,7 +18,6 @@ import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
 import com.call_blocker.loger.utils.getStackTrace
 import com.call_blocker.rest_work_imp.SettingsRepository
-import com.call_blocker.rest_work_imp.TaskMessage
 import com.call_blocker.rest_work_imp.TaskRepository
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
@@ -30,7 +25,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -49,10 +43,41 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
     }
     private val taskManager: TaskManager by inject()
 
+
+    override suspend fun doWork(): Result {
+        try {
+            SmartLog.e("Start worker")
+            wakeLock.acquire(1000 * 60 * 35)
+            isRunning.emit(true)
+            setForeground(NotificationService.createForegroundInfo(context))
+            withContext(Dispatchers.IO) {
+                taskRepository.connectionStatusFlow.onEach {
+                    SmartLog.e("Connect status $it")
+                    if (it) {
+                        taskRepository.sendTaskStatuses()
+                    }
+                }.launchIn(this)
+
+                job = taskRepository.taskMessage().onEach { msg ->
+                    SmartLog.d("onEach ${msg.list.map { it.id }}")
+                    msg.list.forEach {
+                        taskManager.processTask(it)
+                    }
+                }.launchIn(this)
+                taskManager.checkConnection()
+                taskManager.sendSignalStrength()
+            }
+        } catch (e: Exception) {
+            SmartLog.e("Worker  ${getStackTrace(e)}")
+        }
+        return Result.success()
+    }
+
+
     companion object : KoinComponent {
         val isRunning = MutableStateFlow(false)
         var job: Job? = null
-        const val WORK_NAME = "ServiceWorker"
+        const val WORK_NAME = "SendingSMSWorker"
 
         private val smsBlockerDatabase: SmsBlockerDatabase by inject()
         private val taskRepository: TaskRepository by inject()
@@ -63,20 +88,12 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
             startWorkers(context)
             SmartLog.e("Sms1 ${smsBlockerDatabase.smsPerDaySimFirst}")
             SmartLog.e("Sms2 ${smsBlockerDatabase.smsPerDaySimSecond}")
-            if (ActivityCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-            ) {
-                SmartLog.e("SignalStrength = ${ConnectionManager.getSignalStrength()}")
-            }
-            SmartLog.e("NetworkGeneration = ${ConnectionManager.getNetworkGeneration()}")
+            ConnectionManager.logSignalStrength()
         }
 
         private fun getDeviceName(): String {
             return "${Build.MANUFACTURER} ${Build.MODEL}"
         }
-
 
         private fun startWorkers(context: Context) {
             val workManager = WorkManager.getInstance(context)
@@ -120,38 +137,4 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
             }
         }
     }
-
-
-    private var taskList: Flow<TaskMessage>? = null
-
-    override suspend fun doWork(): Result {
-        try {
-            SmartLog.e("Start worker")
-            taskList = taskRepository.taskMessage()
-            wakeLock.acquire(1000 * 60 * 35)
-            isRunning.emit(true)
-            setForeground(NotificationService.createForegroundInfo(context))
-            withContext(Dispatchers.IO) {
-                taskRepository.connectionStatusFlow.onEach {
-                    SmartLog.e("Connect status $it")
-                    if (it) {
-                        taskRepository.sendTaskStatuses()
-                    }
-                }.launchIn(this)
-
-                job = taskList!!.onEach { msg ->
-                    SmartLog.d("onEach ${msg.list.map { it.id }}")
-                    msg.list.forEach {
-                        taskManager.processTask(it)
-                    }
-                }.launchIn(this)
-                taskManager.checkConnection()
-                taskManager.sendSignalStrength()
-            }
-        } catch (e: Exception) {
-            Log.e("Worker", getStackTrace(e))
-        }
-        return Result.success()
-    }
-
 }

@@ -16,16 +16,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.call_blocker.adstv.ui.primaryDimens
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.R
-import com.call_blocker.app.new_ui.*
 import com.call_blocker.app.ui.buttonBackground
 import com.call_blocker.app.ui.buttonTextColor
 import com.call_blocker.app.ui.darkGrey
 import com.call_blocker.app.ui.disabledButton
 import com.call_blocker.app.ui.medium24Sp
 import com.call_blocker.app.ui.primary
+import com.call_blocker.app.ui.primaryDimens
 import com.call_blocker.app.ui.widgets.PasswordField
 import com.call_blocker.app.ui.widgets.TextField
 
