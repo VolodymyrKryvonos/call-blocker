@@ -36,6 +36,7 @@ android {
         buildConfigField("int", "patch", "${Config.patch}")
         buildConfigField("boolean", "showAmount", "true")
         buildConfigField("boolean", "logs", "true")
+        buildConfigField("boolean", "sandBoxConfig", "false")
     }
 
     flavorDimensions += "version"
@@ -54,6 +55,22 @@ android {
                 }
             }
         }
+
+        create("sandbox") {
+            buildConfigField("boolean", "sandBoxConfig", "true")
+            resValue("string", "app_name", "Bottega SMS")
+            applicationVariants.all {
+                if (name.contains("sandbox")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "new_ui_bottega-sms-sender-sandbox-v${versionName}.${output.outputFile.extension}"
+                        }
+                    }
+                }
+            }
+        }
+
         create("asar") {
             resValue("string", "app_name", "ASAR")
             applicationVariants.all {
@@ -67,21 +84,21 @@ android {
                 }
             }
         }
-//        create("without_amount") {
-//            resValue("string", "app_name", "SMS sender AN")
-//            buildConfigField("boolean", "showAmount", "false")
-//            buildConfigField("boolean", "logs", "false")
-//            applicationVariants.all {
-//                if (name.contains("without_amount")) {
-//                    outputs.forEach { output ->
-//                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-//                            output.outputFileName =
-//                                "new_ui_sms-sender-AN-remote-v${versionName}.${output.outputFile.extension}"
-//                        }
-//                    }
-//                }
-//            }
-//        }
+        create("without_amount") {
+            resValue("string", "app_name", "SMS sender AN")
+            buildConfigField("boolean", "showAmount", "false")
+            buildConfigField("boolean", "logs", "false")
+            applicationVariants.all {
+                if (name.contains("without_amount")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "new_ui_sms-sender-AN-remote-v${versionName}.${output.outputFile.extension}"
+                        }
+                    }
+                }
+            }
+        }
     }
 
     compileOptions {

@@ -5,7 +5,7 @@ import com.call_blocker.a_repository.model.SocketMessage
 import com.call_blocker.a_repository.model.TaskResponse
 import com.call_blocker.a_repository.rest.TaskRest
 import com.call_blocker.a_repository.socket.SocketBuilder
-import com.call_blocker.common.rest.Const.domain
+import com.call_blocker.common.rest.Const
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.TaskMethod
 import com.call_blocker.db.entity.TaskEntity
@@ -39,10 +39,11 @@ class TaskRepositoryImp(
 
     private val socketBuilder by lazy {
         SocketBuilder
-            .Builder
+            .Builder()
             .setUserToken(smsBlockerDatabase.userToken ?: "jhfhjlbdhjlf")
             .setUUid(smsBlockerDatabase.deviceID)
-            .setIP(domain)
+            .setIP(Const.sandboxDomain)
+            .setPort(Const.port)
             .build(smsBlockerDatabase)
     }
 

@@ -28,6 +28,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -137,7 +139,6 @@ class TaskManager(
                     is Resource.Loading -> Unit
                     is Resource.Success -> {
                         smsBlockerDatabase.profile = it.data
-                        sendSignalStrengthJob?.cancel()
                         sendSignalStrength()
                         taskRepository.reconnect()
                         if (smsBlockerDatabase.profile?.isConnected == true) {
@@ -152,22 +153,24 @@ class TaskManager(
     }
 
     fun sendSignalStrength() {
+        SmartLog.e("sendSignalStrength called")
         sendSignalStrengthJob?.cancel()
         sendSignalStrengthJob = launch {
             while (SendingSMSWorker.isRunning.value) {
+                SmartLog.e("Send signal strength")
                 val delay =
                     smsBlockerDatabase.profile?.delaySignalStrength?.toDuration(DurationUnit.SECONDS)
-                if (delay != null) {
-                    delay(delay)
-                    settingsRepository.sendSignalStrengthInfo(
-                        context
-                    )
-                }
+                        ?: 60.seconds
+                delay(delay)
+                settingsRepository.sendSignalStrengthInfo(
+                    context
+                )
             }
         }
     }
 
     fun checkConnection() {
+        SmartLog.e("checkConnection called")
         checkConnectionJob?.cancel()
         checkConnectionJob = launch {
             while (SendingSMSWorker.isRunning.value) {
@@ -185,7 +188,7 @@ class TaskManager(
                         }
                     }
                 } else {
-                    delay(60000)
+                    delay(1.minutes)
                 }
             }
         }

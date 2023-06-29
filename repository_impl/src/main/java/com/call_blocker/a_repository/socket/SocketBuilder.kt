@@ -2,8 +2,8 @@ package com.call_blocker.a_repository.socket
 
 import android.os.Handler
 import android.os.Looper
+import com.call_blocker.common.rest.Const
 import com.call_blocker.common.rest.Const.domain
-import com.call_blocker.common.rest.Const.port
 import com.call_blocker.common.rest.Const.socketUrl
 import com.call_blocker.common.rest.Pinger
 import com.call_blocker.db.SmsBlockerDatabase
@@ -28,6 +28,7 @@ class SocketBuilder private constructor(
     private val userToken: String,
     private val uuid: String,
     private var ip: String,
+    private var port: Int,
     private val smsBlockerDatabase: SmsBlockerDatabase
 ) : WebSocketListener(), CoroutineScope {
 
@@ -172,29 +173,32 @@ class SocketBuilder private constructor(
         }
     }
 
-    class Builder private constructor() {
+    class Builder {
 
         private var userToken: String? = null
         private var uuid: String? = null
         private var ip: String? = null
+        private var port: Int = Const.port
 
-        companion object {
-            private val data = Builder()
 
-            fun setUserToken(d: String): Builder {
-                data.userToken = d
-                return data
-            }
+        fun setUserToken(d: String): Builder {
+            userToken = d
+            return this
         }
 
         fun setIP(ip: String): Builder {
-            data.ip = ip
-            return data
+            this.ip = ip
+            return this
         }
 
         fun setUUid(d: String): Builder {
-            data.uuid = d
-            return data
+            uuid = d
+            return this
+        }
+
+        fun setPort(port: Int): Builder {
+            this.port = port
+            return this
         }
 
         fun build(smsBlockerDatabase: SmsBlockerDatabase): SocketBuilder {
@@ -203,6 +207,7 @@ class SocketBuilder private constructor(
                 userToken = userToken!!,
                 uuid = uuid!!,
                 ip = domain,
+                port = port,
                 smsBlockerDatabase = smsBlockerDatabase
             )
         }
