@@ -32,45 +32,19 @@ open class USSDServiceKT : AccessibilityService() {
      */
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         Companion.event = event
-        val ussd = USSDController
         SmartLog.e("${event.text}")
         SmartLog.e("ussd dialog class:${event.className}")
-        SmartLog.e("${ussd.isRunning}")
+        SmartLog.e("${USSDController.isRunning}")
         val response = event.text.toString()
-        if (LoginView(event) && notInputText(event)) {
-            SmartLog.e("LoginView(event) && notInputText(event)")
-            // first view or logView, do nothing, pass / FIRST MESSAGE
-            clickOnButton(event, 0)
-            ussd.stopRunning()
-            USSDController.callbackInvoke.over(response)
-        } else if (problemView(event) || LoginView(event)) {
-            SmartLog.e("problemView(event) || LoginView(event)")
-            // deal down
-            clickOnButton(event, 1)
-            USSDController.callbackInvoke.over(response)
-        } else if (isUSSDWidget(event)) {
-            SmartLog.e("isUSSDWidget(event)")
-            Timber.d("catch a USSD widget/Window")
-            if (notInputText(event)) {
-                SmartLog.e("notInputText(event)")
-                // not more input panels / LAST MESSAGE
-                // sent 'OK' button
-                Timber.d("No inputText found & closing USSD process")
-                clickOnButton(event, 0)
-                ussd.stopRunning()
-                USSDController.callbackInvoke.over(response)
-            } else {
-                // sent option 1
-                if (ussd.sendType==true) {
-                    SmartLog.e("ussd.sendType")
-                    ussd.callbackMessage?.invoke(response)
-                } else {
-                    SmartLog.e("else")
-                    USSDController.callbackInvoke.responseInvoke(
-                        response
-                    )
-                }
-            }
+        leaves = getLeaves(event)
+        if (problemView(event)) {
+            clickOnButton(0)
+            USSDController.stopRunning()
+        }
+        if (USSDController.sendType == true) {
+            USSDController.callbackMessage?.invoke(response)
+        } else {
+            USSDController.callbackInvoke.responseInvoke(response)
         }
     }
 
@@ -137,6 +111,8 @@ open class USSDServiceKT : AccessibilityService() {
     companion object {
         private var event: AccessibilityEvent? = null
 
+        private var leaves: List<AccessibilityNodeInfo?> = listOf()
+
         /**
          * Send whatever you want via USSD
          *
@@ -144,8 +120,8 @@ open class USSDServiceKT : AccessibilityService() {
          */
         fun send(text: String?) {
             Timber.d("trying to send... %s", text)
-            setTextIntoField(event, text)
-            clickOnButton(event, 1)
+            setTextIntoField(text)
+            clickOnButton(1)
         }
 
         /**
@@ -153,7 +129,7 @@ open class USSDServiceKT : AccessibilityService() {
          */
         fun cancel(): Boolean {
             Timber.d("Trying to close/cancel USSD process by clicked in first button ")
-            return clickOnButton(event, 0)
+            return clickOnButton(0)
         }
 
         /**
@@ -162,13 +138,13 @@ open class USSDServiceKT : AccessibilityService() {
          * @param event AccessibilityEvent
          * @param data  Any String
          */
-        private fun setTextIntoField(event: AccessibilityEvent?, data: String?) {
+        private fun setTextIntoField(data: String?) {
             val arguments = Bundle()
             arguments.putCharSequence(
                 AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
                 data
             )
-            for (leaf in getLeaves(event)) {
+            for (leaf in leaves) {
                 if (leaf?.className == "android.widget.EditText" && !leaf.performAction(
                         AccessibilityNodeInfo.ACTION_SET_TEXT,
                         arguments
@@ -189,8 +165,7 @@ open class USSDServiceKT : AccessibilityService() {
          * @return boolean has or not input text
          */
         protected fun notInputText(event: AccessibilityEvent?): Boolean {
-            for (leaf in getLeaves(event)) if (leaf?.className == "android.widget.EditText") return false
-            return true
+            return !leaves.any { it?.className == "android.widget.EditText" }
         }
 
         /**
@@ -199,9 +174,9 @@ open class USSDServiceKT : AccessibilityService() {
          * @param event AccessibilityEvent
          * @param index button's index
          */
-        protected fun clickOnButton(event: AccessibilityEvent?, index: Int): Boolean {
+        protected fun clickOnButton(index: Int): Boolean {
             var count = -1
-            for (leaf in getLeaves(event)) {
+            for (leaf in leaves) {
                 if (leaf?.className.toString().lowercase(Locale.getDefault()).contains("button")) {
                     count++
                     if (count == index) {
@@ -232,7 +207,7 @@ open class USSDServiceKT : AccessibilityService() {
                 leaves.add(node)
                 return
             }
-            for (i in 0 until (node?.childCount?:0)) {
+            for (i in 0 until (node?.childCount ?: 0)) {
                 getLeaves(leaves, node?.getChild(i))
             }
         }

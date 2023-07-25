@@ -155,4 +155,5 @@ dependencies {
     implementation(project(":model"))
     implementation(project(":ussd-library-kotlin"))
     implementation(project(mapOf("path" to ":ussd_sender")))
+    testImplementation("junit:junit:4.12")
 }

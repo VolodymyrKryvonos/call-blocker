@@ -53,6 +53,7 @@ object UssdService {
     }
 
     private fun startSessionCountdown(onReceiveResult: (SessionResult) -> Unit) {
+        handler.removeCallbacksAndMessages(null)
         handler.postDelayedKt(60 * 1000) {
             onReceiveResult(SessionResult.Timeout)
             closeSession()
@@ -66,7 +67,6 @@ object UssdService {
         SmartLog.e("selectMenu")
         USSDController.send(menuItem) {
             onReceiveResult(SessionResult.Success(it))
-            handler.removeCallbacksAndMessages(null)
             isSessionAlive = true
             startSessionCountdown(onReceiveResult)
         }

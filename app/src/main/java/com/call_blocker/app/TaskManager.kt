@@ -12,6 +12,7 @@ import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.TaskMethod
 import com.call_blocker.db.entity.TaskEntity
 import com.call_blocker.loger.SmartLog
+import com.call_blocker.loger.utils.getStackTrace
 import com.call_blocker.rest_work_imp.LogRepository
 import com.call_blocker.rest_work_imp.SettingsRepository
 import com.call_blocker.rest_work_imp.TaskRepository
@@ -97,18 +98,16 @@ class TaskManager(
                 UssdService.closeSession()
                 return@launch
             }
-            if (!UssdService.isSessionAlive) {
+
+            if (!UssdService.isSessionAlive && task.message.contains(Regex(".*[#*].*"))) {
+                UssdService.closeSession()
                 UssdService.startSession(task.message, task.simSlot ?: 0, context, sessionCallback)
             } else {
                 try {
                     UssdService.selectMenu(task.message, sessionCallback)
                 } catch (e: Exception) {
-                    UssdService.startSession(
-                        task.message,
-                        task.simSlot ?: 0,
-                        context,
-                        sessionCallback
-                    )
+                    storeUssdResult(task, "Error ${e.message}")
+                    SmartLog.e("sendUssdCode ${getStackTrace(e)}")
                 }
             }
         }

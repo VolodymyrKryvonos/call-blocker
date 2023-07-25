@@ -1,6 +1,5 @@
 package com.call_blocker.app
 
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
@@ -11,6 +10,6 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-        assertEquals(4, 2 + 2)
+        assert("*161#".contains(Regex(".*[#*].*")))
     }
 }
