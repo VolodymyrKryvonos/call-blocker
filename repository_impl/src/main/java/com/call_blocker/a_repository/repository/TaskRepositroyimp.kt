@@ -20,12 +20,12 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -72,14 +72,14 @@ class TaskRepositoryImp(
                 if (it.isNullOrEmpty()) {
                     return@collect
                 }
-                async {
+                launch {
                     SmartLog.d("Receive Message $it")
                     toTaskMessage(it)?.let { taskMessage ->
                         if (taskMessage.list.any { it.simSlot != null && it.simSlot != -1 }) {
                             send(taskMessage)
                         }
                     }
-                }.start()
+                }
             }
         }
     }.onCompletion {

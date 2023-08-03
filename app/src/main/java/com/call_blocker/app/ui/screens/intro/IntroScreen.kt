@@ -124,11 +124,9 @@ private fun Permissions(mViewModel: SplashViewModel) {
         rememberLauncherForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { pers ->
-            //requestPermission(context = context)
             val all = pers.all {
                 it.value
             }
-
             mViewModel.isPermissionGranted.postValue(all)
         }
 

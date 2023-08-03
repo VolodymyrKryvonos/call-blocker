@@ -114,6 +114,7 @@ class HolderActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        splashViewModel.initMe(this)
         homeViewModel.checkIsLatestVersion()
         smsBlockerDatabase.isUssdCommandOn = UssdService.hasAccessibilityPermission(this)
         settingsViewModel.handleEvent(SettingsEvent.UpdateIsUssdEnableEvent(smsBlockerDatabase.isUssdCommandOn))
