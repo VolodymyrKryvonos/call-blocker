@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
@@ -58,12 +59,17 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
                     }
                 }.launchIn(this)
 
-                job = taskRepository.taskMessage().onEach { msg ->
-                    SmartLog.d("onEach ${msg.list.map { it.id }}")
-                    msg.list.forEach {
-                        taskManager.processTask(it)
+                launch { taskRepository.collectMessagesToPriorityQueue() }
+                launch {
+                    while (isRunning.value) {
+                        val message = taskRepository.messageQueue.poll()
+                        if (message == null) {
+                            delay(500)
+                            continue
+                        }
+                        taskManager.processTask(message)
                     }
-                }.launchIn(this)
+                }
                 taskManager.checkConnection()
                 taskManager.sendSignalStrength()
             }

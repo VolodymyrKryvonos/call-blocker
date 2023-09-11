@@ -20,6 +20,11 @@ import com.call_blocker.rest_work_imp.FullSimInfoModel
 import com.call_blocker.rest_work_imp.SettingsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import org.json.JSONObject
+import java.io.IOException
 
 
 class SettingsRepositoryImp(
@@ -235,13 +240,36 @@ class SettingsRepositoryImp(
                     secondSimOperator = secondSim?.carrierName?.toString(),
                     countryCode = CountryCodeExtractor.getCountryCode(
                         context
-                    )
+                    ),
+                    ipAddress = getIpAddress()
                 )
             )
         } catch (e: Exception) {
             SmartLog.e("Failed send signal strength ${getStackTrace(e)}")
         }
     }
+
+    private suspend fun getIpAddress(): String {
+        val client = OkHttpClient()
+
+        val request = Request.Builder()
+            .url("https://api64.ipify.org?format=json")
+            .build()
+
+        try {
+            val response: Response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string() ?: ""
+                val jsonResponse = JSONObject(responseBody)
+                return jsonResponse.optString("ip", "")
+            }
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        return ""
+    }
+
 
     override suspend fun changeSimCard(
         context: Context

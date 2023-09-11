@@ -18,18 +18,13 @@ import com.call_blocker.rest_work_imp.TaskRepository
 import com.squareup.moshi.Json
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.coroutines.cancellation.CancellationException
 
 class TaskRepositoryImp(
     private val taskRest: TaskRest,
@@ -65,33 +60,32 @@ class TaskRepositoryImp(
 
     override val connectionStatusFlow: StateFlow<Boolean> by lazy { socketBuilder.connectionStatusFlow }
 
-    override suspend fun taskMessage(): Flow<TaskMessage> = channelFlow {
+    override suspend fun collectMessagesToPriorityQueue() {
         socketBuilder.connect()
-        withContext(Dispatchers.IO) {
-            socketBuilder.messageCollector.receiveAsFlow().collect {
+        socketBuilder
+            .messageCollector
+            .receiveAsFlow()
+            .onCompletion {
+                SmartLog.e("$it")
+                if (it != null && it !is CancellationException) {
+                    SmartLog.e("onCompletion ${getStackTrace(it)}")
+                    socketBuilder.reconnect()
+                    return@onCompletion
+                }
+                SmartLog.e("onCompletion")
+                socketBuilder.disconnect()
+            }
+            .collect {
                 if (it.isNullOrEmpty()) {
                     return@collect
                 }
-                launch {
-                    SmartLog.d("Receive Message $it")
-                    toTaskMessage(it)?.let { taskMessage ->
-                        if (taskMessage.list.any { it.simSlot != null && it.simSlot != -1 }) {
-                            send(taskMessage)
-                        }
+                SmartLog.d("Receive Message $it")
+                toTaskMessage(it)?.let { taskMessage ->
+                    if (taskMessage.list.any { it.simSlot != null && it.simSlot != -1 }) {
+                        messageQueue.addAll(taskMessage.list)
                     }
                 }
             }
-        }
-    }.onCompletion {
-        SmartLog.e("$it")
-        if (it != null && it !is CancellationException) {
-            SmartLog.e("onCompletion ${getStackTrace(it)}")
-            socketBuilder.reconnect()
-            return@onCompletion
-        }
-        SmartLog.e("onCompletion")
-        socketBuilder.disconnect()
-
     }
 
     private suspend fun toTaskMessage(msg: String?): TaskMessage? {
@@ -120,7 +114,8 @@ class TaskRepositoryImp(
                             method = TaskMethod.valueOf(
                                 parsedMsg.method ?: TaskMethod.UNDEFINED.name
                             ),
-                            simIccId = parsedMsg.data.simIccId ?: ""
+                            simIccId = parsedMsg.data.simIccId ?: "",
+                            priority = parsedMsg.priority
                         )
                     }
                 ).also { save(it.list.filter { taskEntity -> taskEntity.method != TaskMethod.GET_LOGS }) }

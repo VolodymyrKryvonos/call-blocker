@@ -3,7 +3,7 @@ package com.call_blocker.a_repository.socket
 import android.os.Handler
 import android.os.Looper
 import com.call_blocker.common.rest.Const
-import com.call_blocker.common.rest.Const.domain
+import com.call_blocker.common.rest.Const.sandboxDomain
 import com.call_blocker.common.rest.Const.socketUrl
 import com.call_blocker.common.rest.Pinger
 import com.call_blocker.db.SmsBlockerDatabase
@@ -206,7 +206,7 @@ class SocketBuilder private constructor(
             return SocketBuilder(
                 userToken = userToken!!,
                 uuid = uuid!!,
-                ip = domain,
+                ip = sandboxDomain,
                 port = port,
                 smsBlockerDatabase = smsBlockerDatabase
             )

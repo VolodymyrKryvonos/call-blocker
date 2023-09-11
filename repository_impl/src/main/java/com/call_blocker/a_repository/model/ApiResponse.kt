@@ -9,7 +9,8 @@ data class ApiResponse<DATA>(
 data class SocketMessage<DATA>(
     val method: String? = null,
     val data: DATA?,
-    val options: Options
+    val options: Options,
+    val priority: Int = 0,
 )
 
 data class Options(

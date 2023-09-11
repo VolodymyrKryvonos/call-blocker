@@ -67,7 +67,7 @@ class TaskManager(
             }
 
             TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
-            else -> smsSender.doTask(task)
+            else -> delay(5000)
         }
     }
 
@@ -144,7 +144,6 @@ class TaskManager(
                             checkConnection()
                         }
                     }
-
                     else -> Unit
                 }
             }
@@ -160,10 +159,10 @@ class TaskManager(
                 val delay =
                     smsBlockerDatabase.profile?.delaySignalStrength?.toDuration(DurationUnit.SECONDS)
                         ?: 60.seconds
-                delay(delay)
                 settingsRepository.sendSignalStrengthInfo(
                     context
                 )
+                delay(delay)
             }
         }
     }

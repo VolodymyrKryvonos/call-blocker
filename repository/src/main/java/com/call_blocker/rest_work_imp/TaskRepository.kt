@@ -4,14 +4,17 @@ import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.TaskMethod
 import com.call_blocker.db.entity.TaskEntity
 import com.call_blocker.db.entity.TaskStatus
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Calendar
+import java.util.PriorityQueue
 import java.util.TimeZone
 
 abstract class TaskRepository(private val smsBlockerDatabase: SmsBlockerDatabase) {
 
     private val taskDao = smsBlockerDatabase.taskDao
+
+    val messageQueue =
+        PriorityQueue<TaskEntity> { task1, task2 -> task2.priority - task1.priority }
 
     protected suspend fun task(id: Int) =
         taskDao.findByID(id) ?: TaskEntity(-1, TaskMethod.UNDEFINED, "", "", simIccId = "")
@@ -84,7 +87,7 @@ abstract class TaskRepository(private val smsBlockerDatabase: SmsBlockerDatabase
 
     abstract suspend fun sendTaskStatuses()
 
-    abstract suspend fun taskMessage(): Flow<TaskMessage>
+    abstract suspend fun collectMessagesToPriorityQueue()
 
     suspend fun clearFor(simIndex: Int) = taskDao.clearFor(simIndex)
 

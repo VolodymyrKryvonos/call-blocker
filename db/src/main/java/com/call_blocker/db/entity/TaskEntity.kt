@@ -3,7 +3,8 @@ package com.call_blocker.db.entity
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.call_blocker.db.TaskMethod
-import java.util.*
+import java.util.Calendar
+import java.util.TimeZone
 
 @Entity(tableName = "task")
 data class TaskEntity(
@@ -17,6 +18,8 @@ data class TaskEntity(
     val message: String,
 
     val highPriority: Boolean = false,
+
+    val priority: Int = 0,
 
     var status: TaskStatus = TaskStatus.BUFFERED,
 

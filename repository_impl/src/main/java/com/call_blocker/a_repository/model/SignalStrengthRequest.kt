@@ -16,5 +16,7 @@ data class SignalStrengthRequest(
     @Json(name = "second_sim_operator")
     val secondSimOperator: String?,
     @Json(name = "country_code")
-    val countryCode: String
+    val countryCode: String,
+    @Json(name = "ip_address")
+    val ipAddress: String
 )
