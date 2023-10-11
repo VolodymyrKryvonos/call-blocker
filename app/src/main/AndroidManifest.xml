@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.call_blocke.app">
+    package="com.call_blocker.app">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -30,6 +30,7 @@
     <uses-permission android:name="android.permission.ANSWER_PHONE_CALLS" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
 
 
     <!-- @SystemApi @hide Allows an application to call APIs that allow it to do interactions
@@ -44,22 +45,25 @@
     <!-- @hide Fuller form of {@link android.Manifest.permission#INTERACT_ACROSS_USERS}
          that removes restrictions on where broadcasts can be sent and allows other
          types of interactions. -->
-    <permission android:name="android.permission.INTERACT_ACROSS_USERS_FULL"
+    <permission
+        android:name="android.permission.INTERACT_ACROSS_USERS_FULL"
         android:protectionLevel="signature" />
 
     <uses-feature android:name="android.hardware.telephony" />
 
     <application
-        android:name=".SmsApp"
+        android:name="com.call_blocker.app.SmsApp"
         android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/App"
         android:usesCleartextTraffic="true"
-        android:fullBackupContent="false"
-        android:requestLegacyExternalStorage="true">
+        tools:targetApi="s">
 
         <activity
             android:name=".SplashActivity"
@@ -71,16 +75,22 @@
         </activity>
 
         <activity
-            android:name=".MainActivity"
-            android:exported="true"
+            android:name=".ui.HolderActivity"
             android:directBootAware="true"
-            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE">
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
+            android:screenOrientation="portrait">
             <intent-filter>
+
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SENDTO" />
                 <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
+
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data android:scheme="sms" />
                 <data android:scheme="smsto" />
                 <data android:scheme="mms" />
@@ -88,13 +98,14 @@
             </intent-filter>
         </activity>
 
+
         <service
-            android:stopWithTask="false"
-            android:name=".service.TaskExecutorService"
-            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
+            android:name="com.call_blocker.app.service.TaskExecutorService"
             android:directBootAware="true"
+            android:exported="true"
             android:foregroundServiceType="phoneCall"
-            android:exported="true">
+            android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
+            android:stopWithTask="false">
             <intent-filter>
                 <action android:name="android.intent.action.RESPOND_VIA_MESSAGE" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -107,9 +118,9 @@
         </service>
 
         <receiver
-            android:name=".broad_cast.SmsReceiver"
-            android:enabled="true"
+            android:name="com.call_blocker.app.broad_cast.SmsReceiver"
             android:directBootAware="true"
+            android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BROADCAST_SMS">
             <intent-filter android:priority="999">
@@ -119,9 +130,9 @@
         </receiver>
 
         <receiver
-            android:name=".broad_cast.MmsReceiver"
-            android:exported="true"
+            android:name="com.call_blocker.app.broad_cast.MmsReceiver"
             android:directBootAware="true"
+            android:exported="true"
             android:permission="android.permission.BROADCAST_WAP_PUSH">
             <intent-filter>
                 <action android:name="android.provider.Telephony.WAP_PUSH_DELIVER" />
@@ -131,7 +142,7 @@
         </receiver>
 
         <receiver
-            android:name=".broad_cast.CallReceiver"
+            android:name="com.call_blocker.app.broad_cast.CallReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter>
@@ -140,13 +151,30 @@
         </receiver>
 
         <receiver
-            android:name=".broad_cast.SimSlotReceiver"
+            android:name="com.call_blocker.app.broad_cast.SimSlotReceiver"
             android:directBootAware="true"
+            android:enabled="true"
             android:exported="true">
             <intent-filter android:priority="999">
                 <action android:name="android.provider.Telephony.SIM_STATE_CHANGED" />
+                <action android:name="android.intent.action.SIM_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <service android:name="com.call_blocker.app.service.ChangeSimCardNotifierService" />
+
+        <service
+            android:name="com.romellfudi.ussdlibrary.USSDServiceKT"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/config_service" />
+        </service>
+
 
         <provider
             android:name="androidx.core.content.FileProvider"

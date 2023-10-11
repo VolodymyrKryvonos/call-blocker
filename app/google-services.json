@@ -33,6 +33,35 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:966328126819:android:065e2cf97f82de42db5756",
+        "android_client_info": {
+          "package_name": "com.call_blocker.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "966328126819-tjhfafr5fdhcvvb6ikdpl9ners6r6of5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCuyPyE3JZzqXp-VesmBx5rzeUAPOchZYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "966328126819-tjhfafr5fdhcvvb6ikdpl9ners6r6of5.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

@@ -1,16 +1,16 @@
-import AppDependencies.impTester
-import AppDependencies.implementation
+@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 
 plugins {
-    id("com.android.application")
-    kotlin("android")
-    id("kotlin-android")
-    kotlin("kapt")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.crashlytics)
 }
 
 android {
+
+    namespace = "com.call_blocker.app"
     signingConfigs {
         create("release") {
             storeFile = file("/Users/mykyta/Documents/callblockerunit/key")
@@ -20,23 +20,32 @@ android {
         }
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 
-    compileSdk = Version.compileSdk
-    buildToolsVersion = Version.buildTool
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.call_blocke.app"
-        minSdk = (Config.minSdkVersion.toInt())
-        targetSdk = Config.targetVersion.toInt()
-        versionCode = Config.versionCode
-        versionName = Config.versionName
+        applicationId = "com.call_blocker.app"
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.compileSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("int", "major", "${Config.major}")
-        buildConfigField("int", "minor", "${Config.minor}")
-        buildConfigField("int", "patch", "${Config.patch}")
+
+        val major = libs.versions.major.get()
+        val minor = libs.versions.minor.get()
+        val patch = libs.versions.patch.get()
+        versionCode = major.toInt() * 100000 + minor.toInt() * 1000 + patch.toInt()
+        versionName = "$major.$minor.$patch"
+
+        buildConfigField("int", "major", major)
+        buildConfigField("int", "minor", minor)
+        buildConfigField("int", "patch", patch)
+
+        buildConfigField("boolean", "showAmount", "true")
+        buildConfigField("boolean", "logs", "true")
+        buildConfigField("boolean", "sandBoxConfig", "false")
     }
 
     flavorDimensions += "version"
@@ -44,78 +53,93 @@ android {
     productFlavors {
         create("bottega_sms") {
             resValue("string", "app_name", "Bottega SMS")
+            applicationVariants.all {
+                if (name.contains("bottega_sms")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "new_ui_bottega-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                        }
+                    }
+                }
+            }
+        }
+        create("sandbox") {
+            buildConfigField("boolean", "sandBoxConfig", "true")
+            resValue("string", "app_name", "Bottega SMS")
+            applicationVariants.all {
+                if (name.contains("sandbox")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "new_ui_bottega-sms-sender-sandbox-v${versionName}.${output.outputFile.extension}"
+                        }
+                    }
+                }
+            }
         }
         create("asar") {
             resValue("string", "app_name", "ASAR")
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = Version.compose
-    }
-
-    buildTypes {
-        release {
             applicationVariants.all {
-                outputs.forEach { output ->
-                    if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
-                        output.outputFileName =
-                            "sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                if (name.contains("asar")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "new_ui_asar-sms-sender-remote-v${versionName}.${output.outputFile.extension}"
+                        }
+                    }
+                }
+            }
+        }
+        create("without_amount") {
+            resValue("string", "app_name", "SMS sender AN")
+            buildConfigField("boolean", "showAmount", "false")
+            buildConfigField("boolean", "logs", "false")
+            applicationVariants.all {
+                if (name.contains("without_amount")) {
+                    outputs.forEach { output ->
+                        if (output is com.android.build.gradle.internal.api.BaseVariantOutputImpl) {
+                            output.outputFileName =
+                                "new_ui_sms-sender-AN-remote-v${versionName}.${output.outputFile.extension}"
+                        }
                     }
                 }
             }
         }
     }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtensionVersion.get()
+    }
+
 }
 
 dependencies {
-    implementation(AppDependencies.base)
+    implementation(libs.bundles.kotlin.base)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.bundles.compose)
+    implementation(libs.bundles.androidx)
 
-    implementation(AppDependencies.kotlinUI)
+    implementation(libs.moshi)
+    implementation(libs.koin)
 
-    implementation("androidx.appcompat:appcompat:1.3.0")
-
-    implementation("androidx.fragment:fragment-ktx:1.3.5")
-
-    implementation("androidx.compose.runtime:runtime-livedata:${Version.compose}")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:1.0.0-alpha07")
-    implementation("androidx.activity:activity-compose:1.3.0-rc01")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.3.1")
-    implementation("androidx.navigation:navigation-compose:2.4.0-alpha04")
-
-    implementation("com.squareup.moshi:moshi-kotlin:1.13.0")
-
-    implementation(project(":ui"))
-
-    implementation("com.google.android.material:material:1.4.0")
-    implementation(project(":repository_di"))
-    implementation(project(":repository"))
-
-    implementation(project(":db"))
-
-    implementation(project(":model"))
-    implementation(AppDependencies.paged)
-
-    implementation(platform("com.google.firebase:firebase-bom:29.0.0"))
-
-    implementation("com.google.firebase:firebase-analytics-ktx")
-
-    implementation("com.google.firebase:firebase-crashlytics-ktx")
-    implementation(project(mapOf("path" to ":common")))
-
-    impTester()
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     implementation(project(":loger"))
-
-    implementation("androidx.work:work-runtime-ktx:2.7.1")
+    implementation(project(":repository"))
+    implementation(project(":db"))
+    implementation(project(":repository_impl"))
+    implementation(project(":common"))
+    implementation(project(":verification"))
+    implementation(project(":model"))
+    implementation(project(":ussd-library-kotlin"))
+    implementation(project(":ussd_sender"))
 }
