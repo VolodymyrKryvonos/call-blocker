@@ -37,7 +37,9 @@ class UserRepositoryImp(
     }
 
     override suspend fun doRegister(
-        email: String, password: String,
+        email: String,
+        password: String,
+        whatsApp: String,
         packageName: String,
         versionName: String
     ): String {
@@ -48,11 +50,12 @@ class UserRepositoryImp(
                 nameOfPackage = packageName,
                 versionOfPackage = versionName,
                 deviceModel = Build.MODEL,
-                deviceType = "Smarthone",
+                deviceType = "Smartphone",
                 campaign = "App Sms",
                 connectionType = "WIFI",
                 msisdn = "",
-                deviceBrand = Build.BRAND
+                deviceBrand = Build.BRAND,
+                whatsApp = whatsApp
             )
         ).data.success.token
     }

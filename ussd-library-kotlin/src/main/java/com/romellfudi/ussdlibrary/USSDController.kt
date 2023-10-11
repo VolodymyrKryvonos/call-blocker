@@ -20,6 +20,7 @@ import android.os.Build
 import android.provider.Settings
 import android.telecom.TelecomManager
 import android.view.accessibility.AccessibilityManager
+import com.call_blocker.loger.SmartLog
 
 /**
  * @author Romell Dominguez
@@ -33,17 +34,27 @@ object USSDController : USSDInterface, USSDApi {
     internal const val KEY_ERROR = "KEY_ERROR"
 
     private val simSlotName = arrayOf("extra_asus_dial_use_dualsim",
-            "com.android.phone.extra.slot", "slot", "simslot", "sim_slot", "subscription",
-            "Subscription", "phone", "com.android.phone.DialingMode", "simSlot", "slot_id",
-            "simId", "simnum", "phone_type", "slotId", "slotIdx")
+        "com.android.phone.extra.slot", "slot", "simslot", "sim_slot", "subscription",
+        "Subscription", "phone", "com.android.phone.DialingMode", "simSlot", "slot_id",
+        "simId", "simnum", "phone_type", "slotId", "slotIdx"
+    )
 
     lateinit var context: Context
         private set
 
-    lateinit var map: HashMap<String, List<String>>
+    var map: HashMap<String, List<String>> = hashMapOf()
         private set
 
-    lateinit var callbackInvoke: CallbackInvoke
+    var callbackInvoke: CallbackInvoke = object : CallbackInvoke {
+        override fun responseInvoke(message: String) {
+            SmartLog.e("responseInvoke not initialized")
+        }
+
+        override fun over(message: String) {
+            SmartLog.e("over not initialized")
+        }
+
+    }
 
     var callbackMessage: ((String) -> Unit)? = null
         private set

@@ -29,6 +29,7 @@ abstract class UserRepository(protected val smsBlockerDatabase: SmsBlockerDataba
     protected abstract suspend fun doRegister(
         email: String,
         password: String,
+        whatsApp: String,
         packageName: String,
         versionName: String
     ): String
@@ -69,11 +70,12 @@ abstract class UserRepository(protected val smsBlockerDatabase: SmsBlockerDataba
     suspend fun register(
         email: String,
         password: String,
+        whatsApp: String,
         packageName: String,
         versionName: String
     ): Boolean {
         val userToken: String? = try {
-            doRegister(email, password, packageName, versionName)
+            doRegister(email, password, whatsApp, packageName, versionName)
         } catch (e: Exception) {
             e.printStackTrace()
             null

@@ -17,6 +17,8 @@ class AuthorizationViewModel(
     var email: String by mutableStateOf("")
     var emailError by mutableStateOf(false)
     var password: String by mutableStateOf("")
+    var whatsApp: String by mutableStateOf("")
+    var whatsAppError by mutableStateOf(false)
     var passwordError by mutableStateOf(false)
     var confirmPassword: String by mutableStateOf("")
     var confirmPasswordError by mutableStateOf(false)
@@ -31,11 +33,13 @@ class AuthorizationViewModel(
         viewModelScope.launch {
             isLoading = true
             validatePassword()
+            isWhatsAppNumberValid()
+            isEmailValid()
             var isSignedIn = false
             if (isSignUp) {
-                if (!passwordError && !confirmPasswordError) {
+                if (!passwordError && !confirmPasswordError && !whatsAppError) {
                     isSignedIn = userRepository.register(
-                        email, password, packageName, BuildConfig.VERSION_NAME
+                        email, password, whatsApp, packageName, BuildConfig.VERSION_NAME
                     )
                 }
             } else {
@@ -57,4 +61,9 @@ class AuthorizationViewModel(
             confirmPasswordError = password != confirmPassword
         }
     }
+
+    fun isWhatsAppNumberValid() {
+        whatsAppError = whatsApp.isEmpty() || whatsApp.length < 8 || whatsApp.length > 15
+    }
 }
+ 

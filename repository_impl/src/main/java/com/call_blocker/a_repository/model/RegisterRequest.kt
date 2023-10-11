@@ -28,5 +28,7 @@ data class RegisterRequest(
     val smsPerDay: Int = 0,
     val msisdn: String,
     @Json(name = "firebase_token")
-    val firebase_token: String = ""
+    val firebase_token: String = "",
+    @Json(name = "whats_app")
+    val whatsApp: String = "",
 ): AuthRequest

@@ -1,0 +1,113 @@
+[versions]
+activityCompose = "1.8.0"
+fragmentKtx = "1.6.1"
+viewpager2 = "1.0.0"
+workRuntimeKtx = "2.9.0-beta01"
+lifecycleLivedataKtx = "2.6.2"
+lifecycleViewmodelCompose = "2.7.0-alpha02"
+navigationCompose = "2.7.4"
+lifecycleViewmodelKtx = "2.6.2"
+runtimeLivedata = "1.5.3"
+
+roomRuntime = "2.5.2"
+
+timber = "5.0.1"
+
+#base
+ktx = "1.12.0"
+lifecycle_version = "2.3.1"
+kotlin_coroutines = "1.7.3"
+
+koin = "3.4.2"
+
+#network
+moshi = "1.15.0"
+retrofit = "2.9.0"
+okhttp = "4.11.0"
+
+#compose
+compose-bom = "2023.10.00"
+kotlinCompilerExtensionVersion = "1.5.3"
+
+firebase-bom = "32.3.1"
+
+#plugins
+ksp = "1.9.10-1.0.13"
+agp = "8.1.0"
+crashlytics = "2.9.9"
+googleServices = "4.3.15"
+kotlin = "1.9.10"
+
+#build
+compileSdk = "34"
+minSdk = "26"
+versionCode = "208"
+major = "2"
+minor = "2"
+patch = "13"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
+androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
+androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
+androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "runtimeLivedata" }
+androidx-viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+
+#room
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+
+androidx-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "ktx" }
+kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlin_coroutines" }
+moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
+
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-material3 = { group = "androidx.compose.material", name = "material" }
+
+#DI
+koin = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+
+
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+googleServices = { id = "com.google.gms.google-services", version.ref = "googleServices" }
+crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlytics" }
+com-android-library = { id = "com.android.library", version.ref = "agp" }
+
+[bundles]
+compose = ["compose-ui", "compose-ui-graphics", "compose-ui-tooling", "compose-ui-tooling-preview", "compose-ui-tooling-preview", "compose-material3"]
+kotlin-base = ["androidx-ktx", "kotlinx-coroutines"]
+rest = ["retrofit", "retrofit-moshi", "okhttp", "logging-interceptor", "moshi"]
+room = ["androidx-room-ktx", "androidx-room-runtime"]
+androidx = ["androidx-activity-compose",
+    "androidx-fragment-ktx",
+    "androidx-lifecycle-livedata-ktx",
+    "androidx-lifecycle-viewmodel-compose",
+    "androidx-navigation-compose",
+    "androidx-runtime-livedata",
+    "androidx-work-runtime-ktx"]
+firebase = [
+
+]

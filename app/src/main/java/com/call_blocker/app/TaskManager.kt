@@ -67,7 +67,9 @@ class TaskManager(
             }
 
             TaskMethod.UPDATE_USER_PROFILE -> updateProfile()
-            else -> delay(5000)
+            else -> smsSender.doTask(
+                task
+            )
         }
     }
 

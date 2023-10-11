@@ -63,7 +63,7 @@ fun SimCardInfoScreen(
     onEvent: (event: SimCardInfoEvents) -> Unit = {}
 ) {
     Log.e("SimCardInfoScreen", state.toString())
-    val tabs = getTabList(state)
+    val tabs = getTabs(state)
     val context = LocalContext.current
     LaunchedEffect(key1 = Unit) {
         onEvent(SimCardInfoEvents.ReloadSimInfoEvent(context))
@@ -107,7 +107,7 @@ fun SimCardInfoScreen(
                     indicator = indicator,
                     backgroundColor = itemBackground
                 ) {
-                    tabs.forEachIndexed { index, tab ->
+                    tabs.forEach { (index, tab) ->
                         if (tab.iconId != null) {
                             LeadingIconTab(
                                 text = { Text(tab.name) },
@@ -134,44 +134,47 @@ fun SimCardInfoScreen(
                 }
             }
             Spacer(modifier = Modifier.height(10.dp))
-            SimCardInfoTab(
-                tabs[state.currentPage].simInfo,
-                onNewLimitsSet = { dayLimit, monthLimit ->
-                    onEvent(
-                        SimCardInfoEvents.SetNewLimitsEvent(
-                            context,
-                            tabs[state.currentPage].simInfo.simSubInfo.simSlotIndex,
-                            dayLimit,
-                            monthLimit
+            val simInfo = tabs[state.currentPage]?.simInfo
+            if (simInfo != null)
+                SimCardInfoTab(
+                    simInfo,
+                    onNewLimitsSet = { dayLimit, monthLimit ->
+                        onEvent(
+                            SimCardInfoEvents.SetNewLimitsEvent(
+                                context,
+                                simInfo.simSubInfo.simSlotIndex,
+                                dayLimit,
+                                monthLimit
+                            )
                         )
-                    )
-                },
-                onResetClicked = {
-                    onEvent(
-                        SimCardInfoEvents.ResetSimCardEvent(
-                            tabs[state.currentPage].simInfo.simSubInfo.simSlotIndex,
-                            context
+                    },
+                    onResetClicked = {
+                        onEvent(
+                            SimCardInfoEvents.ResetSimCardEvent(
+                                simInfo.simSubInfo.simSlotIndex,
+                                context
+                            )
                         )
-                    )
-                },
-                onVerifyClicked = {
-                    onEvent(
-                        SimCardInfoEvents.VerifySimCardEvent(
-                            tabs[state.currentPage].simInfo.simSubInfo.simSlotIndex,
-                            context
+                    },
+                    onVerifyClicked = {
+                        onEvent(
+                            SimCardInfoEvents.VerifySimCardEvent(
+                                simInfo.simSubInfo.simSlotIndex,
+                                context
+                            )
                         )
-                    )
-                })
+                    })
         }
     }
 }
 
 @Composable
-fun getTabList(state: SimCardInfoScreenState): List<SimTab> {
-    return mutableListOf<SimTab>().apply {
+fun getTabs(state: SimCardInfoScreenState): Map<Int, SimTab> {
+    return mutableMapOf<Int, SimTab>().apply {
         Log.e("getTabList", "$state")
         if (state.firstSimSubInfo != null)
-            add(
+            put(
+                0,
                 SimTab(
                     name = stringResource(id = R.string.simWithPlaceHolder, 1),
                     simInfo = SimInfoState(
@@ -184,7 +187,8 @@ fun getTabList(state: SimCardInfoScreenState): List<SimTab> {
                 )
             )
         if (state.secondSimSubInfo != null) {
-            add(
+            put(
+                1,
                 SimTab(
                     name = stringResource(id = R.string.simWithPlaceHolder, 2),
                     simInfo = SimInfoState(

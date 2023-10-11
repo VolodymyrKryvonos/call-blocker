@@ -145,5 +145,6 @@
     <string name="signUp">Sign up</string>
     <string name="invalidValue">Invalid value</string>
     <string name="enable_ussd">Enable ussd commands</string>
+    <string name="whatsApp">WhatsApp number</string>
 
 </resources>

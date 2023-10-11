@@ -1,9 +1,10 @@
 package com.call_blocker.app.ui.screens.login_screen
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -34,7 +35,8 @@ fun LoginScreen(viewModel: AuthorizationViewModel) {
     Column(
         modifier = Modifier
             .padding(28.dp)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(36.dp))
@@ -59,6 +61,21 @@ fun LoginScreen(viewModel: AuthorizationViewModel) {
             autofillTypes = listOf(AutofillType.EmailAddress),
             keyboardType = KeyboardType.Email
         )
+        if (viewModel.isSignUp) {
+            Spacer(modifier = Modifier.height(15.dp))
+            TextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = viewModel.whatsApp,
+                onValueChange = {
+                    viewModel.whatsApp = it
+                    viewModel.isWhatsAppNumberValid()
+                },
+                isError = viewModel.whatsAppError,
+                hint = stringResource(id = R.string.whatsApp),
+                autofillTypes = listOf(AutofillType.PhoneNumber),
+                keyboardType = KeyboardType.Phone
+            )
+        }
         Spacer(modifier = Modifier.height(15.dp))
         PasswordField(
             modifier = Modifier.fillMaxWidth(),
@@ -119,16 +136,15 @@ fun LoginScreen(viewModel: AuthorizationViewModel) {
             )
             Spacer(modifier = Modifier.height(22.dp))
 
-            Text(
-                modifier = Modifier
-                    .clickable {
-                        viewModel.isSignUp = !viewModel.isSignUp
-                    }
-                    .padding(8.dp),
-                text = stringResource(id = if (viewModel.isSignUp) R.string.signIn else R.string.createAccount),
-                style = MaterialTheme.typography.h5,
-                color = primary
-            )
+            TextButton(onClick = { viewModel.isSignUp = !viewModel.isSignUp }) {
+                Text(
+                    text = stringResource(id = if (viewModel.isSignUp) R.string.signIn else R.string.createAccount),
+                    style = MaterialTheme.typography.h5,
+                    color = primary
+                )
+            }
+
+
         }
         Spacer(modifier = Modifier.weight(1f))
         Text(

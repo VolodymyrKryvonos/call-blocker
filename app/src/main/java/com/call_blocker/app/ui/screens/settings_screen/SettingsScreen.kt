@@ -221,6 +221,7 @@ private fun sendLogs(context: Context) {
 private fun viewLog(context: Context) {
     val directory = File(context.filesDir.absolutePath + "/Log")
     val filesList = directory.listFiles() ?: return
+    if (filesList.isEmpty()) return
     val intent = Intent(Intent.ACTION_VIEW)
     intent.flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
     intent.setDataAndType(

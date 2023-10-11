@@ -14,7 +14,6 @@ import android.view.accessibility.AccessibilityNodeInfo
 import com.call_blocker.loger.SmartLog
 import com.romellfudi.ussdlibrary.USSDController.context
 import com.romellfudi.ussdlibrary.USSDController.map
-import timber.log.Timber
 import java.util.Locale
 
 /**
@@ -97,7 +96,7 @@ open class USSDServiceKT : AccessibilityService() {
      * Active when SO interrupt the application
      */
     override fun onInterrupt() {
-        Timber.d("onInterrupt")
+        SmartLog.d("onInterrupt")
     }
 
     /**
@@ -105,7 +104,7 @@ open class USSDServiceKT : AccessibilityService() {
      */
     override fun onServiceConnected() {
         super.onServiceConnected()
-        Timber.d("onServiceConnected")
+        SmartLog.d("onServiceConnected")
     }
 
     companion object {
@@ -119,7 +118,7 @@ open class USSDServiceKT : AccessibilityService() {
          * @param text any string
          */
         fun send(text: String?) {
-            Timber.d("trying to send... %s", text)
+            SmartLog.d("trying to send... $text")
             setTextIntoField(text)
             clickOnButton(1)
         }
@@ -128,7 +127,7 @@ open class USSDServiceKT : AccessibilityService() {
          * Dismiss dialog by using first button from USSD Dialog
          */
         fun cancel(): Boolean {
-            Timber.d("Trying to close/cancel USSD process by clicked in first button ")
+            SmartLog.d("Trying to close/cancel USSD process by clicked in first button ")
             return clickOnButton(0)
         }
 

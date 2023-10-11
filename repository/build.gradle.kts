@@ -1,38 +1,25 @@
-import AppDependencies.implementation
+@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.com.android.library)
 }
 
 android {
-    kapt {
-        generateStubs = true
-    }
-
-    compileSdk = Version.compileSdk
-    buildToolsVersion = Version.buildTool
-
-    defaultConfig {
-        minSdkPreview = Config.minSdkVersion
-        targetSdkPreview = Config.targetVersion
-    }
-
+    namespace = "com.call_blocker.rest_work_imp"
+    compileSdk = libs.versions.compileSdk.get().toInt()
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 }
 
 dependencies {
-    implementation(AppDependencies.base)
-    implementation(project(AppDependencies.db))
+    implementation(libs.bundles.kotlin.base)
 
-
+    implementation(project(":db"))
     implementation(project(":loger"))
     implementation(project(":model"))
     implementation(project(":common"))

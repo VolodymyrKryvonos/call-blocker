@@ -1,40 +1,28 @@
-import AppDependencies.implementation
-
+@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.com.android.library)
+    alias(libs.plugins.ksp)
 }
 
 android {
-    compileSdk = (Version.compileSdk)
-    buildToolsVersion = (Version.buildTool)
-
-    defaultConfig {
-        minSdk = (Config.minSdkVersion.toInt())
-        minSdkPreview = (Config.minSdkVersion)
-        targetSdk =  (Config.targetVersion.toInt())
-    }
-
+    namespace = "com.call_blocker.db"
+    compileSdk = libs.versions.compileSdk.get().toInt()
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 }
 
 dependencies {
-    implementation(AppDependencies.base)
+    implementation(libs.bundles.kotlin.base)
+    implementation(libs.bundles.room)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.moshi)
+    implementation(libs.koin)
 
-    implementation("androidx.room:room-runtime:2.5.0")
     implementation(project(":model"))
-    kapt("androidx.room:room-compiler:2.5.0")
-    implementation("androidx.room:room-ktx:2.5.0")
-
-    implementation(AppDependencies.moshi)
-    implementation(AppDependencies.koin)
-    implementation(AppDependencies.security)
 }

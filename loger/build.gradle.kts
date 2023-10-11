@@ -1,21 +1,21 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.com.android.library)
 }
 
 android {
-    compileSdk = (Version.compileSdk)
-    buildToolsVersion = (Version.buildTool)
-
-    defaultConfig {
-        minSdkPreview = (Config.minSdkVersion)
-        targetSdk =  (Config.targetVersion.toInt())
+    namespace = "com.call_blocker.loger"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 }
 
 dependencies {
-    implementation (AppDependencies.ktx)
-
-    implementation ("com.jakewharton.timber:timber:5.0.1")
-
+    implementation(libs.bundles.kotlin.base)
+    implementation(libs.timber)
 }

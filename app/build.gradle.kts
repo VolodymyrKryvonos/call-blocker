@@ -1,13 +1,16 @@
-import AppDependencies.implementation
+@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 
 plugins {
-    id("com.android.application")
-    kotlin("android")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
+
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.crashlytics)
 }
 
 android {
+
+    namespace = "com.call_blocker.app"
     signingConfigs {
         create("release") {
             storeFile = file("/Users/mykyta/Documents/callblockerunit/key")
@@ -17,23 +20,29 @@ android {
         }
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 
-    compileSdk = Version.compileSdk
-    buildToolsVersion = Version.buildTool
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.call_blocker.app"
-        minSdk = (Config.minSdkVersion.toInt())
-        targetSdk = Config.targetVersion.toInt()
-        versionCode = Config.versionCode
-        versionName = Config.versionName
+        minSdk = libs.versions.minSdk.get().toInt()
+        targetSdk = libs.versions.compileSdk.get().toInt()
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField("int", "major", "${Config.major}")
-        buildConfigField("int", "minor", "${Config.minor}")
-        buildConfigField("int", "patch", "${Config.patch}")
+
+        val major = libs.versions.major.get()
+        val minor = libs.versions.minor.get()
+        val patch = libs.versions.patch.get()
+        versionCode = major.toInt() * 100000 + minor.toInt() * 1000 + patch.toInt()
+        versionName = "$major.$minor.$patch"
+
+        buildConfigField("int", "major", major)
+        buildConfigField("int", "minor", minor)
+        buildConfigField("int", "patch", patch)
+
         buildConfigField("boolean", "showAmount", "true")
         buildConfigField("boolean", "logs", "true")
         buildConfigField("boolean", "sandBoxConfig", "false")
@@ -55,7 +64,6 @@ android {
                 }
             }
         }
-
         create("sandbox") {
             buildConfigField("boolean", "sandBoxConfig", "true")
             resValue("string", "app_name", "Bottega SMS")
@@ -70,7 +78,6 @@ android {
                 }
             }
         }
-
         create("asar") {
             resValue("string", "app_name", "ASAR")
             applicationVariants.all {
@@ -100,51 +107,31 @@ android {
             }
         }
     }
-
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
-
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
-
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.3.2"
+        kotlinCompilerExtensionVersion = libs.versions.kotlinCompilerExtensionVersion.get()
     }
-
 
 }
 
 dependencies {
-    implementation(AppDependencies.base)
+    implementation(libs.bundles.kotlin.base)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.bundles.compose)
+    implementation(libs.bundles.androidx)
 
-    implementation(AppDependencies.kotlinUI)
+    implementation(libs.moshi)
+    implementation(libs.koin)
 
-    implementation("androidx.appcompat:appcompat:1.6.1")
-
-    implementation("androidx.fragment:fragment-ktx:1.5.5")
-
-    implementation("androidx.compose.runtime:runtime-livedata:${Version.compose}")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
-    implementation("androidx.activity:activity-compose:1.6.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.5.1")
-    implementation("androidx.navigation:navigation-compose:2.5.3")
-
-    implementation(AppDependencies.moshi)
-    implementation(AppDependencies.koin)
-
-
-    implementation("com.google.android.material:material:1.8.0")
-    implementation(platform("com.google.firebase:firebase-bom:29.0.0"))
-
-    implementation("com.google.firebase:firebase-analytics-ktx")
-
-    implementation("com.google.firebase:firebase-crashlytics-ktx")
-
-    implementation("androidx.work:work-runtime-ktx:2.8.0")
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     implementation(project(":loger"))
     implementation(project(":repository"))
@@ -154,6 +141,5 @@ dependencies {
     implementation(project(":verification"))
     implementation(project(":model"))
     implementation(project(":ussd-library-kotlin"))
-    implementation(project(mapOf("path" to ":ussd_sender")))
-    testImplementation("junit:junit:4.12")
+    implementation(project(":ussd_sender"))
 }

@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.call_blocker.common.rest"
+    namespace = "com.romellfudi.ussdlibrary"
     compileSdk = libs.versions.compileSdk.get().toInt()
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -19,8 +19,5 @@ android {
 
 dependencies {
     implementation(libs.bundles.kotlin.base)
-    implementation(libs.bundles.rest)
-    implementation(libs.koin)
     implementation(project(":loger"))
-    implementation(project(":db"))
 }

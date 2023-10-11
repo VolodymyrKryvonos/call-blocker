@@ -7,7 +7,6 @@
 package com.call_blocker.common.rest
 
 import com.call_blocker.db.SmsBlockerDatabase
-import com.call_blocker.loger.SmartLog
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.CacheControl
@@ -17,7 +16,6 @@ import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import org.koin.java.KoinJavaComponent.get
 import retrofit2.Retrofit
@@ -52,18 +50,18 @@ class ApiFactory {
         builder?.addInterceptor(AuthorizationInterceptor())
         builder?.addInterceptor(UnauthorizedInterceptor())
         builder?.addInterceptor(UniqueIdInterceptor())
-        val logging = if (BuildConfig.DEBUG) {
-            HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            }
-        } else {
-            HttpLoggingInterceptor {
-                SmartLog.e(it)
-            }.apply {
-                level = HttpLoggingInterceptor.Level.BASIC
-            }
-        }
-        builder?.addInterceptor(logging)
+//        val logging = if (BuildConfig.DEBUG) {
+//            HttpLoggingInterceptor().apply {
+//                level = HttpLoggingInterceptor.Level.BODY
+//            }
+//        } else {
+//            HttpLoggingInterceptor {
+//                SmartLog.e(it)
+//            }.apply {
+//                level = HttpLoggingInterceptor.Level.BASIC
+//            }
+//        }
+//        builder?.addInterceptor(logging)
     }
 
 

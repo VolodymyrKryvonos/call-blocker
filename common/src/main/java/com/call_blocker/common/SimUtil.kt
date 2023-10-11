@@ -62,6 +62,6 @@ object SimUtil {
             telephonyManager.imei
         } else {
             telephonyManager.deviceId
-        }
+        } ?: ""
     }
 }
