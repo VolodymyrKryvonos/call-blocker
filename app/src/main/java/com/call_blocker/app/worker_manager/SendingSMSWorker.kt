@@ -131,7 +131,8 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
             Firebase.crashlytics.log("stop service")
             SmartLog.d("stop service")
             job?.cancel()
-            WorkManager.getInstance(context).cancelAllWork()
+            WorkManager.getInstance(context).cancelUniqueWork("RestartServiceWorker")
+            WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                 isRunning.emit(false)
                 launch {

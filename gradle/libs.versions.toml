@@ -44,7 +44,7 @@ minSdk = "26"
 versionCode = "208"
 major = "2"
 minor = "2"
-patch = "13"
+patch = "14"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
