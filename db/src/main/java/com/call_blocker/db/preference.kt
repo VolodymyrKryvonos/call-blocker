@@ -3,6 +3,8 @@ package com.call_blocker.db
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.call_blocker.db.entity.SystemDetailEntity
 import com.call_blocker.model.Profile
 import com.squareup.moshi.Moshi
@@ -15,11 +17,20 @@ enum class AutoVerificationResult {
 class Preference(context: Context) {
 
     private val moshi = Moshi.Builder().addLast(KotlinJsonAdapterFactory()).build()
+    val masterKey: MasterKey = MasterKey.Builder(context)
+        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+        .build()
 
-    private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
-        "sms_send_app",
-        Context.MODE_PRIVATE
-    )
+    private val sharedPreferences: SharedPreferences =
+        EncryptedSharedPreferences
+            .create(
+                context,
+                "secret_shared_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
 
     var userPassword: String?
         get() = sharedPreferences.getString("userPassword", null)
@@ -234,4 +245,13 @@ class Preference(context: Context) {
                 commit()
             }
         }
+
+    var email: String?
+        get() = sharedPreferences.getString("email", null)
+        set(value) = sharedPreferences.edit().putString("email", value).apply()
+
+    var password: String?
+        get() = sharedPreferences.getString("password", null)
+        set(value) = sharedPreferences.edit().putString("password", value).apply()
+
 }

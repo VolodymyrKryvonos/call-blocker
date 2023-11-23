@@ -6,16 +6,26 @@
 
 package com.call_blocker.common.rest
 
+import com.call_blocker.db.BuildConfig
 import com.call_blocker.db.SmsBlockerDatabase
+import com.call_blocker.loger.SmartLog
+import com.call_blocker.loger.utils.getStackTrace
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import okhttp3.CacheControl
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.Interceptor
 import okhttp3.Interceptor.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import org.koin.java.KoinJavaComponent.get
 import retrofit2.Retrofit
@@ -33,35 +43,22 @@ class ApiFactory {
         builder?.connectTimeout(CONNECT_TIMEOUT.toLong(), TimeUnit.SECONDS)
         builder?.writeTimeout(WRITE_TIMEOUT.toLong(), TimeUnit.SECONDS)
         builder?.readTimeout(READ_TIMEOUT.toLong(), TimeUnit.SECONDS)
-        builder?.addInterceptor { chain ->
-            val original = chain.request()
-            val requestBuilder = original.newBuilder()
-                .addHeader("Accept", "application/json; charset=utf-8")
-                .addHeader("Content-Type", "application/json; charset=utf-8")
-                .header("platform", "android")
-                .method(original.method, original.body)
-
-            val request = requestBuilder
-                .cacheControl(CacheControl.Builder().noCache().build())
-                .build()
-
-            chain.proceed(request)
-        }
+        builder?.addInterceptor(HeadersInterceptor())
         builder?.addInterceptor(AuthorizationInterceptor())
         builder?.addInterceptor(UnauthorizedInterceptor())
         builder?.addInterceptor(UniqueIdInterceptor())
-//        val logging = if (BuildConfig.DEBUG) {
-//            HttpLoggingInterceptor().apply {
-//                level = HttpLoggingInterceptor.Level.BODY
-//            }
-//        } else {
-//            HttpLoggingInterceptor {
-//                SmartLog.e(it)
-//            }.apply {
-//                level = HttpLoggingInterceptor.Level.BASIC
-//            }
-//        }
-//        builder?.addInterceptor(logging)
+        val logging = if (BuildConfig.DEBUG) {
+            HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+        } else {
+            HttpLoggingInterceptor {
+                SmartLog.e(it)
+            }.apply {
+                level = HttpLoggingInterceptor.Level.BASIC
+            }
+        }
+        builder?.addInterceptor(logging)
     }
 
 
@@ -82,6 +79,20 @@ class ApiFactory {
         const val READ_TIMEOUT = DEFAULT_TIMEOUT
     }
 }
+
+
+internal class HeadersInterceptor : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val original = chain.request()
+        val requestBuilder = original.newBuilder()
+            .addHeader("Accept", "application/json; charset=utf-8")
+            .addHeader("Content-Type", "application/json; charset=utf-8")
+            .header("platform", "android")
+            .method(original.method, original.body)
+        return chain.proceed(requestBuilder.build())
+    }
+}
+
 
 internal class UniqueIdInterceptor : Interceptor {
     override fun intercept(chain: Chain): Response {
@@ -127,14 +138,62 @@ internal class AuthorizationInterceptor : Interceptor {
     }
 }
 
+
 internal class UnauthorizedInterceptor : Interceptor {
     @Throws(IOException::class)
-    override fun intercept(chain: Chain): Response {
-        val smsBlockerDatabase: SmsBlockerDatabase = get(SmsBlockerDatabase::class.java)
+    override fun intercept(chain: Interceptor.Chain): Response {
         val response: Response = chain.proceed(chain.request())
         if (response.code == 401) {
-            smsBlockerDatabase.userToken = null
+            tryAutoLogin()
         }
         return response
+    }
+
+    private fun tryAutoLogin() {
+        CoroutineScope(Job()).launch {
+            val smsBlockerDatabase: SmsBlockerDatabase = get(SmsBlockerDatabase::class.java)
+            val email = smsBlockerDatabase.email ?: return@launch
+            val password = smsBlockerDatabase.password ?: return@launch
+
+            val body = JSONObject()
+            body.put("email", email)
+            body.put("password", password)
+            body.put("version_of_package", BuildConfig.versionName)
+            OkHttpClient
+                .Builder()
+                .addInterceptor(HeadersInterceptor())
+                .addInterceptor(UniqueIdInterceptor())
+                .build()
+                .newCall(
+                    Request
+                        .Builder()
+                        .post(
+                            body
+                                .toString()
+                                .toRequestBody("application/json".toMediaTypeOrNull())
+                        )
+                        .url("${Const.url}login")
+                        .build()
+                ).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        smsBlockerDatabase.userToken = null
+                        SmartLog.e("tryAutoLogin ${getStackTrace(e)}")
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        try {
+                            SmartLog.e("onResponse ${response.body.toString()}")
+                            val jsonResponse = JSONObject(response.body.toString())
+
+                            smsBlockerDatabase.userToken =
+                                jsonResponse.getJSONObject("data").getJSONObject("success")
+                                    .getString("token")
+                        } catch (e: Exception) {
+
+                            SmartLog.e("onResponse ${getStackTrace(e)}")
+                        }
+                    }
+                })
+        }
     }
 }

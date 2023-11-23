@@ -12,6 +12,15 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    buildFeatures {
+        buildConfig = true
+    }
+    defaultConfig {
+        val major = libs.versions.major.get()
+        val minor = libs.versions.minor.get()
+        val patch = libs.versions.patch.get()
+        buildConfigField("String", "versionName", "\"$major.$minor.$patch\"")
+    }
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }
@@ -24,5 +33,6 @@ dependencies {
     implementation(libs.moshi)
     implementation(libs.koin)
 
+    implementation(libs.androidx.security.crypto)
     implementation(project(":model"))
 }

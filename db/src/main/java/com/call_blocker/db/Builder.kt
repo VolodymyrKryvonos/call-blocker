@@ -166,6 +166,19 @@ class SmsBlockerDatabase(context: Context) {
     val isSimChange: Boolean
         get() = secondSimChanged || firstSimChanged
 
+
+    var email: String?
+        get() = (preference ?: throw DbModuleException("please init db module")).email
+        set(value) {
+            preference?.email = value
+        }
+
+    var password: String?
+        get() = (preference ?: throw DbModuleException("please init db module")).password
+        set(value) {
+            preference?.password = value
+        }
+
     init {
         preference = Preference(context)
 

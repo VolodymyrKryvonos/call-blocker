@@ -31,6 +31,8 @@ kotlinCompilerExtensionVersion = "1.5.3"
 
 firebase-bom = "32.3.1"
 
+androidx-security-crypto = "1.1.0-alpha06"
+
 #plugins
 ksp = "1.9.10-1.0.13"
 agp = "8.1.0"
@@ -41,10 +43,10 @@ kotlin = "1.9.10"
 #build
 compileSdk = "34"
 minSdk = "26"
-versionCode = "208"
+versionCode = "209"
 major = "2"
 minor = "2"
-patch = "14"
+patch = "15"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -76,6 +78,8 @@ compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 compose-material3 = { group = "androidx.compose.material", name = "material" }
+
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "androidx-security-crypto" }
 
 #DI
 koin = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }

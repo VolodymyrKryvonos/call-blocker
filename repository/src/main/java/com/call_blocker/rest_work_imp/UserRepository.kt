@@ -54,6 +54,8 @@ abstract class UserRepository(protected val smsBlockerDatabase: SmsBlockerDataba
         if (userToken != null) {
             smsBlockerDatabase.userToken = userToken
             smsBlockerDatabase.userPassword = password
+            smsBlockerDatabase.email = email
+            smsBlockerDatabase.password = password
         }
 
         return userToken != null
@@ -84,6 +86,8 @@ abstract class UserRepository(protected val smsBlockerDatabase: SmsBlockerDataba
         if (userToken != null) {
             smsBlockerDatabase.userToken = userToken
             smsBlockerDatabase.userPassword = password
+            smsBlockerDatabase.email = email
+            smsBlockerDatabase.password = password
         }
 
         return userToken != null
