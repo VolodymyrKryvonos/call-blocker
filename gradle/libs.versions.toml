@@ -1,15 +1,15 @@
 [versions]
-activityCompose = "1.8.0"
-fragmentKtx = "1.6.1"
+activityCompose = "1.8.2"
+fragmentKtx = "1.6.2"
 viewpager2 = "1.0.0"
-workRuntimeKtx = "2.9.0-beta01"
-lifecycleLivedataKtx = "2.6.2"
-lifecycleViewmodelCompose = "2.7.0-alpha02"
-navigationCompose = "2.7.4"
-lifecycleViewmodelKtx = "2.6.2"
-runtimeLivedata = "1.5.3"
+workRuntimeKtx = "2.9.0"
+lifecycleLivedataKtx = "2.7.0"
+lifecycleViewmodelCompose = "2.7.0"
+navigationCompose = "2.7.7"
+lifecycleViewmodelKtx = "2.7.0"
+runtimeLivedata = "1.6.2"
 
-roomRuntime = "2.5.2"
+roomRuntime = "2.6.1"
 
 timber = "5.0.1"
 
@@ -23,21 +23,21 @@ koin = "3.4.2"
 #network
 moshi = "1.15.0"
 retrofit = "2.9.0"
-okhttp = "4.11.0"
+okhttp = "4.12.0"
 
 #compose
-compose-bom = "2023.10.00"
+compose-bom = "2024.02.00"
 kotlinCompilerExtensionVersion = "1.5.3"
 
-firebase-bom = "32.3.1"
+firebase-bom = "32.7.2"
 
 androidx-security-crypto = "1.1.0-alpha06"
 
 #plugins
 ksp = "1.9.10-1.0.13"
-agp = "8.1.0"
+agp = "8.2.2"
 crashlytics = "2.9.9"
-googleServices = "4.3.15"
+googleServices = "4.4.1"
 kotlin = "1.9.10"
 
 #build

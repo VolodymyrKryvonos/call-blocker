@@ -3,10 +3,12 @@ package com.call_blocker.a_repository.model
 import com.squareup.moshi.Json
 
 data class SignalStrengthRequest(
-    @Json(name = "signal_strength")
-    val signalStrength: Int,
-    @Json(name = "signal_generation")
-    val signalGeneration: String,
+    @Json(name = "signal_strength_sim_1")
+    val firstSimSignalStrength: Int,
+    @Json(name = "signal_strength_sim_2")
+    val secondSimSignalStrength: Int,
+    @Json(name = "signal_strength_wifi")
+    val wifiSignalStrength: Int,
     @Json(name = "first_sim_iccid")
     val firstSimId: String?,
     @Json(name = "second_sim_iccid")

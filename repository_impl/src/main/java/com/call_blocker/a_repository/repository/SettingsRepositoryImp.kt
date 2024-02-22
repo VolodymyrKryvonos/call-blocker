@@ -1,15 +1,19 @@
 package com.call_blocker.a_repository.repository
 
 import android.content.Context
-import androidx.annotation.RequiresPermission
+import android.telephony.SubscriptionInfo
 import com.call_blocker.a_repository.BuildConfig
-import com.call_blocker.a_repository.model.*
+import com.call_blocker.a_repository.model.ChangeSimCardRequest
+import com.call_blocker.a_repository.model.RefreshDataForSimRequest
+import com.call_blocker.a_repository.model.SignalStrengthRequest
+import com.call_blocker.a_repository.model.SimInfoRequest
+import com.call_blocker.a_repository.model.SmsPerDayRequest
 import com.call_blocker.a_repository.request.GetProfileRequest
 import com.call_blocker.a_repository.rest.SettingsRest
-import com.call_blocker.common.ConnectionManager
 import com.call_blocker.common.CountryCodeExtractor
 import com.call_blocker.common.Resource
 import com.call_blocker.common.SimUtil
+import com.call_blocker.common.getNetworkGeneration
 import com.call_blocker.common.rest.Const
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.loger.SmartLog
@@ -88,7 +92,7 @@ class SettingsRepositoryImp(
                     firstSimICCID = firstSim?.iccId ?: "",
                     secondSimICCID = secondSim?.iccId ?: "",
                     countryCode = countryCode,
-                    connectionType = ConnectionManager.getNetworkGeneration()
+                    connectionType = getNetworkGeneration(context)
                 )
             )
 
@@ -223,24 +227,25 @@ class SettingsRepositoryImp(
         }
     }
 
-    @RequiresPermission("android.permission.ACCESS_FINE_LOCATION")
     override suspend fun sendSignalStrengthInfo(
-        context: Context
+        firstSimSignal: Int,
+        secondSimSignal: Int,
+        wifiSignal: Int,
+        firstSim: SubscriptionInfo?,
+        secondSim: SubscriptionInfo?,
+        countryCode: String
     ) {
         try {
-            val firstSim = SimUtil.firstSim(context)
-            val secondSim = SimUtil.secondSim(context)
             settingsRest.sendSignalStrengthInfo(
                 SignalStrengthRequest(
-                    signalStrength = ConnectionManager.getSignalStrength(),
-                    signalGeneration = ConnectionManager.getNetworkGeneration(),
+                    firstSimSignalStrength = firstSimSignal,
+                    secondSimSignalStrength = secondSimSignal,
+                    wifiSignalStrength = wifiSignal,
                     firstSimId = firstSim?.iccId,
                     secondSimId = secondSim?.iccId,
                     firstSimOperator = firstSim?.carrierName?.toString(),
                     secondSimOperator = secondSim?.carrierName?.toString(),
-                    countryCode = CountryCodeExtractor.getCountryCode(
-                        context
-                    ),
+                    countryCode = countryCode,
                     ipAddress = getIpAddress()
                 )
             )
@@ -249,7 +254,7 @@ class SettingsRepositoryImp(
         }
     }
 
-    private suspend fun getIpAddress(): String {
+    private fun getIpAddress(): String {
         val client = OkHttpClient()
 
         val request = Request.Builder()

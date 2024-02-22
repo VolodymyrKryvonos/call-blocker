@@ -1,6 +1,7 @@
 package com.call_blocker.rest_work_imp
 
 import android.content.Context
+import android.telephony.SubscriptionInfo
 import com.call_blocker.common.Resource
 import com.call_blocker.model.ConnectionStatus
 import com.call_blocker.model.Profile
@@ -34,7 +35,12 @@ interface SettingsRepository {
 
     suspend fun notifyServerUserStopService(): Flow<Resource<Unit>>
     suspend fun sendSignalStrengthInfo(
-        context: Context
+        firstSimSignal: Int,
+        secondSimSignal: Int,
+        wifiSignal: Int,
+        firstSim: SubscriptionInfo?,
+        secondSim: SubscriptionInfo?,
+        countryCode: String
     )
 
     suspend fun changeSimCard(context: Context)

@@ -1,6 +1,7 @@
 package com.call_blocker.app.di
 
-import com.call_blocker.app.TaskManager
+import com.call_blocker.app.managers.SignalStrengthManager
+import com.call_blocker.app.managers.TaskManager
 import com.call_blocker.app.sms_sender.SmsSender
 import com.call_blocker.app.sms_sender.SmsSenderImpl
 import com.call_blocker.app.ui.SplashViewModel
@@ -22,5 +23,6 @@ val appModule = module {
     viewModelOf(::SplashViewModel)
 
     single { TaskManager(androidContext(), get(), get(), get(), get(), get(), get()) }
+    single { SignalStrengthManager(get(), androidContext()) }
     single<SmsSender> { SmsSenderImpl(androidContext(), get(), get(), get()) }
 }

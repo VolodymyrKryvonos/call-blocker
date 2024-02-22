@@ -7,10 +7,10 @@ import com.call_blocker.a_repository.model.RegisterRequest
 import com.call_blocker.a_repository.model.ResetRequest
 import com.call_blocker.a_repository.model.TasksRequest
 import com.call_blocker.a_repository.rest.UserRest
-import com.call_blocker.common.ConnectionManager
 import com.call_blocker.common.CountryCodeExtractor
 import com.call_blocker.common.Resource
 import com.call_blocker.common.SimUtil
+import com.call_blocker.common.getNetworkGeneration
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.entity.SystemDetailEntity
 import com.call_blocker.loger.SmartLog
@@ -66,7 +66,7 @@ class UserRepositoryImp(
         val data = try {
             userRest.userInfo(
                 TasksRequest(
-                    connectionType = ConnectionManager.getNetworkGeneration(),
+                    connectionType = getNetworkGeneration(context),
                     firstSimId = SimUtil.firstSim(context)?.iccId,
                     secondSimId = SimUtil.secondSim(context)?.iccId,
                     countryCode = CountryCodeExtractor.getCountryCode(

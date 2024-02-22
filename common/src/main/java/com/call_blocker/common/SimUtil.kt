@@ -64,4 +64,11 @@ object SimUtil {
             telephonyManager.deviceId
         } ?: ""
     }
+
+    fun getTelephonyManager(context: Context, slot: Int): TelephonyManager? {
+        val subId = simInfo(context, slot)?.subscriptionId ?: return null
+        return (context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager).createForSubscriptionId(
+            subId
+        )
+    }
 }

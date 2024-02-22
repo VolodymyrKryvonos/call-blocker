@@ -14,7 +14,6 @@ import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
 import com.call_blocker.app.util.NotificationService
-import com.call_blocker.common.ConnectionManager
 import com.call_blocker.common.SimUtil
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.TaskMethod
@@ -64,8 +63,7 @@ class SmsSenderImpl(
     override suspend fun doTask(task: TaskEntity): Boolean {
         SmartLog.d("doTask ${task.id}")
         task.simSlot = SimUtil.simSlotById(context, task.simIccId)
-        ConnectionManager.logSignalStrength()
-        if (task.simSlot == null || task.simSlot == -1) {
+        if (task.simSlot == -1) {
             processSendError(task)
             return false
         }

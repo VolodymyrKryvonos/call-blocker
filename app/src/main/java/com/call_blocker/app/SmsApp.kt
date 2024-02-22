@@ -4,7 +4,6 @@ import android.app.Application
 import com.call_blocker.a_repository.di.repositoryModule
 import com.call_blocker.app.di.appModule
 import com.call_blocker.app.util.NotificationService
-import com.call_blocker.common.ConnectionManager
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.di.databaseModule
 import com.call_blocker.loger.LogBuild
@@ -32,7 +31,6 @@ class SmsApp : Application() {
         smsBlockerDatabase.isUssdCommandOn = UssdService.hasAccessibilityPermission(this)
         NotificationService.createNotificationChannel(applicationContext)
         FirebaseApp.initializeApp(applicationContext)
-        ConnectionManager.init(applicationContext)
         LogBuild.build(this)
     }
 }

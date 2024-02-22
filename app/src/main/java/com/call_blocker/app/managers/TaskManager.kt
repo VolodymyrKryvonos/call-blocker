@@ -1,10 +1,9 @@
-package com.call_blocker.app
+package com.call_blocker.app.managers
 
 import android.content.Context
 import com.call_blocker.app.sms_sender.SmsSender
 import com.call_blocker.app.util.wakeScreen
 import com.call_blocker.app.worker_manager.SendingSMSWorker
-import com.call_blocker.common.ConnectionManager
 import com.call_blocker.common.CountryCodeExtractor
 import com.call_blocker.common.Resource
 import com.call_blocker.common.SimUtil
@@ -30,7 +29,6 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -47,12 +45,7 @@ class TaskManager(
 
     override val coroutineContext: CoroutineContext = SupervisorJob() + Dispatchers.IO
 
-    init {
-        ConnectionManager.init(context)
-    }
-
     private var checkConnectionJob: Job? = null
-    private var sendSignalStrengthJob: Job? = null
 
     suspend fun processTask(task: TaskEntity) {
         SmartLog.e(task.toString())
@@ -140,7 +133,6 @@ class TaskManager(
                     is Resource.Loading -> Unit
                     is Resource.Success -> {
                         smsBlockerDatabase.profile = it.data
-                        sendSignalStrength()
                         taskRepository.reconnect()
                         if (smsBlockerDatabase.profile?.isConnected == true) {
                             checkConnection()
@@ -152,22 +144,6 @@ class TaskManager(
         }
     }
 
-    fun sendSignalStrength() {
-        SmartLog.e("sendSignalStrength called")
-        sendSignalStrengthJob?.cancel()
-        sendSignalStrengthJob = launch {
-            while (SendingSMSWorker.isRunning.value) {
-                SmartLog.e("Send signal strength")
-                val delay =
-                    smsBlockerDatabase.profile?.delaySignalStrength?.toDuration(DurationUnit.SECONDS)
-                        ?: 60.seconds
-                settingsRepository.sendSignalStrengthInfo(
-                    context
-                )
-                delay(delay)
-            }
-        }
-    }
 
     fun checkConnection() {
         SmartLog.e("checkConnection called")
