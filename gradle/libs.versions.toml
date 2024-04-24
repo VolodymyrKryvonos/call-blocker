@@ -43,10 +43,10 @@ kotlin = "1.9.10"
 #build
 compileSdk = "34"
 minSdk = "26"
-versionCode = "209"
+versionCode = "211"
 major = "2"
 minor = "2"
-patch = "15"
+patch = "17"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -66,7 +66,6 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 
 androidx-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "ktx" }
 kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlin_coroutines" }
-moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
@@ -85,6 +84,7 @@ androidx-security-crypto = { group = "androidx.security", name = "security-crypt
 koin = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 
 
+moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }

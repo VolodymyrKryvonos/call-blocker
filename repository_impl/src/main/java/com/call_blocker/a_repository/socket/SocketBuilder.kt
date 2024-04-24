@@ -3,7 +3,7 @@ package com.call_blocker.a_repository.socket
 import android.os.Handler
 import android.os.Looper
 import com.call_blocker.common.rest.Const
-import com.call_blocker.common.rest.Const.sandboxDomain
+import com.call_blocker.common.rest.Const.domain
 import com.call_blocker.common.rest.Const.socketUrl
 import com.call_blocker.common.rest.Pinger
 import com.call_blocker.db.SmsBlockerDatabase
@@ -65,10 +65,9 @@ class SocketBuilder private constructor(
             .build()
         if (!statusConnect.value) {
             val connectorBuilder = OkHttpClient.Builder()
-            if (smsBlockerDatabase.profile?.isKeepAlive == true)
-                connectorBuilder.pingInterval(
-                    smsBlockerDatabase.profile?.keepAliveDelay?.toLong() ?: 600L, TimeUnit.SECONDS
-                )
+            connectorBuilder.pingInterval(
+                smsBlockerDatabase.profile?.keepAliveDelay?.toLong() ?: 90L, TimeUnit.SECONDS
+            )
             connector = connectorBuilder.build().newWebSocket(url, this@SocketBuilder)
         }
     }
@@ -206,7 +205,7 @@ class SocketBuilder private constructor(
             return SocketBuilder(
                 userToken = userToken!!,
                 uuid = uuid!!,
-                ip = sandboxDomain,
+                ip = domain,
                 port = port,
                 smsBlockerDatabase = smsBlockerDatabase
             )

@@ -22,7 +22,6 @@ import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -77,7 +76,6 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
     companion object : KoinComponent {
 
         val isRunning = MutableStateFlow(false)
-        var job: Job? = null
         const val WORK_NAME = "SendingSMSWorker"
 
         private val smsBlockerDatabase: SmsBlockerDatabase by inject()
@@ -114,8 +112,8 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
 
             workManager.enqueueUniquePeriodicWork(
                 "ClearLogsWorker",
-                ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequestBuilder<ClearLogsWorker>(12, TimeUnit.HOURS)
+                ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE,
+                PeriodicWorkRequestBuilder<ClearLogsWorker>(6, TimeUnit.HOURS)
                     .setInitialDelay(0, TimeUnit.MILLISECONDS)
                     .build()
             )
@@ -124,7 +122,6 @@ class SendingSMSWorker(private val context: Context, parameters: WorkerParameter
         fun stop(context: Context) {
             Firebase.crashlytics.log("stop service")
             SmartLog.d("stop service")
-            job?.cancel()
             WorkManager.getInstance(context).cancelUniqueWork("RestartServiceWorker")
             WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
