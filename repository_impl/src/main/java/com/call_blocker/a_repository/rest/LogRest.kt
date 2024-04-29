@@ -2,6 +2,7 @@ package com.call_blocker.a_repository.rest
 
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
@@ -11,6 +12,7 @@ interface LogRest {
     @Multipart
     @POST("apps/logs")
     suspend fun sendLogs(
+        @Header("Authorization") header: String = "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjJjNTIyNTI4Yjg3YjY1NjFhZDkyYmJiZTRlMzQyNGZlZTNmYjM2NWZmOGVjYzc5NTNiNmRiYzliMGRlOTA0MTgyZjdhYWRmZTdhNjA5NzVlIn0.eyJhdWQiOiIxIiwianRpIjoiMmM1MjI1MjhiODdiNjU2MWFkOTJiYmJlNGUzNDI0ZmVlM2ZiMzY1ZmY4ZWNjNzk1M2I2ZGJjOWIwZGU5MDQxODJmN2FhZGZlN2E2MDk3NWUiLCJpYXQiOjE3MTQzOTEwMDQsIm5iZiI6MTcxNDM5MTAwNCwiZXhwIjoxNzQ1OTI3MDA0LCJzdWIiOiI1MSIsInNjb3BlcyI6W119.A6KM03V7iZr-oybQEPFeUonWrHx3HanLvAvBwRuQYuB2S-iMC0d6jlwcdFBE6nQl2YaJK94WIB0HylOuVIeGe02WV80q9FTs27JFQDdkgxOubX1QT1aqll00YCiKYIPD4ZwuIYJ2nKkbDTvWA1mtsaVCQbYmjj-5zqigoxc2CxMCwVZK6v-uY1Iwpw8M4A-h6bdzRYYSwRC2eEtYkLd8uKLedjOcTGxMRjbmUyI3So86KL0iIyJ-E7BtKbUX9u0ZMnbRzGT9rGqqq_PA1r7RAlYE0J3KBOhtB4PTyGS3o-7a_YJPWgLKc0ahaoiLpagOisSjbwvtOgC5zDbYgZ-ezCaiOlINupKB_dW6XACJ2Hz-kbSBhaN0Kc-KFEJiN8ZiZAuT-zyzFiAGliL1wDmLMiQThMC2mt-e3KGTxmfL4yr6ZvxrxxZftlVBSyzjuum5GKaq2l3mMn3YWaVeWLfO9HuLL5UFgFGE-d_0HOMM2JZ4v91UDIy-yRwg_ElDWsBMwVQZpeedwBJCWiNRDTH-Orj1awPieFjQZU0r3P1S5sI-N4j8N2lVbwEloUuQfNhOUFpVci1_ydSHNbGJEqwi5e_TH9r0D8lnnJLTecQX3h14CJoBxn2iDyXSLNN2qn3tJqr6c3IFaj4dPqdND-GlCsbECkvh1GTqnXKweJYyi88",
         @Part("unique_id") deviceId: RequestBody,
         @Part file: MultipartBody.Part
     )

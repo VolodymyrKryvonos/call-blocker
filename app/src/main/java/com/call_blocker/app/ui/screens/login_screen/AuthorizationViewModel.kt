@@ -1,5 +1,6 @@
 package com.call_blocker.app.ui.screens.login_screen
 
+import android.content.Context
 import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -7,11 +8,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.call_blocker.app.BuildConfig
+import com.call_blocker.db.SmsBlockerDatabase
+import com.call_blocker.loger.SmartLog
+import com.call_blocker.rest_work_imp.LogRepository
 import com.call_blocker.rest_work_imp.UserRepository
 import kotlinx.coroutines.launch
 
 class AuthorizationViewModel(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val logRepository: LogRepository,
+    private val smsBlockerDatabase: SmsBlockerDatabase
 ) : ViewModel() {
     var isSignUp: Boolean by mutableStateOf(false)
     var email: String by mutableStateOf("")
@@ -27,9 +33,10 @@ class AuthorizationViewModel(
 
     fun isEmailValid() {
         emailError = email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        SmartLog.e("isEmailValid emailError = $emailError")
     }
 
-    fun signIn(packageName: String) {
+    fun signIn(packageName: String, context: Context) {
         viewModelScope.launch {
             isLoading = true
             validatePassword()
@@ -60,10 +67,12 @@ class AuthorizationViewModel(
         if (isSignUp) {
             confirmPasswordError = password != confirmPassword
         }
+        SmartLog.e("validatePassword passwordError = $passwordError confirmPasswordError = $confirmPasswordError")
     }
 
     fun isWhatsAppNumberValid() {
         whatsAppError = whatsApp.isEmpty() || whatsApp.length < 8 || whatsApp.length > 15
+        SmartLog.e("isWhatsAppNumberValid whatsAppError $whatsAppError")
     }
 }
  

@@ -20,7 +20,7 @@ class LogRepositoryImpl(private val logRest: LogRest) : LogRepository {
         val body: MultipartBody.Part =
             MultipartBody.Part.createFormData("file", file.name, requestFile)
         try {
-            logRest.sendLogs(deviceId.toRequestBody(), body)
+            logRest.sendLogs(deviceId = deviceId.toRequestBody(), file = body)
         } catch (e: Exception) {
             SmartLog.e("Send logs ${getStackTrace(e)}")
         }

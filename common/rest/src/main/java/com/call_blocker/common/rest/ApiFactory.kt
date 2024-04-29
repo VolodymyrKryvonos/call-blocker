@@ -47,17 +47,16 @@ class ApiFactory {
         builder?.addInterceptor(AuthorizationInterceptor())
         builder?.addInterceptor(UnauthorizedInterceptor())
         builder?.addInterceptor(UniqueIdInterceptor())
-        val logging = if (BuildConfig.DEBUG) {
-            HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
-            }
-        } else {
-            HttpLoggingInterceptor {
-                SmartLog.e(it)
-            }.apply {
-                level = HttpLoggingInterceptor.Level.BASIC
+        val logging = HttpLoggingInterceptor {
+            SmartLog.e(it)
+        }.apply {
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.BODY
             }
         }
+
         builder?.addInterceptor(logging)
     }
 
@@ -131,8 +130,9 @@ internal class AuthorizationInterceptor : Interceptor {
     override fun intercept(chain: Chain): Response {
 
         val smsBlockerDatabase: SmsBlockerDatabase = get(SmsBlockerDatabase::class.java)
+        val token = smsBlockerDatabase.userToken ?: return chain.proceed(chain.request())
         val request = chain.request().newBuilder()
-            .addHeader("Authorization", "Bearer ${smsBlockerDatabase.userToken}")
+            .addHeader("Authorization", "Bearer $token")
             .build();
         return chain.proceed(request)
     }

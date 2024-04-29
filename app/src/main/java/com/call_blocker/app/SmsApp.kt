@@ -1,6 +1,7 @@
 package com.call_blocker.app
 
 import android.app.Application
+import android.os.Build
 import com.call_blocker.a_repository.di.repositoryModule
 import com.call_blocker.app.di.appModule
 import com.call_blocker.app.util.NotificationService
@@ -29,7 +30,9 @@ class SmsApp : Application() {
         }
         val smsBlockerDatabase: SmsBlockerDatabase = get()
         smsBlockerDatabase.isUssdCommandOn = UssdService.hasAccessibilityPermission(this)
-        NotificationService.createNotificationChannel(applicationContext)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationService.createNotificationChannel(applicationContext)
+        }
         FirebaseApp.initializeApp(applicationContext)
         LogBuild.build(this)
     }

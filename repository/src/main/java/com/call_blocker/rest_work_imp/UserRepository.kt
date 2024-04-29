@@ -4,6 +4,7 @@ import android.content.Context
 import com.call_blocker.common.Resource
 import com.call_blocker.db.SmsBlockerDatabase
 import com.call_blocker.db.entity.SystemDetailEntity
+import com.call_blocker.loger.SmartLog
 import kotlinx.coroutines.flow.Flow
 
 abstract class UserRepository(protected val smsBlockerDatabase: SmsBlockerDatabase) {
@@ -47,6 +48,7 @@ abstract class UserRepository(protected val smsBlockerDatabase: SmsBlockerDataba
         val userToken: String? = try {
             doLogin(email, password, version)
         } catch (e: Exception) {
+            SmartLog.e("login", e)
             e.printStackTrace()
             null
         }
