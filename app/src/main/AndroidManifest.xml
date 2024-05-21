@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_MMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
@@ -103,7 +104,7 @@
             android:name="com.call_blocker.app.service.TaskExecutorService"
             android:directBootAware="true"
             android:exported="true"
-            android:foregroundServiceType="phoneCall"
+            android:foregroundServiceType="specialUse"
             android:permission="android.permission.SEND_RESPOND_VIA_MESSAGE"
             android:stopWithTask="false">
             <intent-filter>
@@ -174,6 +175,11 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/config_service" />
         </service>
+
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="specialUse"
+            tools:node="merge" />
 
 
         <provider

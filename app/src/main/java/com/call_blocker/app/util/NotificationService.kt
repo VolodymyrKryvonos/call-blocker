@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
 import android.graphics.Color
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -101,16 +102,29 @@ object NotificationService {
         } else {
             Notification.Builder(context)
         }
-        return ForegroundInfo(
-            SERVICE_NOTIFICATION_ID,
-            notificationBuilder.setContentTitle("Task executor")
-                .setContentText("On run")
-                .setSmallIcon(R.drawable.app_logo)
-                .setLargeIcon(Icon.createWithResource(context, R.drawable.app_logo))
-                .setContentIntent(pendingIntent)
-                .setCategory(Notification.CATEGORY_SERVICE)
-                .build()
-        )
+
+
+        val notification = notificationBuilder.setContentTitle("Task executor")
+            .setContentText("On run")
+            .setSmallIcon(R.drawable.app_logo)
+            .setLargeIcon(Icon.createWithResource(context, R.drawable.app_logo))
+            .setContentIntent(pendingIntent)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .build()
+
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ForegroundInfo(
+                SERVICE_NOTIFICATION_ID,
+                notification,
+                FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            ForegroundInfo(
+                SERVICE_NOTIFICATION_ID,
+                notification
+            )
+        }
     }
 
     fun showAutoVerificationFailedNotification(context: Context) {

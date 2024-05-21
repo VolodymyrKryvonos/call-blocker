@@ -1,13 +1,13 @@
 [versions]
 activityCompose = "1.8.2"
-fragmentKtx = "1.6.2"
+fragmentKtx = "1.7.0"
 viewpager2 = "1.0.0"
 workRuntimeKtx = "2.9.0"
 lifecycleLivedataKtx = "2.7.0"
 lifecycleViewmodelCompose = "2.7.0"
 navigationCompose = "2.7.7"
 lifecycleViewmodelKtx = "2.7.0"
-runtimeLivedata = "1.6.2"
+runtimeLivedata = "1.6.7"
 
 roomRuntime = "2.6.1"
 
@@ -26,17 +26,17 @@ retrofit = "2.9.0"
 okhttp = "4.12.0"
 
 #compose
-compose-bom = "2024.02.00"
+compose-bom = "2024.05.00"
 kotlinCompilerExtensionVersion = "1.5.3"
 
-firebase-bom = "32.7.2"
+firebase-bom = "33.0.0"
 
 androidx-security-crypto = "1.1.0-alpha06"
 
 #plugins
 ksp = "1.9.10-1.0.13"
 agp = "8.2.2"
-crashlytics = "2.9.9"
+crashlytics = "3.0.0"
 googleServices = "4.4.1"
 kotlin = "1.9.10"
 
