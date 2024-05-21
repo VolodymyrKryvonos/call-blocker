@@ -37,7 +37,7 @@ class TaskRepositoryImp(
             .Builder()
             .setUserToken(smsBlockerDatabase.userToken ?: "jhfhjlbdhjlf")
             .setUUid(smsBlockerDatabase.deviceID)
-            .setIP(Const.sandboxDomain)
+            .setIP(Const.domain)
             .setPort(Const.port)
             .build(smsBlockerDatabase)
     }

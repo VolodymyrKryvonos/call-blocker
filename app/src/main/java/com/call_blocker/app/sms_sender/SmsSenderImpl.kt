@@ -32,9 +32,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class SmsSenderImpl(
     private val context: Context,
@@ -57,8 +57,33 @@ class SmsSenderImpl(
     }
 
     private val smsLimitInterval by lazy {
-        (smsBlockerDatabase.profile?.delaySmsSend ?: 40) * 1000L
+        (smsBlockerDatabase.profile?.delaySmsSend ?: 5) * 1000L
     }
+
+    private val smsManagerSim1: SmsManager? = kotlin.run {
+        val subId = SimUtil.firstSim(context)?.subscriptionId ?: return@run null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (context.getSystemService(SmsManager::class.java) as SmsManager).createForSubscriptionId(
+                subId
+            )
+        } else {
+            SmsManager.getSmsManagerForSubscriptionId(subId)
+        }
+    }
+
+    private val smsManagerSim2: SmsManager? = kotlin.run {
+        val subId = SimUtil.secondSim(context)?.subscriptionId ?: return@run null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            (context.getSystemService(SmsManager::class.java) as SmsManager).createForSubscriptionId(
+                subId
+            )
+        } else {
+            SmsManager.getSmsManagerForSubscriptionId(subId)
+        }
+    }
+
+    private val smsManager1Mutex: Mutex = Mutex()
+    private val smsManager2Mutex: Mutex = Mutex()
 
     override suspend fun doTask(task: TaskEntity): Boolean {
         SmartLog.d("doTask ${task.id}")
@@ -85,11 +110,12 @@ class SmsSenderImpl(
             sentSmsNCountSecond++
         }
         val status = sendSms(sim, task)
-        sendStatus(status, task)
+
         return status
     }
 
     private suspend fun delaySmsSending(task: TaskEntity) {
+        SmartLog.e("delaySmsSending ${task.id} smsLimitInterval = $smsLimitInterval sentSmsNCountFirst = $sentSmsNCountFirst sentSmsNCountSecond = $sentSmsNCountSecond")
         if (task.simSlot == 0) {
             while (sentSmsNCountFirst >= smsLimit) {
                 delay(50L)
@@ -152,55 +178,56 @@ class SmsSenderImpl(
 
     private suspend fun sendSms(
         simInfo: SubscriptionInfo, task: TaskEntity
-    ): Boolean = coroutineScope {
-        suspendCoroutine { cont ->
-            val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
-
-            val smsManager: SmsManager = try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    (context.getSystemService(SmsManager::class.java) as SmsManager).createForSubscriptionId(
-                        simInfo.subscriptionId
-                    )
-                } else {
-                    SmsManager.getSmsManagerForSubscriptionId(simInfo.subscriptionId)
-                }
-            } catch (e: Exception) {
-                SmartLog.e("OnSimSelect ${getStackTrace(e)} ${e.message}")
-                cont.resume(false)
-                return@suspendCoroutine
-            }
-
-            val sentStatusIntent = Intent(sentRegisterName)
-
-            object : BroadcastReceiver() {
-                override fun onReceive(arg0: Context, arg1: Intent) {
-                    SmartLog.e("resultCode = $resultCode  ${task.id}")
-                    context.unregisterReceiver(this)
-                    val result = resultCode == Activity.RESULT_OK
-                    if (result) {
-                        launch {
-                            smsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(task.sendTo))
-                        }
-                    }
-                    cont.resume(result)
-                }
-            }.also {
-                context.registerReceiver(it, IntentFilter(sentRegisterName))
-            }
-
-            val sentPI = PendingIntent.getBroadcast(
-                context, task.sendTo.hashCode(), sentStatusIntent, PendingIntent.FLAG_IMMUTABLE
-            )
-            val msgText = smsChecker.toGSM7BitText(task.message)
-            SmartLog.e("msgText = $msgText")
-            try {
-                SmartLog.e("Try to sent message ${task.id}")
-                smsManager.sendTextMessage(
-                    task.sendTo, null, msgText, sentPI, null
-                )
-            } catch (e: Exception) {
-                SmartLog.e("OnSendTextMessage ${getStackTrace(e)} ${e.message}")
+    ): Boolean {
+        var result = false
+        val (smsManager, smsManagerMutex) = when (simInfo.simSlotIndex) {
+            0 -> smsManagerSim1 to smsManager1Mutex
+            1 -> smsManagerSim2 to smsManager2Mutex
+            else -> {
+                SmartLog.e("Failed send sms invalid sim slot")
+                return false
             }
         }
+        smsManager ?: return false
+        SmartLog.e(smsManagerMutex.toString())
+        smsManagerMutex.withLock {
+            coroutineScope {
+                val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
+                val sentStatusIntent = Intent(sentRegisterName)
+                object : BroadcastReceiver() {
+                    override fun onReceive(arg0: Context, arg1: Intent) {
+                        SmartLog.e("resultCode = $resultCode  ${task.id}")
+                        context.unregisterReceiver(this)
+                        val status = resultCode == Activity.RESULT_OK
+                        if (status) {
+                            launch {
+                                smsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(task.sendTo))
+                            }
+                        }
+                        launch {
+                            sendStatus(status, task)
+                        }
+                    }
+                }.also {
+                    context.registerReceiver(it, IntentFilter(sentRegisterName))
+                }
+                val sentPI = PendingIntent.getBroadcast(
+                    context, task.sendTo.hashCode(), sentStatusIntent, PendingIntent.FLAG_IMMUTABLE
+                )
+                val msgText = smsChecker.toGSM7BitText(task.message)
+                SmartLog.e("msgText = $msgText")
+                try {
+                    SmartLog.e("Try to sent message ${task.id}")
+                    smsManager.sendTextMessage(
+                        task.sendTo, null, msgText, sentPI, null
+                    )
+                    result = true
+                } catch (e: Exception) {
+                    result = false
+                    SmartLog.e("OnSendTextMessage ${getStackTrace(e)} ${e.message}")
+                }
+            }
+        }
+        return result
     }
 }
