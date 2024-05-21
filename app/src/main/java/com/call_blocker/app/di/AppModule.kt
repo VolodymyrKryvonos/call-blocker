@@ -4,6 +4,7 @@ import com.call_blocker.app.managers.SignalStrengthManager
 import com.call_blocker.app.managers.TaskManager
 import com.call_blocker.app.sms_sender.SmsSender
 import com.call_blocker.app.sms_sender.SmsSenderImpl
+import com.call_blocker.app.sms_sender.TestSmsSender
 import com.call_blocker.app.ui.SplashViewModel
 import com.call_blocker.app.ui.screens.home_screen.HomeViewModel
 import com.call_blocker.app.ui.screens.login_screen.AuthorizationViewModel
