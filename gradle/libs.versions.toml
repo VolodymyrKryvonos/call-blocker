@@ -43,10 +43,10 @@ kotlin = "1.9.10"
 #build
 compileSdk = "34"
 minSdk = "24"
-versionCode = "213"
+versionCode = "218"
 major = "2"
 minor = "2"
-patch = "21"
+patch = "25"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }

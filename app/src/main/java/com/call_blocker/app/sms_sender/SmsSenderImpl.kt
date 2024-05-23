@@ -134,6 +134,7 @@ class SmsSenderImpl(
     }
 
     private suspend fun sendStatus(status: Boolean, task: TaskEntity) {
+        SmartLog.e("sendStatus, $status, ${task.id}")
         if (status) {
             if (task.method == TaskMethod.VERIFY_PHONE_NUMBER || task.method == TaskMethod.AUTO_VERIFY_PHONE_NUMBER) {
                 simCardVerificationChecker.coroutineScope = this
@@ -191,41 +192,39 @@ class SmsSenderImpl(
         smsManager ?: return false
         SmartLog.e(smsManagerMutex.toString())
         smsManagerMutex.withLock {
-            coroutineScope {
-                val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
-                val sentStatusIntent = Intent(sentRegisterName)
-                object : BroadcastReceiver() {
-                    override fun onReceive(arg0: Context, arg1: Intent) {
-                        SmartLog.e("resultCode = $resultCode  ${task.id}")
-                        context.unregisterReceiver(this)
-                        val status = resultCode == Activity.RESULT_OK
-                        if (status) {
-                            launch {
-                                smsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(task.sendTo))
-                            }
-                        }
+            val sentRegisterName = "SMS_SENT_${System.currentTimeMillis()}"
+            val sentStatusIntent = Intent(sentRegisterName)
+            object : BroadcastReceiver() {
+                override fun onReceive(arg0: Context, arg1: Intent) {
+                    SmartLog.e("resultCode = $resultCode  ${task.id}")
+                    val status = resultCode == Activity.RESULT_OK
+                    if (status) {
                         launch {
-                            sendStatus(status, task)
+                            smsBlockerDatabase.phoneNumberDao.addNumber(PhoneNumber(task.sendTo))
                         }
                     }
-                }.also {
-                    context.registerReceiver(it, IntentFilter(sentRegisterName))
+                    launch {
+                        sendStatus(status, task)
+                    }
+                    context.unregisterReceiver(this)
                 }
-                val sentPI = PendingIntent.getBroadcast(
-                    context, task.sendTo.hashCode(), sentStatusIntent, PendingIntent.FLAG_IMMUTABLE
+            }.also {
+                context.registerReceiver(it, IntentFilter(sentRegisterName))
+            }
+            val sentPI = PendingIntent.getBroadcast(
+                context, task.sendTo.hashCode(), sentStatusIntent, PendingIntent.FLAG_IMMUTABLE
+            )
+            val msgText = smsChecker.toGSM7BitText(task.message)
+            SmartLog.e("msgText = $msgText")
+            try {
+                SmartLog.e("Try to sent message ${task.id}")
+                smsManager.sendTextMessage(
+                    task.sendTo, null, msgText, sentPI, null
                 )
-                val msgText = smsChecker.toGSM7BitText(task.message)
-                SmartLog.e("msgText = $msgText")
-                try {
-                    SmartLog.e("Try to sent message ${task.id}")
-                    smsManager.sendTextMessage(
-                        task.sendTo, null, msgText, sentPI, null
-                    )
-                    result = true
-                } catch (e: Exception) {
-                    result = false
-                    SmartLog.e("OnSendTextMessage ${getStackTrace(e)} ${e.message}")
-                }
+                result = true
+            } catch (e: Exception) {
+                result = false
+                SmartLog.e("OnSendTextMessage ${getStackTrace(e)} ${e.message}")
             }
         }
         return result
