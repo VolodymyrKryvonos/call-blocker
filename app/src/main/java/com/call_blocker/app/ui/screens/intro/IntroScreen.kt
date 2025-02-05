@@ -5,6 +5,7 @@ import android.app.role.RoleManager
 import android.content.Intent
 import android.os.Build
 import android.provider.Telephony
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
@@ -21,6 +22,7 @@ import androidx.compose.material.Divider
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -34,13 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.call_blocker.app.R
-import com.call_blocker.app.ui.PERMISSIONS_REQUIRED
-import com.call_blocker.app.ui.SplashViewModel
-import com.call_blocker.app.ui.bold16Sp
-import com.call_blocker.app.ui.buttonBackground
-import com.call_blocker.app.ui.buttonTextColor
-import com.call_blocker.app.ui.disabledButton
-import com.call_blocker.app.ui.primaryDimens
+import com.call_blocker.app.ui.*
 
 @Composable
 private fun IntroItem(
@@ -88,6 +84,10 @@ private fun IntroItem(
 fun IntroScreen(mViewModel: SplashViewModel) {
     val isPermissionsGranted by mViewModel.isPermissionGranted.observeAsState(initial = false)
     val isAppDefault by mViewModel.isAppDefault.observeAsState(initial = false)
+
+    LaunchedEffect(isAppDefault) {
+        Log.e("IntroScreen", "isAppDefault = $isAppDefault")
+    }
 
     var isWelcomeScreen: Boolean by remember {
         mutableStateOf(true)
@@ -142,6 +142,7 @@ private fun Permissions(mViewModel: SplashViewModel) {
 
 @Composable
 private fun AppAsDefault(mViewModel: SplashViewModel) {
+    val context = LocalContext.current
     val requestAppAsDefaultLauncher =
         rememberLauncherForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -149,7 +150,6 @@ private fun AppAsDefault(mViewModel: SplashViewModel) {
             mViewModel.isAppDefault.postValue(it.resultCode == Activity.RESULT_OK)
         }
 
-    val context = LocalContext.current
 
     IntroItem(
         title = stringResource(id = R.string.intro_app_as_default_title),
@@ -162,7 +162,6 @@ private fun AppAsDefault(mViewModel: SplashViewModel) {
 
             if (!roleManager!!.isRoleAvailable(RoleManager.ROLE_SMS))
                 return@IntroItem
-
             if (roleManager.isRoleHeld(RoleManager.ROLE_SMS))
                 return@IntroItem
 

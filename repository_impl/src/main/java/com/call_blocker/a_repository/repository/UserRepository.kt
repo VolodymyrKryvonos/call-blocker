@@ -26,14 +26,19 @@ class UserRepositoryImp(
         email: String,
         password: String,
         version: String
-    ): String {
-        return userRest.signIn(
-            LoginRequest(
-                email = email,
-                password = password,
-                version = version
-            )
-        ).data.success.token
+    ): String? {
+        try {
+            return userRest.signIn(
+                LoginRequest(
+                    email = email,
+                    password = password,
+                    version = version
+                )
+            ).data.success.token
+        } catch (e: Exception) {
+            SmartLog.e("Login Failed", e)
+            return null
+        }
     }
 
     override suspend fun doRegister(

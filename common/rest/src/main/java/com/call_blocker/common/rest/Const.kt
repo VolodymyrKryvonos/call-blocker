@@ -3,8 +3,7 @@ package com.call_blocker.common.rest
 object Const {
 
     const val socketUrl = "ws://" + "%s" + ":%s"
-
-    const val domain = "free-tokens.info"
+    const val domain = "sms.alizee.net"
 
     const val sandboxDomain = "sandbox.free-tokens.info"
 

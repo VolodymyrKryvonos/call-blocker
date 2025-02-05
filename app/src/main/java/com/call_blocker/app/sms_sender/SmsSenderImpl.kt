@@ -2,17 +2,14 @@ package com.call_blocker.app.sms_sender
 
 import android.app.Activity
 import android.app.PendingIntent
-import android.content.BroadcastReceiver
-import android.content.ContentResolver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.telephony.SmsManager
 import android.telephony.SubscriptionInfo
+import androidx.core.content.ContextCompat.RECEIVER_EXPORTED
 import com.call_blocker.app.util.NotificationService
 import com.call_blocker.common.SimUtil
 import com.call_blocker.db.SmsBlockerDatabase
@@ -26,12 +23,7 @@ import com.call_blocker.rest_work_imp.TaskRepository
 import com.call_blocker.verification.domain.SimCardVerificationChecker
 import com.call_blocker.verification.domain.VerificationInfoStateHolder
 import com.call_blocker.verification.domain.VerificationStatus
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlin.coroutines.CoroutineContext
@@ -209,7 +201,11 @@ class SmsSenderImpl(
                     context.unregisterReceiver(this)
                 }
             }.also {
-                context.registerReceiver(it, IntentFilter(sentRegisterName))
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.registerReceiver(it, IntentFilter(sentRegisterName), RECEIVER_EXPORTED)
+                } else {
+                    context.registerReceiver(it, IntentFilter(sentRegisterName))
+                }
             }
             val sentPI = PendingIntent.getBroadcast(
                 context, task.sendTo.hashCode(), sentStatusIntent, PendingIntent.FLAG_IMMUTABLE

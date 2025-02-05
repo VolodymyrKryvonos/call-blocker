@@ -35,6 +35,7 @@ class SplashViewModel : ViewModel() {
     val isAppDefault = MutableLiveData<Boolean>()
 
     fun initMe(context: Context) {
+
         isPermissionGranted.postValue(PERMISSIONS_REQUIRED.all {
             ContextCompat.checkSelfPermission(
                 context,
@@ -42,7 +43,9 @@ class SplashViewModel : ViewModel() {
             ) == PackageManager.PERMISSION_GRANTED
         })
         isAppDefault.postValue(
-            Telephony.Sms.getDefaultSmsPackage(context) == context.packageName
+            Telephony.Sms.getDefaultSmsPackage(context) == context.packageName || Telephony.Sms.getDefaultSmsPackage(
+                context
+            ) == null
         )
     }
 

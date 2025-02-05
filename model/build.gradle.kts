@@ -10,6 +10,9 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    defaultConfig {
+        minSdk = libs.versions.minSdk.get().toInt()
+    }
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_17.toString()
     }

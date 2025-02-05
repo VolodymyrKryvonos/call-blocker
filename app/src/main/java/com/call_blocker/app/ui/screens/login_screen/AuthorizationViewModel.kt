@@ -1,6 +1,5 @@
 package com.call_blocker.app.ui.screens.login_screen
 
-import android.content.Context
 import android.util.Patterns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,7 +35,7 @@ class AuthorizationViewModel(
         SmartLog.e("isEmailValid emailError = $emailError")
     }
 
-    fun signIn(packageName: String, context: Context) {
+    fun signIn(packageName: String) {
         viewModelScope.launch {
             isLoading = true
             validatePassword()

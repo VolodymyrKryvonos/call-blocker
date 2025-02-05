@@ -33,14 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.R
-import com.call_blocker.app.ui.Them
-import com.call_blocker.app.ui.buttonBackground
-import com.call_blocker.app.ui.buttonTextColor
-import com.call_blocker.app.ui.darkGrey
-import com.call_blocker.app.ui.dividerColor
-import com.call_blocker.app.ui.itemBackground
-import com.call_blocker.app.ui.medium24Sp
-import com.call_blocker.app.ui.primaryDimens
+import com.call_blocker.app.ui.*
 import com.call_blocker.app.ui.screens.home_screen.Container
 import com.call_blocker.app.ui.widgets.ToggleButton
 import com.call_blocker.common.SimUtil
@@ -94,7 +87,7 @@ fun SettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
-                imageVector = ImageVector.vectorResource(R.drawable.app_logo),
+                imageVector = ImageVector.vectorResource(R.drawable.ic_launcher_foreground),
                 contentDescription = null,
                 modifier = Modifier.requiredSize(
                     size = primaryDimens * 4

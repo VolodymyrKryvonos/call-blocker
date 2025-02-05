@@ -1,5 +1,3 @@
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
-
 plugins {
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.com.android.library)
@@ -15,6 +13,7 @@ android {
         val major = libs.versions.major.get()
         val minor = libs.versions.minor.get()
         val patch = libs.versions.patch.get()
+        minSdk = libs.versions.minSdk.get().toInt()
         buildConfigField("String", "versionName", "\"$major.$minor.$patch\"")
     }
     compileOptions {
@@ -29,8 +28,9 @@ android {
 dependencies {
 
     implementation(libs.bundles.kotlin.base)
-    implementation(libs.koin)
     implementation(libs.bundles.rest)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.bundles.koin)
 
     implementation(project(":db"))
     implementation(project(":repository"))

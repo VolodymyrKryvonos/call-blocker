@@ -30,13 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.call_blocker.app.BuildConfig
 import com.call_blocker.app.R
-import com.call_blocker.app.ui.buttonBackground
-import com.call_blocker.app.ui.buttonTextColor
-import com.call_blocker.app.ui.darkGrey
-import com.call_blocker.app.ui.disabledButton
-import com.call_blocker.app.ui.medium24Sp
-import com.call_blocker.app.ui.primary
-import com.call_blocker.app.ui.primaryDimens
+import com.call_blocker.app.ui.*
 import com.call_blocker.app.ui.widgets.PasswordField
 import com.call_blocker.app.ui.widgets.TextField
 
@@ -45,9 +39,9 @@ import com.call_blocker.app.ui.widgets.TextField
 fun LoginScreen(viewModel: AuthorizationViewModel) {
     Column(
         modifier = Modifier
-            .padding(28.dp)
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .padding(28.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(36.dp))
@@ -119,7 +113,7 @@ fun LoginScreen(viewModel: AuthorizationViewModel) {
             CircularProgressIndicator(color = primary)
         } else {
             Button(
-                onClick = { viewModel.signIn(context.packageName, context) },
+                onClick = { viewModel.signIn(context.packageName) },
                 shape = RoundedCornerShape(100f),
                 colors = ButtonDefaults.buttonColors(
                     backgroundColor = buttonBackground,

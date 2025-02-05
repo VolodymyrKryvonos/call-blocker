@@ -3,6 +3,7 @@ package com.call_blocker.app.ui
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -114,7 +115,9 @@ class HolderActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        splashViewModel.initMe(this)
+        if (Build.VERSION.SDK_INT < 35) {
+            splashViewModel.initMe(this)
+        }
         homeViewModel.checkIsLatestVersion()
         smsBlockerDatabase.isUssdCommandOn = UssdService.hasAccessibilityPermission(this)
         settingsViewModel.handleEvent(SettingsEvent.UpdateIsUssdEnableEvent(smsBlockerDatabase.isUssdCommandOn))

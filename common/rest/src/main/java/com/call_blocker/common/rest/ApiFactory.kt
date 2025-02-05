@@ -15,23 +15,22 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.Interceptor
-import okhttp3.Interceptor.*
+import okhttp3.*
+import okhttp3.Interceptor.Chain
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import org.json.JSONObject
 import org.koin.java.KoinJavaComponent.get
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.io.IOException
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSocketFactory
+import javax.net.ssl.X509TrustManager
 
 
 class ApiFactory {
@@ -47,6 +46,28 @@ class ApiFactory {
         builder?.addInterceptor(AuthorizationInterceptor())
         builder?.addInterceptor(UnauthorizedInterceptor())
         builder?.addInterceptor(UniqueIdInterceptor())
+
+        val trustAllCerts = arrayOf<X509TrustManager>(object : X509TrustManager {
+
+            override fun checkClientTrusted(chain: Array<X509Certificate>, authType: String) {
+            }
+
+            override fun checkServerTrusted(chain: Array<X509Certificate>, authType: String) {
+            }
+
+            override fun getAcceptedIssuers(): Array<X509Certificate> {
+                return arrayOf()
+            }
+        }
+        )
+        val sslContext = SSLContext.getInstance("SSL")
+        sslContext.init(null, trustAllCerts, SecureRandom())
+        val sslSocketFactory: SSLSocketFactory = sslContext.socketFactory
+
+        builder?.sslSocketFactory(sslSocketFactory, trustAllCerts[0])
+        builder?.hostnameVerifier { hostname, session -> true }
+
+
         val logging = HttpLoggingInterceptor {
             SmartLog.e(it)
         }.apply {
@@ -133,7 +154,7 @@ internal class AuthorizationInterceptor : Interceptor {
         val token = smsBlockerDatabase.userToken ?: return chain.proceed(chain.request())
         val request = chain.request().newBuilder()
             .addHeader("Authorization", "Bearer $token")
-            .build();
+            .build()
         return chain.proceed(request)
     }
 }

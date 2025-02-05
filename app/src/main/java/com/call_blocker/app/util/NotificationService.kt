@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
 import android.graphics.Color
-import android.graphics.drawable.Icon
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
@@ -41,7 +40,7 @@ object NotificationService {
             NotificationCompat.Builder(context)
         }
         notificationBuilder.setContentTitle(context.getString(R.string.verification_failed))
-            .setSmallIcon(R.drawable.app_logo)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .setCategory(Notification.CATEGORY_EVENT)
             .setAutoCancel(true)
@@ -81,7 +80,7 @@ object NotificationService {
 
         return notificationBuilder.setContentTitle("SIM card change detected")
             .setContentText("Updating...")
-            .setSmallIcon(R.drawable.app_logo)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setCategory(Notification.CATEGORY_SERVICE)
             .build()
     }
@@ -106,8 +105,7 @@ object NotificationService {
 
         val notification = notificationBuilder.setContentTitle("Task executor")
             .setContentText("On run")
-            .setSmallIcon(R.drawable.app_logo)
-            .setLargeIcon(Icon.createWithResource(context, R.drawable.app_logo))
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .setCategory(Notification.CATEGORY_SERVICE)
             .build()
@@ -143,7 +141,7 @@ object NotificationService {
             NotificationCompat.Builder(context)
         }
         notificationBuilder.setContentTitle(context.getString(R.string.auto_verification_failed))
-            .setSmallIcon(R.drawable.app_logo)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .setCategory(Notification.CATEGORY_EVENT)
             .setAutoCancel(true)

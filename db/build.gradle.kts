@@ -1,4 +1,3 @@
-@Suppress("DSL_SCOPE_VIOLATION") // TODO: Remove once KTIJ-19369 is fixed
 plugins {
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.com.android.library)
@@ -11,6 +10,9 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+    defaultConfig {
+        minSdk = libs.versions.minSdk.get().toInt()
     }
     buildFeatures {
         buildConfig = true
@@ -31,7 +33,8 @@ dependencies {
     implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)
     implementation(libs.moshi)
-    implementation(libs.koin)
+    implementation(platform(libs.koin.bom))
+    implementation(libs.bundles.koin)
 
     implementation(libs.androidx.security.crypto)
     implementation(project(":model"))
