@@ -52,6 +52,15 @@
 
     <uses-feature android:name="android.hardware.telephony" />
 
+    <queries>
+        <package android:name="com.android.mms"/>
+        <package android:name="com.google.android.apps.messaging"/>
+        <intent>
+            <action android:name="android.intent.action.SEND"/>
+            <data android:mimeType="vnd.android-dir/mms-sms"/>
+        </intent>
+    </queries>
+
     <application
         android:name="com.call_blocker.app.SmsApp"
         android:allowBackup="true"

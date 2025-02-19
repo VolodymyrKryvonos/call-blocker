@@ -5,9 +5,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.provider.Telephony
+import android.util.Log
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 
 val PERMISSIONS_REQUIRED = arrayListOf(
     Manifest.permission.READ_SMS,
@@ -31,19 +32,24 @@ val PERMISSIONS_REQUIRED = arrayListOf(
 
 class SplashViewModel : ViewModel() {
 
-    val isPermissionGranted = MutableLiveData<Boolean>()
-    val isAppDefault = MutableLiveData<Boolean>()
+    val isPermissionGranted = MutableStateFlow<Boolean>(false)
+    val isAppDefault = MutableStateFlow<Boolean>(false)
 
     fun initMe(context: Context) {
 
-        isPermissionGranted.postValue(PERMISSIONS_REQUIRED.all {
+        isPermissionGranted.tryEmit(PERMISSIONS_REQUIRED.all {
             ContextCompat.checkSelfPermission(
                 context,
                 it
             ) == PackageManager.PERMISSION_GRANTED
         })
-        isAppDefault.postValue(
-            Telephony.Sms.getDefaultSmsPackage(context) == context.packageName || Telephony.Sms.getDefaultSmsPackage(
+        isAppDefault.tryEmit(
+            Telephony.Sms.getDefaultSmsPackage(context).also {
+                Log.e(
+                    "getDefaultSmsPackage",
+                    it ?: "null"
+                )
+            } == context.packageName || Telephony.Sms.getDefaultSmsPackage(
                 context
             ) == null
         )

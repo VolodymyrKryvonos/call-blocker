@@ -147,10 +147,12 @@ dependencies {
     implementation(libs.bundles.kotlin.base)
     implementation(platform(libs.compose.bom))
     implementation(libs.bundles.compose)
+    implementation(libs.material)
     implementation(libs.bundles.androidx)
 
 
     implementation(libs.moshi)
+
     implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin)
 

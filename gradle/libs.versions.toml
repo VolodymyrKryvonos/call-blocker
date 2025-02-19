@@ -1,49 +1,45 @@
 [versions]
-activityCompose = "1.9.3"
-fragmentKtx = "1.8.4"
-materialIconsExtended = "1.7.4"
-viewpager2 = "1.1.0"
-workRuntimeKtx = "2.9.1"
-lifecycleLivedataKtx = "2.8.6"
-lifecycleViewmodelCompose = "2.8.6"
-navigationCompose = "2.8.3"
-lifecycleViewmodelKtx = "2.8.6"
-runtimeLivedata = "1.7.4"
-
-roomRuntime = "2.6.1"
-
-timber = "5.0.1"
-
-#base
-ktx = "1.13.1"
-lifecycle_version = "2.3.1"
-kotlin_coroutines = "1.7.3"
+agp = "8.7.3"
+kotlin = "2.1.0"
+core-ktx = "1.15.0"
+junit = "4.13.2"
+androidx-test-ext-junit = "1.2.1"
+espresso-core = "3.6.1"
+lifecycle-runtime-ktx = "2.8.7"
+activity-compose = "1.10.0"
+compose-bom = "2025.02.00"
+retrofit2 = "2.9.0"
+moshi = "1.15.0"
+okhttp = "4.12.0"
 
 koin-bom = "4.0.0"
 
-#network
-moshi = "1.15.0"
-retrofit = "2.9.0"
-okhttp = "4.12.0"
-
-#compose
-compose-bom = "2024.10.00"
-kotlinCompilerExtensionVersion = "1.5.3"
-compose-plugin = "1.7.0"
-
-firebase-bom = "33.5.1"
-
-androidx-security-crypto = "1.1.0-alpha06"
-
-#plugins
-ksp = "2.0.21-1.0.25"
-agp = "8.2.2"
-crashlytics = "3.0.2"
+room = "2.6.1"
+navigation = "2.8.7"
+mockito = "5.11.0"
+mockito-kotlin = "3.2.0"
+kotlinx-coroutines-test = "1.10.1"
+timber = "5.0.1"
+turbine = "1.0.0"
+ksp = "2.1.0-1.0.29"
+robolectric = "4.9"
+work-manager = "2.10.0"
+io-michaelrocks = "8.13.28"
+androidx-compose-icons-extended = "1.7.8"
 googleServices = "4.4.2"
-kotlin = "2.0.21"
+firebase-bom = "33.9.0"
+crashlytics = "3.0.3"
+appcompat = "1.7.0"
+kotlinxSerializationJson = "1.7.3"
+kotlinCompilerExtensionVersion = "1.5.3"
+material = "1.7.8"
+compose-plugin = "1.7.0"
+androidx-security-crypto = "1.1.0-alpha06"
+materialVersion = "1.12.0"
+uiTooling = "1.7.8"
 
 #build
-compileSdk = "34"
+compileSdk = "35"
 minSdk = "24"
 versionCode = "218"
 major = "2"
@@ -51,50 +47,65 @@ minor = "2"
 patch = "32"
 
 [libraries]
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
-androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
-androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycleLivedataKtx" }
-androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
-androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
-androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
-androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
-androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "runtimeLivedata" }
-androidx-viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
-androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
+lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work-manager" }
 
-#room
-androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
-androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
-androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 
-androidx-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "ktx" }
-kotlinx-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "kotlin_coroutines" }
-
-firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
-firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
-firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
-
-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
-compose-ui = { group = "androidx.compose.ui", name = "ui" }
-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-compose-material3 = { group = "androidx.compose.material", name = "material" }
-
-androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "androidx-security-crypto" }
+#Networking
+retrofit2-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit2" }
+retrofit2-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit2" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
 
 #DI
+
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-android = { group = "io.insert-koin", name = "koin-android" }
 koin-core-viewmodel = { group = "io.insert-koin", name = "koin-core-viewmodel" }
 
-moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
-retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
-retrofit-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+material = { module = "androidx.compose.material:material", version.ref = "material" }
 
+#Room
+room = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+
+#Compose
+activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+ui = { group = "androidx.compose.ui", name = "ui" }
+ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+material3 = { group = "androidx.compose.material3", name = "material3" }
+navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
+lifecycle-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle-runtime-ktx" }
+androidx-compose-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "androidx-compose-icons-extended" }
+io-michaelrocks = { group = "io.michaelrocks", name = "libphonenumber-android", version.ref = "io-michaelrocks" }
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebase-bom" }
+firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
+firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
+
+#Test
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidx-test-ext-junit" }
+espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockito-kotlin = { group = "org.mockito.kotlin", name = "mockito-kotlin", version.ref = "mockito-kotlin" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "kotlinx-coroutines-test" }
+turbine = { group = "app.cash.turbine", name = "turbine", version.ref = "turbine" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "androidx-security-crypto" }
+google-material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -105,23 +116,18 @@ crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "crashlyti
 com-android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
 [bundles]
-compose = ["compose-ui",
-    "compose-ui-graphics",
-    "compose-ui-tooling",
-    "compose-ui-tooling-preview",
-    "compose-ui-tooling-preview", "compose-material3",
-    "androidx-material-icons-extended"]
-kotlin-base = ["androidx-ktx", "kotlinx-coroutines"]
-rest = ["retrofit", "retrofit-moshi", "okhttp", "logging-interceptor", "moshi"]
-room = ["androidx-room-ktx", "androidx-room-runtime"]
+compose = ["ui",
+    "ui-graphics",
+    "ui-tooling",
+    "ui-tooling-preview", "material3",
+    "androidx-compose-icons-extended"]
+kotlin-base = ["core-ktx"]
+rest = ["retrofit2-core", "retrofit2-moshi", "okhttp", "okhttp-logging-interceptor", "moshi"]
+room = ["room", "room-ktx"]
 koin = ["koin-android", "koin-core-viewmodel"]
-androidx = ["androidx-activity-compose",
-    "androidx-fragment-ktx",
-    "androidx-lifecycle-livedata-ktx",
-    "androidx-lifecycle-viewmodel-compose",
-    "androidx-navigation-compose",
-    "androidx-runtime-livedata",
+androidx = ["activity-compose",
+    "navigation",
     "androidx-work-runtime-ktx"]

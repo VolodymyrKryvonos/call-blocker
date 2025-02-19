@@ -31,7 +31,7 @@ android {
 dependencies {
     implementation(libs.bundles.kotlin.base)
     implementation(libs.bundles.room)
-    ksp(libs.androidx.room.compiler)
+    ksp(libs.room.compiler)
     implementation(libs.moshi)
     implementation(platform(libs.koin.bom))
     implementation(libs.bundles.koin)

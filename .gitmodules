@@ -1,0 +1,3 @@
+[submodule "bottega-payment-request"]
+	path = bottega-payment-request
+	url = https://github.com/VolodymyrKryvonos/bottega-payment-request.git

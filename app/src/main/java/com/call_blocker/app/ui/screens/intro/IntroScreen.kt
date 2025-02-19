@@ -9,25 +9,10 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -82,8 +67,8 @@ private fun IntroItem(
 
 @Composable
 fun IntroScreen(mViewModel: SplashViewModel) {
-    val isPermissionsGranted by mViewModel.isPermissionGranted.observeAsState(initial = false)
-    val isAppDefault by mViewModel.isAppDefault.observeAsState(initial = false)
+    val isPermissionsGranted by mViewModel.isPermissionGranted.collectAsState()
+    val isAppDefault by mViewModel.isAppDefault.collectAsState()
 
     LaunchedEffect(isAppDefault) {
         Log.e("IntroScreen", "isAppDefault = $isAppDefault")
@@ -127,7 +112,7 @@ private fun Permissions(mViewModel: SplashViewModel) {
             val all = pers.all {
                 it.value
             }
-            mViewModel.isPermissionGranted.postValue(all)
+            mViewModel.isPermissionGranted.tryEmit(all)
         }
 
     IntroItem(
@@ -147,7 +132,7 @@ private fun AppAsDefault(mViewModel: SplashViewModel) {
         rememberLauncherForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {
-            mViewModel.isAppDefault.postValue(it.resultCode == Activity.RESULT_OK)
+            mViewModel.isAppDefault.tryEmit(it.resultCode == Activity.RESULT_OK)
         }
 
 

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -67,8 +66,8 @@ class HolderActivity : ComponentActivity() {
                 .userIsAuthLiveData
                 .collectAsState(initial = smsBlockerDatabase.userToken != null)
 
-            val isPermissionsGranted by splashViewModel.isPermissionGranted.observeAsState(initial = null)
-            val isAppDefault by splashViewModel.isAppDefault.observeAsState(initial = null)
+            val isPermissionsGranted by splashViewModel.isPermissionGranted.collectAsState()
+            val isAppDefault by splashViewModel.isAppDefault.collectAsState()
 
             navController = rememberNavController()
 
